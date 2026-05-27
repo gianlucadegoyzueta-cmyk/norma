@@ -1,0 +1,410 @@
+// ============================================================
+//  SaaS Compliance Affitti Brevi — Modello dati
+//
+//  Convenzioni:
+//   - Nomi in inglese; termini di dominio in italiano dove non
+//     esiste un equivalente pulito (Schedina, Comune, Soggiorno…).
+//   - "Organization" = il tenant/cliente (host singolo o property manager).
+//   - Ogni tabella multi-tenant porta organizationId ESPLICITO:
+//     isolamento dei dati per cliente, semplice e robusto.
+//   - Il denaro è sempre in centesimi (Int), mai in virgola mobile.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // DATABASE_URL: transaction pooler (porta 6543) — usata dall'app a runtime (serverless-friendly).
+  url       = env("DATABASE_URL")
+  // DIRECT_URL: session pooler / connessione diretta (porta 5432) — usata da `prisma migrate`
+  // (le migrazioni richiedono una sessione, non il transaction pooler).
+  directUrl = env("DIRECT_URL")
+}
+
+// ----------------------------- ENUM -----------------------------
+
+enum MembershipRole {
+  OWNER // proprietario dell'organizzazione (privilegi massimi)
+  ADMIN
+  MEMBER
+}
+
+enum CredentialCategory {
+  SINGOLA // utenza Alloggiati di UNA singola struttura
+  GESTIONE_APPARTAMENTI // utenza che gestisce N appartamenti (stessa provincia)
+}
+
+enum CredentialStatus {
+  ACTIVE // funzionante
+  PENDING_REONBOARDING // da (ri)validare: es. dopo il cambio password dell'host
+  INVALID // autenticazione fallita
+  DISABLED // disattivata dall'utente
+}
+
+enum Sex {
+  M // nel tracciato Alloggiati: 1
+  F // nel tracciato Alloggiati: 2
+}
+
+enum TipoAlloggiato {
+  OSPITE_SINGOLO // cod. 16 — documento OBBLIGATORIO
+  CAPO_FAMIGLIA // cod. 17 — documento OBBLIGATORIO
+  CAPO_GRUPPO // cod. 18 — documento OBBLIGATORIO
+  FAMILIARE // cod. 19 — campi documento in BIANCO
+  MEMBRO_GRUPPO // cod. 20 — campi documento in BIANCO
+}
+
+// Stati dell'outbox (decisione architetturale presa):
+enum SchedinaStatus {
+  PENDING // creata, non ancora inviata
+  SENDING // invio in corso (persistito PRIMA della chiamata di rete)
+  ACQUIRED // acquisita da Alloggiati (esito riga = true)
+  REJECTED // scartata con errore → correggibile e re-inviabile
+  UNVERIFIED // inviata ma esito ignoto (timeout) → riconciliare a T+1
+}
+
+enum SubmissionChannel {
+  WEB_SERVICE // invio normale via web service SOAP
+  PEC // fallback: PEC alla Questura quando il portale è giù
+}
+
+// -------------------------- TENANT & UTENTI --------------------------
+
+/// Il tenant/cliente. Può essere un host con una sola struttura
+/// oppure un property manager con molte credenziali e immobili.
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships            Membership[]
+  credentials            AlloggiatiCredential[]
+  properties             Property[]
+  stays                  Stay[]
+  guests                 Guest[]
+  schedine               Schedina[]
+  touristTaxDeclarations TouristTaxDeclaration[]
+}
+
+/// Persona che accede all'app. Campi compatibili con Auth.js: l'autenticazione
+/// vera (provider OAuth / magic link / sessioni) si aggancia in una fase successiva.
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  name          String?
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  memberships   Membership[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+/// Ponte User <-> Organization: un utente può appartenere a PIÙ organizzazioni
+/// (es. un collaboratore/agenzia che gestisce più clienti) e un'organizzazione
+/// può avere PIÙ utenti del team.
+model Membership {
+  id             String         @id @default(cuid())
+  organizationId String
+  userId         String
+  role           MembershipRole @default(MEMBER)
+  createdAt      DateTime       @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId]) // un utente una sola volta per organizzazione
+  @@index([userId])
+}
+
+// ----------------------- CREDENZIALI ALLOGGIATI -----------------------
+
+/// "1 Organization -> N credenziali eterogenee".
+/// IMPORTANTISSIMO: utente/password/wskey NON stanno qui in chiaro.
+/// Qui c'è solo `secretRef`, un riferimento opaco al secrets manager.
+/// Il recupero/decifratura avviene dietro l'interfaccia SecretsVault.
+model AlloggiatiCredential {
+  id             String             @id @default(cuid())
+  organizationId String
+  label          String // etichetta leggibile, es. "Struttura Trastevere – RM"
+  category       CredentialCategory
+  provincia      String // sigla, es. "RM". Una GESTIONE_APPARTAMENTI copre UNA sola provincia.
+  status         CredentialStatus   @default(PENDING_REONBOARDING)
+
+  secretRef String @unique // riferimento al vault (NON il segreto in chiaro)
+
+  // Metadati operativi (NON il token vero: quello è effimero e vive in cache a runtime)
+  lastVerifiedAt DateTime? // ultimo Authentication_Test andato a buon fine
+  tokenExpiresAt DateTime? // scadenza nota del token corrente (per il refresh "lazy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  properties   Property[] // per GESTIONE_APPARTAMENTI: gli immobili gestiti
+  schedine     Schedina[]
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+// ------------------------ IMMOBILI / APPARTAMENTI ------------------------
+
+/// Unifichiamo "Immobile" (nostro concetto) e "Appartamento" (concetto Alloggiati).
+/// `alloggiatiApartmentId` è valorizzato SOLO quando l'immobile è registrato sotto
+/// una credenziale GESTIONE_APPARTAMENTI; per le SINGOLA resta null.
+model Property {
+  id             String  @id @default(cuid())
+  organizationId String
+  name           String // nome interno, es. "Bilocale Trastevere"
+  address        String
+  comuneId       String
+  proprietario   String // sotto una stessa credenziale possono esserci proprietari diversi
+
+  credentialId          String? // credenziale con cui si inviano le schedine (nullable)
+  alloggiatiApartmentId String? // IdAppartamento assegnato da Alloggiati (solo gestione appartamenti)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  comune       Comune                @relation(fields: [comuneId], references: [id])
+  credential   AlloggiatiCredential? @relation(fields: [credentialId], references: [id])
+  stays        Stay[]
+
+  @@index([organizationId])
+  @@index([credentialId])
+}
+
+// --------------------------- SOGGIORNI & OSPITI ---------------------------
+
+model Stay {
+  id             String    @id @default(cuid())
+  organizationId String
+  propertyId     String
+  arrivalDate    DateTime // fa scattare la deadline (24h, o 6h se soggiorno breve)
+  departureDate  DateTime?
+  guestsCount    Int
+  isShortStay    Boolean   @default(false) // soggiorno <=24h → deadline a +6h
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  property     Property     @relation(fields: [propertyId], references: [id])
+  guests       Guest[]
+
+  @@index([organizationId])
+  @@index([propertyId])
+}
+
+/// Un Ospite è legato a UN soggiorno (niente anagrafica persistente: scelta GDPR-friendly).
+/// `tipoAlloggiato` determina le regole del tracciato (documento obbligatorio per 16/17/18,
+/// in bianco per 19/20). `leaderId` (auto-relazione) collega familiari/membri al capo.
+/// NB: i campi documento sono OPZIONALI a DB proprio perché per FAMILIARE/MEMBRO_GRUPPO
+///     non vanno compilati; l'obbligatorietà per gli altri la impone la logica di dominio.
+model Guest {
+  id             String   @id @default(cuid())
+  organizationId String
+  stayId         String
+
+  firstName String
+  lastName  String
+  sex       Sex
+  birthDate DateTime
+
+  birthCountryId String // Stato di nascita — SEMPRE obbligatorio
+  birthComuneId  String? // Comune di nascita — solo se Stato = Italia
+  citizenshipId  String // cittadinanza — sempre obbligatoria
+
+  documentTypeId  String? // documento: obbligatorio solo per 16/17/18
+  documentNumber  String?
+  documentPlaceId String? // luogo di rilascio (Stato o Comune)
+
+  tipoAlloggiato TipoAlloggiato
+  leaderId       String? // punta al capo famiglia/gruppo (per familiari/membri)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stay         Stay          @relation(fields: [stayId], references: [id], onDelete: Cascade)
+  leader       Guest?        @relation("GuestGroup", fields: [leaderId], references: [id])
+  members      Guest[]       @relation("GuestGroup")
+  birthCountry Country       @relation("GuestBirthCountry", fields: [birthCountryId], references: [id])
+  birthComune  Comune?       @relation("GuestBirthComune", fields: [birthComuneId], references: [id])
+  citizenship  Country       @relation("GuestCitizenship", fields: [citizenshipId], references: [id])
+  documentType DocumentType? @relation(fields: [documentTypeId], references: [id])
+  schedina     Schedina?
+
+  @@index([organizationId])
+  @@index([stayId])
+}
+
+// ----------------------------- OUTBOX SCHEDINE -----------------------------
+
+/// Tabella outbox: una riga per OGNI schedina (= un ospite di un soggiorno).
+/// L'invio è IRREVERSIBILE e il `Send` di Alloggiati NON è idempotente, perciò:
+///  - `dedupKey` UNIQUE impedisce di creare due intenti identici (doppioni non eliminabili);
+///  - lo stato segue PENDING → SENDING → ACQUIRED / REJECTED / UNVERIFIED;
+///  - i campi di ricevuta/riconciliazione servono al controllo differito (T+1, via metodo Ricevuta).
+model Schedina {
+  id             String @id @default(cuid())
+  organizationId String
+  guestId        String @unique // 1 ospite : 1 schedina
+  credentialId   String
+
+  status  SchedinaStatus    @default(PENDING)
+  channel SubmissionChannel @default(WEB_SERVICE)
+
+  /// hash(struttura|idAppartamento|dataArrivo|numeroDocumento|cognome|nome|dataNascita).
+  /// Non include i giorni di permanenza: un prolungamento si gestisce come ri-emissione
+  /// della STESSA riga (transizione di stato), non come nuova riga.
+  dedupKey String
+
+  payloadSnapshot String? // stringa del tracciato effettivamente inviata (audit/riconciliazione)
+  deadlineAt      DateTime // arrivo +24h (o +6h se soggiorno <=24h)
+
+  attempts     Int     @default(0)
+  lastErrorCod String?
+  lastErrorDes String?
+
+  sentAt       DateTime?
+  acquiredAt   DateTime?
+  receiptDate  DateTime? // data della Ricevuta su cui risulta (T+1)
+  receiptRef   String? // riferimento all'archiviazione della ricevuta PDF
+  reconciledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  guest        Guest                @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  credential   AlloggiatiCredential @relation(fields: [credentialId], references: [id])
+  events       SchedinaEvent[]
+
+  @@unique([organizationId, dedupKey]) // ← barriera anti-doppione
+  @@index([status])
+  @@index([deadlineAt])
+}
+
+/// Log append-only delle transizioni di stato: audit + debug dell'outbox.
+model SchedinaEvent {
+  id         String          @id @default(cuid())
+  schedinaId String
+  fromStatus SchedinaStatus?
+  toStatus   SchedinaStatus
+  message    String?
+  createdAt  DateTime        @default(now())
+
+  schedina Schedina @relation(fields: [schedinaId], references: [id], onDelete: Cascade)
+
+  @@index([schedinaId])
+}
+
+// --------- TABELLE DI RIFERIMENTO (codifiche ufficiali Alloggiati) ---------
+// Si sincronizzeranno dal metodo `Tabella` del web service. Qui solo lo scheletro.
+
+model Comune {
+  id        String @id @default(cuid())
+  code      String @unique // codice catastale/Alloggiati
+  name      String
+  provincia String // sigla
+
+  properties             Property[]
+  guestsBirth            Guest[]                 @relation("GuestBirthComune")
+  touristTaxConfig       TouristTaxConfig?
+  touristTaxDeclarations TouristTaxDeclaration[]
+}
+
+model Country {
+  id   String @id @default(cuid())
+  code String @unique // codice Stato (tabella Stati)
+  name String
+
+  guestsBirth       Guest[] @relation("GuestBirthCountry")
+  guestsCitizenship Guest[] @relation("GuestCitizenship")
+}
+
+model DocumentType {
+  id     String  @id @default(cuid())
+  code   String  @unique // codice tipo documento (tabella Documenti)
+  name   String
+  guests Guest[]
+}
+
+// --------- TASSA DI SOGGIORNO (predisposta, NON implementata) ---------
+
+/// Configurazione tariffaria per Comune. Regole in JSON per ora (ogni Comune ha regole
+/// diverse: importi per notte/categoria, esenzioni, numero massimo di notti…).
+/// Struttureremo meglio quando implementeremo il calcolo.
+model TouristTaxConfig {
+  id        String    @id @default(cuid())
+  comuneId  String    @unique
+  rules     Json
+  validFrom DateTime
+  validTo   DateTime?
+
+  comune Comune @relation(fields: [comuneId], references: [id])
+}
+
+/// Dichiarazione/versamento periodico della tassa (scheletro).
+model TouristTaxDeclaration {
+  id             String   @id @default(cuid())
+  organizationId String
+  comuneId       String
+  period         String // es. "2026-05" (mese di riferimento)
+  amountCents    Int      @default(0) // denaro in centesimi
+  status         String   @default("DRAFT")
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  comune       Comune       @relation(fields: [comuneId], references: [id])
+
+  @@unique([organizationId, comuneId, period])
+}
+
+// ----------------------- AUTENTICAZIONE (Auth.js / NextAuth) -----------------------
+// Modelli richiesti dall'adapter Prisma di Auth.js.
+// `Account` = account di provider esterni (OAuth): con il solo magic-link resta vuoto,
+// ma fa parte dello schema standard dell'adapter. (Da non confondere con Organization, il tenant.)
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

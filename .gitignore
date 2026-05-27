@@ -1,0 +1,23 @@
+# dipendenze
+/node_modules
+
+# build Next.js
+/.next
+/out
+/build
+
+# variabili d'ambiente (NB: .env.example resta tracciato)
+.env
+.env*.local
+
+# store locale dei segreti (cifrato, ma non va in git)
+/.localsecrets
+
+# TypeScript / Next
+next-env.d.ts
+*.tsbuildinfo
+
+# sistema / editor
+.DS_Store
+*.log
+npm-debug.log*

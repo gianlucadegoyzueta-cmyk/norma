@@ -1,0 +1,20 @@
+# PostgreSQL per lo sviluppo locale.
+# Avvio:   docker compose up -d db
+# Stop:    docker compose down        (i dati restano nel volume)
+# Reset:   docker compose down -v     (cancella anche i dati)
+services:
+  db:
+    image: postgres:16
+    container_name: compliance-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: compliance
+      POSTGRES_PASSWORD: compliance
+      POSTGRES_DB: compliance
+    ports:
+      - "5432:5432"
+    volumes:
+      - compliance-pgdata:/var/lib/postgresql/data
+
+volumes:
+  compliance-pgdata:
