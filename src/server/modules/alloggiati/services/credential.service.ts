@@ -1,9 +1,16 @@
-import type { CredentialCategory } from "@prisma/client";
+import type { CredentialCategory, CredentialStatus } from "@prisma/client";
 import type { AlloggiatiSecret, SecretsVault } from "../../../secrets";
 import type {
   CredentialMetadata,
   PrismaCredentialRepository,
 } from "../adapters/PrismaCredentialRepository";
+import { AlloggiatiAuthError } from "../soap/errors";
+
+/** Minimo per verificare una credenziale contro Alloggiati. Lo soddisfa `AlloggiatiSoapClient`. */
+export interface CredentialVerifyClient {
+  generateToken(secret: AlloggiatiSecret): Promise<{ utente: string; token: string }>;
+  authenticationTest(utente: string, token: string): Promise<void>;
+}
 
 export interface OnboardCredentialInput {
   organizationId: string;
@@ -26,6 +33,7 @@ export class CredentialService {
   constructor(
     private readonly repo: PrismaCredentialRepository,
     private readonly vault: SecretsVault,
+    private readonly client: CredentialVerifyClient,
   ) {}
 
   async onboard(input: OnboardCredentialInput): Promise<CredentialMetadata> {
@@ -42,6 +50,32 @@ export class CredentialService {
     } catch (e) {
       // se l'insert nel DB fallisce, non lasciare segreti orfani nel vault
       await this.vault.delete(secretRef).catch(() => undefined);
+      throw e;
+    }
+  }
+
+  /**
+   * Verifica la credenziale CONTRO il sistema reale: GenerateToken → Authentication_Test.
+   * NON invia nulla (nessun Send). Aggiorna lo stato:
+   *  - ACTIVE se le credenziali sono valide;
+   *  - INVALID se vengono rifiutate (AlloggiatiAuthError);
+   *  - su errore TRANSITORIO (rete/protocollo) RILANCIA: lo stato resta PENDING_REONBOARDING e
+   *    il chiamante mostra l'errore (riprovabile più tardi).
+   */
+  async verify(credentialId: string): Promise<CredentialStatus> {
+    const cred = await this.repo.getById(credentialId);
+    if (!cred) throw new Error(`Credenziale non trovata: ${credentialId}`);
+    const secret = await this.vault.retrieve(cred.secretRef);
+    try {
+      const { utente, token } = await this.client.generateToken(secret);
+      await this.client.authenticationTest(utente, token);
+      await this.repo.markVerified(credentialId);
+      return "ACTIVE";
+    } catch (e) {
+      if (e instanceof AlloggiatiAuthError) {
+        await this.repo.updateStatus(credentialId, "INVALID");
+        return "INVALID";
+      }
       throw e;
     }
   }

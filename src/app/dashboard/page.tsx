@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { signOut } from "@/auth";
@@ -22,6 +23,20 @@ export default async function DashboardPage() {
         Sei in Organization <strong>{ctx.current.organizationName}</strong> — ruolo{" "}
         <strong>{ctx.current.role}</strong>.
       </p>
+
+      <nav style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", margin: "1.25rem 0" }}>
+        <Link
+          href="/credentials"
+          style={{
+            padding: "0.5rem 0.9rem",
+            border: "1px solid #ccc",
+            borderRadius: 6,
+            textDecoration: "none",
+          }}
+        >
+          🔑 Credenziali Alloggiati
+        </Link>
+      </nav>
 
       {ctx.organizations.length > 1 && (
         <section>

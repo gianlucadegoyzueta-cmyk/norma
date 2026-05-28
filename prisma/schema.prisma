@@ -337,6 +337,21 @@ model DocumentType {
   guests Guest[]
 }
 
+// --------- CAVEAU SEGRETI (cifrati) ---------
+
+/// Una riga = un AlloggiatiSecret (utente/password/wskey) cifrato con AES-256-GCM.
+/// `AlloggiatiCredential.secretRef` punta all'id di questa riga. È il backend DUREVOLE del
+/// SecretsVault: a differenza del vault su file locale, sopravvive su runtime serverless (Vercel).
+/// La chiave di cifratura sta SOLO in env (SECRETS_LOCAL_KEY), mai nel DB.
+model Secret {
+  id        String   @id @default(cuid())
+  iv        String // nonce GCM (hex)
+  authTag   String // tag di autenticazione GCM (hex)
+  data      String // ciphertext (hex)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // --------- TASSA DI SOGGIORNO (predisposta, NON implementata) ---------
 
 /// Configurazione tariffaria per Comune. Regole in JSON per ora (ogni Comune ha regole
