@@ -20,6 +20,7 @@ export * from "./adapters/SoapAlloggiatiSender";
 export * from "./adapters/SoapTabellaClient";
 export * from "./adapters/FakeTabellaClient";
 export * from "./services/outbox.service";
+export * from "./services/verify.service";
 export * from "./services/credential.service";
 export * from "./services/table-sync.service";
 export * from "./services/record-builder.service";

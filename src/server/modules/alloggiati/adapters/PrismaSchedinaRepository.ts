@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import type { PrismaClient, SchedinaStatus } from "@prisma/client";
+import type { PrismaClient, SchedinaStatus, SubmissionChannel } from "@prisma/client";
 import { computeDedupKey } from "../domain/dedup";
 import { assertValidTransition, type StatusDecision } from "../domain/transitions";
 import type {
@@ -8,6 +8,23 @@ import type {
   SchedinaRecord,
   SchedinaRepository,
 } from "../ports/SchedinaRepository";
+
+/** Riga schedina come serve alla dashboard outbox (relazioni risolte). */
+export interface SchedinaListItem {
+  id: string;
+  status: SchedinaStatus;
+  channel: SubmissionChannel;
+  guestName: string;
+  propertyName: string;
+  credentialId: string;
+  credentialLabel: string;
+  deadlineAt: Date;
+  sentAt: Date | null;
+  acquiredAt: Date | null;
+  attempts: number;
+  lastErrorCod: string | null;
+  lastErrorDes: string | null;
+}
 
 const SELECT = {
   id: true,
@@ -64,6 +81,53 @@ export class PrismaSchedinaRepository implements SchedinaRepository {
       where: { credentialId, status: "PENDING" },
       select: SELECT,
     });
+  }
+
+  /**
+   * Elenco delle schedine di un'organizzazione per la dashboard outbox. Lettura di sola
+   * visualizzazione (non fa parte del PORT, focalizzato sulla meccanica dell'invio).
+   * Ordinato per scadenza crescente: le più urgenti in cima.
+   */
+  async listForOrganization(organizationId: string): Promise<SchedinaListItem[]> {
+    const rows = await this.prisma.schedina.findMany({
+      where: { organizationId },
+      orderBy: { deadlineAt: "asc" },
+      select: {
+        id: true,
+        status: true,
+        channel: true,
+        deadlineAt: true,
+        sentAt: true,
+        acquiredAt: true,
+        attempts: true,
+        lastErrorCod: true,
+        lastErrorDes: true,
+        credentialId: true,
+        guest: {
+          select: {
+            firstName: true,
+            lastName: true,
+            stay: { select: { property: { select: { name: true } } } },
+          },
+        },
+        credential: { select: { label: true } },
+      },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      status: r.status,
+      channel: r.channel,
+      guestName: `${r.guest.lastName} ${r.guest.firstName}`,
+      propertyName: r.guest.stay.property.name,
+      credentialId: r.credentialId,
+      credentialLabel: r.credential.label,
+      deadlineAt: r.deadlineAt,
+      sentAt: r.sentAt,
+      acquiredAt: r.acquiredAt,
+      attempts: r.attempts,
+      lastErrorCod: r.lastErrorCod,
+      lastErrorDes: r.lastErrorDes,
+    }));
   }
 
   async markSending(id: string): Promise<void> {
