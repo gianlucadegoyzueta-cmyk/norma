@@ -17,11 +17,14 @@ import { prisma } from "@/server/db";
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  // Dominio di produzione dietro il proxy di Vercel: fidati dell'host della richiesta così i
+  // magic link usano l'URL canonico (https://norma.casa, da AUTH_URL) e non l'host *.vercel.app.
+  trustHost: true,
   session: { strategy: "database" },
   pages: { signIn: "/login" },
   providers: [
     Nodemailer({
-      from: process.env.EMAIL_FROM ?? "no-reply@compliance.local",
+      from: process.env.EMAIL_FROM ?? "no-reply@norma.casa",
       // `server` è richiesto dal provider ma NON viene usato: l'invio è in sendVerificationRequest
       // (Resend via HTTP). Placeholder per superare la validazione anche senza SMTP.
       server: process.env.EMAIL_SERVER || {
@@ -42,7 +45,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           body: JSON.stringify({
             from: provider.from,
             to: identifier,
-            subject: "Accedi a Compliance Affitti Brevi",
+            subject: "Accedi a Norma",
             text: `Accedi cliccando questo link (valido a breve termine):\n\n${url}\n\nSe non hai richiesto l'accesso, ignora questa email.`,
           }),
         });

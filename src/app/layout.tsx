@@ -17,12 +17,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Compliance — Affitti Brevi",
-    template: "%s · Compliance",
+    default: "Norma — Affitti Brevi",
+    template: "%s · Norma",
   },
   description:
-    "SaaS di compliance per affitti brevi in Italia: gestione credenziali e invii ad Alloggiati Web.",
-  applicationName: "Compliance",
+    "Norma: SaaS di compliance per affitti brevi in Italia — gestione credenziali e invii ad Alloggiati Web.",
+  applicationName: "Norma",
 };
 
 export const viewport: Viewport = {

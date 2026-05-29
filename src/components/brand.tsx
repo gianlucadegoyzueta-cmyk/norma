@@ -8,7 +8,7 @@ export function Brand({ className }: { className?: string }) {
         <ShieldCheck className="size-5" />
       </span>
       <span>
-        Compliance
+        Norma
         <span className="text-muted-foreground ml-1">· Affitti Brevi</span>
       </span>
     </span>

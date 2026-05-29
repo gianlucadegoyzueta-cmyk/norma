@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { Building2, ChevronRight, KeyRound, LogOut } from "lucide-react";
+import { BedDouble, Building2, ChevronRight, FileText, KeyRound, LogOut } from "lucide-react";
 import { signOut } from "@/auth";
 import { CURRENT_ORG_COOKIE, getCurrentContext } from "@/server/auth/session";
 import { SiteHeader } from "@/components/site-header";
@@ -65,6 +65,68 @@ export default async function DashboardPage() {
                 <CardDescription>
                   Gestisci le credenziali Alloggiati Web, salvate cifrate nel vault e verificate in
                   tempo reale.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          <Link
+            href="/properties"
+            className="group focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
+          >
+            <Card className="h-full transition-shadow group-hover:shadow-md">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
+                    <Building2 className="size-5" />
+                  </span>
+                  <ChevronRight className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5" />
+                </div>
+                <CardTitle className="mt-2">Immobili</CardTitle>
+                <CardDescription>
+                  Registra gli immobili e collegali a una credenziale Alloggiati per l&apos;invio
+                  delle schedine.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          <Link
+            href="/stays"
+            className="group focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
+          >
+            <Card className="h-full transition-shadow group-hover:shadow-md">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
+                    <BedDouble className="size-5" />
+                  </span>
+                  <ChevronRight className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5" />
+                </div>
+                <CardTitle className="mt-2">Soggiorni</CardTitle>
+                <CardDescription>
+                  Registra i soggiorni e gli ospiti; da qui genererai le schedine per Alloggiati.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          <Link
+            href="/schedine"
+            className="group focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
+          >
+            <Card className="h-full transition-shadow group-hover:shadow-md">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
+                    <FileText className="size-5" />
+                  </span>
+                  <ChevronRight className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5" />
+                </div>
+                <CardTitle className="mt-2">Schedine</CardTitle>
+                <CardDescription>
+                  L&apos;outbox degli invii: stato delle schedine e scadenze, le più urgenti in
+                  cima.
                 </CardDescription>
               </CardHeader>
             </Card>
