@@ -29,7 +29,11 @@ function encrypt(secret: AlloggiatiSecret): Blob {
   const iv = randomBytes(12);
   const cipher = createCipheriv(ALGO, getKey(), iv);
   const data = Buffer.concat([cipher.update(JSON.stringify(secret), "utf8"), cipher.final()]);
-  return { iv: iv.toString("hex"), authTag: cipher.getAuthTag().toString("hex"), data: data.toString("hex") };
+  return {
+    iv: iv.toString("hex"),
+    authTag: cipher.getAuthTag().toString("hex"),
+    data: data.toString("hex"),
+  };
 }
 
 function decrypt(blob: Blob): AlloggiatiSecret {

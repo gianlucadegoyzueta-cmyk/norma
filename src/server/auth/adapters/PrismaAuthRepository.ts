@@ -10,7 +10,10 @@ export class PrismaAuthRepository implements AuthRepository {
   }
 
   /** Crea Organization + Membership OWNER in un'unica scrittura atomica (nested create). */
-  async createPersonalOrganization(userId: string, name: string): Promise<{ organizationId: string }> {
+  async createPersonalOrganization(
+    userId: string,
+    name: string,
+  ): Promise<{ organizationId: string }> {
     const org = await this.prisma.organization.create({
       data: {
         name,

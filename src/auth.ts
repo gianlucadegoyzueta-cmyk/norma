@@ -24,7 +24,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       from: process.env.EMAIL_FROM ?? "no-reply@compliance.local",
       // `server` è richiesto dal provider ma NON viene usato: l'invio è in sendVerificationRequest
       // (Resend via HTTP). Placeholder per superare la validazione anche senza SMTP.
-      server: process.env.EMAIL_SERVER || { host: "localhost", port: 587, auth: { user: "", pass: "" } },
+      server: process.env.EMAIL_SERVER || {
+        host: "localhost",
+        port: 587,
+        auth: { user: "", pass: "" },
+      },
       async sendVerificationRequest({ identifier, url, provider }) {
         const apiKey = process.env.RESEND_API_KEY;
         if (!apiKey) {
@@ -59,7 +63,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async createUser({ user }) {
       // Provisioning della prima Organization (OWNER) al primo accesso.
       if (user.id) {
-        await provisionNewUser({ id: user.id, email: user.email ?? null }, new PrismaAuthRepository(prisma));
+        await provisionNewUser(
+          { id: user.id, email: user.email ?? null },
+          new PrismaAuthRepository(prisma),
+        );
       }
     },
   },

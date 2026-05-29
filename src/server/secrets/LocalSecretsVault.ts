@@ -1,9 +1,4 @@
-import {
-  createCipheriv,
-  createDecipheriv,
-  randomBytes,
-  randomUUID,
-} from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes, randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -49,11 +44,7 @@ export class LocalSecretsVault implements SecretsVault {
   async retrieve(ref: string): Promise<AlloggiatiSecret> {
     const raw = await readFile(this.file(ref), "utf8");
     const blob = JSON.parse(raw) as EncryptedBlob;
-    const decipher = createDecipheriv(
-      ALGO,
-      getKey(),
-      Buffer.from(blob.iv, "hex"),
-    );
+    const decipher = createDecipheriv(ALGO, getKey(), Buffer.from(blob.iv, "hex"));
     decipher.setAuthTag(Buffer.from(blob.authTag, "hex"));
     const decrypted = Buffer.concat([
       decipher.update(Buffer.from(blob.data, "hex")),

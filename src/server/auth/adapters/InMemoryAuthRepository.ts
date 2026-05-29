@@ -21,7 +21,10 @@ export class InMemoryAuthRepository implements AuthRepository {
     return this.mems.filter((m) => m.userId === userId).length;
   }
 
-  async createPersonalOrganization(userId: string, name: string): Promise<{ organizationId: string }> {
+  async createPersonalOrganization(
+    userId: string,
+    name: string,
+  ): Promise<{ organizationId: string }> {
     const id = `org_${++this.seq}`;
     this.orgs.push({ id, name });
     this.mems.push({ userId, organizationId: id, role: "OWNER" });
@@ -39,7 +42,12 @@ export class InMemoryAuthRepository implements AuthRepository {
   }
 
   /** Helper per i test: aggiunge una membership arbitraria (es. simulare multi-org o altri utenti). */
-  addMembership(userId: string, organizationId: string, organizationName: string, role: MembershipRole): void {
+  addMembership(
+    userId: string,
+    organizationId: string,
+    organizationName: string,
+    role: MembershipRole,
+  ): void {
     if (!this.orgs.some((o) => o.id === organizationId)) {
       this.orgs.push({ id: organizationId, name: organizationName });
     }

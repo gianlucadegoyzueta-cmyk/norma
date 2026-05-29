@@ -18,7 +18,9 @@ if (!password) {
   process.exit(1);
 }
 if (/^\[.*\]$/.test(password)) {
-  console.error("⚠️  La password ha parentesi quadre [ ]: rimuovile (non fanno parte della password).");
+  console.error(
+    "⚠️  La password ha parentesi quadre [ ]: rimuovile (non fanno parte della password).",
+  );
   process.exit(1);
 }
 
@@ -36,9 +38,13 @@ env = env.replace(
 );
 
 if (count < 2) {
-  console.error(`⚠️  Attese 2 righe (DATABASE_URL + DIRECT_URL), trovate ${count}. Controlla il .env.`);
+  console.error(
+    `⚠️  Attese 2 righe (DATABASE_URL + DIRECT_URL), trovate ${count}. Controlla il .env.`,
+  );
   process.exit(1);
 }
 
 writeFileSync(envUrl, env);
-console.log(`✅ Password impostata in ${count} URL (lunghezza ${password.length}). Ora esegui: npx prisma migrate deploy`);
+console.log(
+  `✅ Password impostata in ${count} URL (lunghezza ${password.length}). Ora esegui: npx prisma migrate deploy`,
+);

@@ -28,7 +28,9 @@ export async function onboardCredentialAction(
 
   const label = String(formData.get("label") ?? "").trim();
   const category = String(formData.get("category") ?? "SINGOLA") as CredentialCategory;
-  const provincia = String(formData.get("provincia") ?? "").trim().toUpperCase();
+  const provincia = String(formData.get("provincia") ?? "")
+    .trim()
+    .toUpperCase();
   const utente = String(formData.get("utente") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const wskey = String(formData.get("wskey") ?? "").trim();

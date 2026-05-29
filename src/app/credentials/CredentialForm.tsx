@@ -1,17 +1,15 @@
 "use client";
 
 import { useActionState } from "react";
+import { CheckCircle2, Loader2, Lock, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { onboardCredentialAction } from "./actions";
 
 type OnboardResult = { ok: boolean; message: string };
-
-const inputStyle: React.CSSProperties = {
-  padding: "0.5rem",
-  border: "1px solid #ccc",
-  borderRadius: 4,
-  font: "inherit",
-};
-const labelStyle: React.CSSProperties = { display: "grid", gap: 4 };
 
 export function CredentialForm() {
   const [state, action, pending] = useActionState<OnboardResult | null, FormData>(
@@ -20,49 +18,77 @@ export function CredentialForm() {
   );
 
   return (
-    <form action={action} style={{ display: "grid", gap: "0.7rem", maxWidth: 420 }}>
-      <label style={labelStyle}>
-        <span>Etichetta</span>
-        <input name="label" required placeholder="es. Casa Trastevere" style={inputStyle} />
-      </label>
+    <form action={action} className="grid gap-4">
+      <div className="grid gap-2">
+        <Label htmlFor="label">Etichetta</Label>
+        <Input id="label" name="label" required placeholder="es. Casa Trastevere" />
+      </div>
 
-      <label style={labelStyle}>
-        <span>Tipo credenziale</span>
-        <select name="category" defaultValue="SINGOLA" style={inputStyle}>
-          <option value="SINGOLA">Struttura singola</option>
-          <option value="GESTIONE_APPARTAMENTI">Gestione appartamenti</option>
-        </select>
-      </label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-2">
+          <Label htmlFor="category">Tipo credenziale</Label>
+          <Select id="category" name="category" defaultValue="SINGOLA">
+            <option value="SINGOLA">Struttura singola</option>
+            <option value="GESTIONE_APPARTAMENTI">Gestione appartamenti</option>
+          </Select>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="provincia">Provincia (sigla)</Label>
+          <Input
+            id="provincia"
+            name="provincia"
+            required
+            maxLength={2}
+            placeholder="RM"
+            className="uppercase"
+          />
+        </div>
+      </div>
 
-      <label style={labelStyle}>
-        <span>Provincia (sigla)</span>
-        <input name="provincia" required maxLength={2} placeholder="RM" style={{ ...inputStyle, textTransform: "uppercase" }} />
-      </label>
+      <div className="bg-muted text-muted-foreground my-1 flex items-center gap-2 rounded-md px-3 py-2 text-xs">
+        <Lock className="size-3.5 shrink-0" />
+        Credenziali Alloggiati Web — salvate cifrate nel vault, mai in chiaro.
+      </div>
 
-      <hr style={{ width: "100%", border: 0, borderTop: "1px solid #eee" }} />
-      <p style={{ margin: 0, color: "#666", fontSize: "0.85rem" }}>
-        Credenziali Alloggiati Web (salvate cifrate nel vault, mai in chiaro):
-      </p>
+      <div className="grid gap-2">
+        <Label htmlFor="utente">Utente</Label>
+        <Input id="utente" name="utente" required autoComplete="off" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            required
+            autoComplete="new-password"
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="wskey">WSKey</Label>
+          <Input id="wskey" name="wskey" type="password" required autoComplete="off" />
+        </div>
+      </div>
 
-      <label style={labelStyle}>
-        <span>Utente</span>
-        <input name="utente" required autoComplete="off" style={inputStyle} />
-      </label>
-      <label style={labelStyle}>
-        <span>Password</span>
-        <input name="password" type="password" required autoComplete="new-password" style={inputStyle} />
-      </label>
-      <label style={labelStyle}>
-        <span>WSKey</span>
-        <input name="wskey" type="password" required autoComplete="off" style={inputStyle} />
-      </label>
-
-      <button type="submit" disabled={pending} style={{ padding: "0.6rem 1rem", fontWeight: 600, cursor: pending ? "wait" : "pointer" }}>
+      <Button type="submit" disabled={pending} className="mt-1 w-fit">
+        {pending ? <Loader2 className="animate-spin" /> : null}
         {pending ? "Verifica in corso…" : "Aggiungi e verifica"}
-      </button>
+      </Button>
 
       {state && (
-        <p role="status" style={{ margin: 0, color: state.ok ? "#137333" : "#c5221f", fontWeight: 500 }}>
+        <p
+          role="status"
+          className={cn(
+            "flex items-center gap-2 text-sm font-medium",
+            state.ok ? "text-success" : "text-destructive",
+          )}
+        >
+          {state.ok ? (
+            <CheckCircle2 className="size-4 shrink-0" />
+          ) : (
+            <XCircle className="size-4 shrink-0" />
+          )}
           {state.message}
         </p>
       )}
