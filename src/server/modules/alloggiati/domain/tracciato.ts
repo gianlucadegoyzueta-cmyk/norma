@@ -124,7 +124,9 @@ function numField(value: number, len: number, name: string): string {
 function formatDateIT(iso: string, name: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso ?? "");
   if (!m) {
-    throw new TracciatoError(`Campo "${name}" non valido: atteso ISO YYYY-MM-DD, ricevuto "${iso}".`);
+    throw new TracciatoError(
+      `Campo "${name}" non valido: atteso ISO YYYY-MM-DD, ricevuto "${iso}".`,
+    );
   }
   const [, year, month, day] = m;
   const mm = Number(month);
@@ -137,7 +139,9 @@ function formatDateIT(iso: string, name: string): string {
 
 function validateGiorni(n: number): number {
   if (!Number.isInteger(n) || n < 1 || n > 30) {
-    throw new TracciatoError(`Giorni di permanenza non validi: ${n} (ammessi 1..30, manuale "Massimo 30 gg").`);
+    throw new TracciatoError(
+      `Giorni di permanenza non validi: ${n} (ammessi 1..30, manuale "Massimo 30 gg").`,
+    );
   }
   return n;
 }
@@ -164,7 +168,8 @@ export function buildTracciatoRecord(
   const tipoCode = TIPO_ALLOGGIATO_CODE[input.tipoAlloggiato];
   if (!tipoCode) throw new TracciatoError(`Tipo alloggiato non valido: "${input.tipoAlloggiato}".`);
 
-  if (!SEX_CODE[input.sesso]) throw new TracciatoError(`Sesso non valido: "${input.sesso}" (atteso M o F).`);
+  if (!SEX_CODE[input.sesso])
+    throw new TracciatoError(`Sesso non valido: "${input.sesso}" (atteso M o F).`);
   if (!input.cognome?.trim()) throw new TracciatoError("Cognome obbligatorio.");
   if (!input.nome?.trim()) throw new TracciatoError("Nome obbligatorio.");
 
@@ -191,7 +196,11 @@ export function buildTracciatoRecord(
     }
     tipoDoc = codeField(input.tipoDocumentoCode, FIELD_LAYOUT.tipoDocumento.len, "Tipo Documento");
     numDoc = textField(input.numeroDocumento, FIELD_LAYOUT.numeroDocumento.len);
-    luogoDoc = codeField(input.luogoRilascioCode, FIELD_LAYOUT.luogoRilascioDocumento.len, "Luogo Rilascio");
+    luogoDoc = codeField(
+      input.luogoRilascioCode,
+      FIELD_LAYOUT.luogoRilascioDocumento.len,
+      "Luogo Rilascio",
+    );
   } else {
     tipoDoc = blank(FIELD_LAYOUT.tipoDocumento.len);
     numDoc = blank(FIELD_LAYOUT.numeroDocumento.len);
@@ -203,23 +212,87 @@ export function buildTracciatoRecord(
   const buffer: string[] = new Array<string>(totalLen).fill(" ");
   const L = FIELD_LAYOUT;
 
-  place(buffer, L.tipoAlloggiato.start, codeField(tipoCode, L.tipoAlloggiato.len, "Tipo Alloggiato"), L.tipoAlloggiato.len, "Tipo Alloggiato");
-  place(buffer, L.dataArrivo.start, formatDateIT(input.dataArrivo, "Data Arrivo"), L.dataArrivo.len, "Data Arrivo");
-  place(buffer, L.giorniPermanenza.start, numField(validateGiorni(input.giorniPermanenza), L.giorniPermanenza.len, "Giorni Permanenza"), L.giorniPermanenza.len, "Giorni Permanenza");
+  place(
+    buffer,
+    L.tipoAlloggiato.start,
+    codeField(tipoCode, L.tipoAlloggiato.len, "Tipo Alloggiato"),
+    L.tipoAlloggiato.len,
+    "Tipo Alloggiato",
+  );
+  place(
+    buffer,
+    L.dataArrivo.start,
+    formatDateIT(input.dataArrivo, "Data Arrivo"),
+    L.dataArrivo.len,
+    "Data Arrivo",
+  );
+  place(
+    buffer,
+    L.giorniPermanenza.start,
+    numField(validateGiorni(input.giorniPermanenza), L.giorniPermanenza.len, "Giorni Permanenza"),
+    L.giorniPermanenza.len,
+    "Giorni Permanenza",
+  );
   place(buffer, L.cognome.start, textField(input.cognome, L.cognome.len), L.cognome.len, "Cognome");
   place(buffer, L.nome.start, textField(input.nome, L.nome.len), L.nome.len, "Nome");
   place(buffer, L.sesso.start, SEX_CODE[input.sesso], L.sesso.len, "Sesso");
-  place(buffer, L.dataNascita.start, formatDateIT(input.dataNascita, "Data Nascita"), L.dataNascita.len, "Data Nascita");
-  place(buffer, L.comuneNascita.start, hasComune ? codeField(input.comuneNascitaCode!, L.comuneNascita.len, "Comune Nascita") : blank(L.comuneNascita.len), L.comuneNascita.len, "Comune Nascita");
-  place(buffer, L.provinciaNascita.start, hasProvincia ? codeField(input.provinciaNascita!, L.provinciaNascita.len, "Provincia Nascita") : blank(L.provinciaNascita.len), L.provinciaNascita.len, "Provincia Nascita");
-  place(buffer, L.statoNascita.start, codeField(input.statoNascitaCode, L.statoNascita.len, "Stato Nascita"), L.statoNascita.len, "Stato Nascita");
-  place(buffer, L.cittadinanza.start, codeField(input.cittadinanzaCode, L.cittadinanza.len, "Cittadinanza"), L.cittadinanza.len, "Cittadinanza");
+  place(
+    buffer,
+    L.dataNascita.start,
+    formatDateIT(input.dataNascita, "Data Nascita"),
+    L.dataNascita.len,
+    "Data Nascita",
+  );
+  place(
+    buffer,
+    L.comuneNascita.start,
+    hasComune
+      ? codeField(input.comuneNascitaCode!, L.comuneNascita.len, "Comune Nascita")
+      : blank(L.comuneNascita.len),
+    L.comuneNascita.len,
+    "Comune Nascita",
+  );
+  place(
+    buffer,
+    L.provinciaNascita.start,
+    hasProvincia
+      ? codeField(input.provinciaNascita!, L.provinciaNascita.len, "Provincia Nascita")
+      : blank(L.provinciaNascita.len),
+    L.provinciaNascita.len,
+    "Provincia Nascita",
+  );
+  place(
+    buffer,
+    L.statoNascita.start,
+    codeField(input.statoNascitaCode, L.statoNascita.len, "Stato Nascita"),
+    L.statoNascita.len,
+    "Stato Nascita",
+  );
+  place(
+    buffer,
+    L.cittadinanza.start,
+    codeField(input.cittadinanzaCode, L.cittadinanza.len, "Cittadinanza"),
+    L.cittadinanza.len,
+    "Cittadinanza",
+  );
   place(buffer, L.tipoDocumento.start, tipoDoc, L.tipoDocumento.len, "Tipo Documento");
   place(buffer, L.numeroDocumento.start, numDoc, L.numeroDocumento.len, "Numero Documento");
-  place(buffer, L.luogoRilascioDocumento.start, luogoDoc, L.luogoRilascioDocumento.len, "Luogo Rilascio");
+  place(
+    buffer,
+    L.luogoRilascioDocumento.start,
+    luogoDoc,
+    L.luogoRilascioDocumento.len,
+    "Luogo Rilascio",
+  );
 
   if (fileUnico) {
-    place(buffer, L.idAppartamento.start, numField(options.idAppartamento!, L.idAppartamento.len, "ID Appartamento"), L.idAppartamento.len, "ID Appartamento");
+    place(
+      buffer,
+      L.idAppartamento.start,
+      numField(options.idAppartamento!, L.idAppartamento.len, "ID Appartamento"),
+      L.idAppartamento.len,
+      "ID Appartamento",
+    );
   }
 
   const record = buffer.join("");

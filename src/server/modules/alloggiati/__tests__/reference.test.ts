@@ -14,7 +14,12 @@ const HEADER_LUOGHI = "Codice;Descrizione;Provincia;DataFineVal";
 
 describe("parser Luoghi (split Comuni / Stati esteri)", () => {
   it("splitta su Provincia=='ES': Comuni vs Stati", () => {
-    const csv = [HEADER_LUOGHI, "405028001;ABANO TERME;PD;", "100000100;ITALIA;ES;", "100000215;FRANCIA;ES;"].join("\n");
+    const csv = [
+      HEADER_LUOGHI,
+      "405028001;ABANO TERME;PD;",
+      "100000100;ITALIA;ES;",
+      "100000215;FRANCIA;ES;",
+    ].join("\n");
     const { comuni, countries } = parseLuoghiCsv(csv, { skipHeader: true });
     expect(comuni).toEqual([{ code: "405028001", name: "ABANO TERME", provincia: "PD" }]);
     expect(countries).toEqual([
@@ -89,7 +94,13 @@ describe("TableSyncService", () => {
 
   it("Tipi Alloggiato privi di un codice atteso (19) → TableSyncError, niente upsert", async () => {
     const repo = new InMemoryReferenceTableRepository();
-    const senzaFamiliare = ["Codice;Descrizione", "16;OSPITE", "17;CAPO FAM", "18;CAPO GRP", "20;MEMBRO"].join("\n");
+    const senzaFamiliare = [
+      "Codice;Descrizione",
+      "16;OSPITE",
+      "17;CAPO FAM",
+      "18;CAPO GRP",
+      "20;MEMBRO",
+    ].join("\n");
     const client = new FakeTabellaClient({ TIPI_ALLOGGIATO: senzaFamiliare });
     await expect(new TableSyncService(client, repo).syncAll()).rejects.toThrow(TableSyncError);
     expect(await repo.counts()).toEqual({ comuni: 0, countries: 0, documentTypes: 0 });

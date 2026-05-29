@@ -66,7 +66,9 @@ Prima di OGNI script che tocca il sistema reale compare un banner con ~5 secondi
 il sistema reale.
 
 ### Fase A — Credenziali nel `.env`
+
 Aggiungi al `.env` locale (MAI committato: `.env` è in `.gitignore`):
+
 ```
 ALLOGGIATI_UTENTE="..."
 ALLOGGIATI_PASSWORD="..."
@@ -74,6 +76,7 @@ ALLOGGIATI_WSKEY="..."
 ```
 
 ### Fase B — Live-check (Token + Test, NIENTE Send)
+
 - **Comando:** `npm run alloggiati:live-check`
 - **Fa:** GenerateToken → probe idempotenza token → Authentication_Test → `Test` su una schedina di
   esempio (codici placeholder), con report dettagliato. Mai `Send`.
@@ -81,6 +84,7 @@ ALLOGGIATI_WSKEY="..."
 - ⏸ **STOP** — si guarda l'output insieme.
 
 ### Fase C — Sincronizzazione tabelle
+
 - **Comando:** `npm run alloggiati:sync-tables`
 - **Fa:** scarica `Luoghi` (Comuni + Stati esteri, splittati su Provincia=="ES") + `Tipi_Documento`
   via `Tabella` e popola `Comune`/`Country`/`DocumentType` (upsert idempotente). Mai `Send`.
@@ -88,6 +92,7 @@ ALLOGGIATI_WSKEY="..."
 - ⏸ **STOP** — l'health-check deve passare a `ready: true`.
 
 ### Fase D — Test con DATI REALI (ancora NIENTE Send)
+
 - Solo dopo che A + B + C sono OK e gli output sono stati visti.
 - Si rifà il `Test` su una schedina costruita con **codici reali** (dalle tabelle appena
   sincronizzate) + un **ospite di esempio** della struttura.
@@ -98,7 +103,9 @@ ALLOGGIATI_WSKEY="..."
 - ⏸ **STOP.**
 
 ### Fase E — STOP prima del Send
+
 Il `Send` reale (**irreversibile**) NON parte senza una conferma esplicita scritta:
+
 > "ok procedi col Send reale"
 
 Lo decidiamo insieme dopo aver visto i risultati del `Test`.

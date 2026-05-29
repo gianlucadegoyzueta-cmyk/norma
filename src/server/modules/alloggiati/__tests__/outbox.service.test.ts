@@ -8,7 +8,10 @@ import { SchedinaOutboxService } from "../services/outbox.service";
 const ORG = "org_1";
 const CRED = "cred_1";
 
-function intent(overrides: Partial<CreateIntentInput["dedup"]> = {}, guestId = "g1"): CreateIntentInput {
+function intent(
+  overrides: Partial<CreateIntentInput["dedup"]> = {},
+  guestId = "g1",
+): CreateIntentInput {
   return {
     organizationId: ORG,
     credentialId: CRED,
@@ -68,7 +71,11 @@ describe("SchedinaOutboxService — orchestrazione", () => {
   });
 
   it("rifiuto: PENDING → SENDING → REJECTED", async () => {
-    sender.setBehaviour({ mode: "all-rejected", errorCod: "12", errorDes: "Data di Arrivo Errata" });
+    sender.setBehaviour({
+      mode: "all-rejected",
+      errorCod: "12",
+      errorDes: "Data di Arrivo Errata",
+    });
     await service.processCredentialBatch(CRED);
     expect((await repo.findById(schedinaId))?.status).toBe(SchedinaStatus.REJECTED);
   });

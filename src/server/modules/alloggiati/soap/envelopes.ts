@@ -24,7 +24,11 @@ function envelope(innerBody: string): string {
   );
 }
 
-export function buildGenerateTokenEnvelope(utente: string, password: string, wsKey: string): string {
+export function buildGenerateTokenEnvelope(
+  utente: string,
+  password: string,
+  wsKey: string,
+): string {
   return envelope(
     `<GenerateToken xmlns="${SERVICE_NS}">` +
       `<Utente>${escapeXml(utente)}</Utente>` +

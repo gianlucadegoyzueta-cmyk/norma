@@ -1,5 +1,9 @@
 import type { PrismaClient } from "@prisma/client";
-import { type ReferenceTables, type ResolverGuest, createReferenceTables } from "../domain/resolver";
+import {
+  type ReferenceTables,
+  type ResolverGuest,
+  createReferenceTables,
+} from "../domain/resolver";
 import type { ReferenceTablesLoader } from "../ports/ReferenceTablesLoader";
 
 /**

@@ -63,7 +63,11 @@ describe("readEsito + Dettaglio (Test)", () => {
     expect(readEsito(resp.TestResult).esito).toBe(true);
     const righe = toArray(resp.result.Dettaglio.EsitoOperazioneServizio).map(readEsito);
     expect(righe).toHaveLength(2);
-    expect(righe[0]).toMatchObject({ esito: false, errorCod: "11", errorDes: "SCHEDINA_FORMATO_NON_CORRETTO" });
+    expect(righe[0]).toMatchObject({
+      esito: false,
+      errorCod: "11",
+      errorDes: "SCHEDINA_FORMATO_NON_CORRETTO",
+    });
     expect(righe[1].esito).toBe(true);
   });
 });

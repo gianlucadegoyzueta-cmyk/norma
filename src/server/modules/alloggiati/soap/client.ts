@@ -78,7 +78,10 @@ export class AlloggiatiSoapClient {
   }
 
   async generateToken(secret: AlloggiatiSecret): Promise<TokenResult> {
-    const body = await this.call("GenerateToken", buildGenerateTokenEnvelope(secret.utente, secret.password, secret.wskey));
+    const body = await this.call(
+      "GenerateToken",
+      buildGenerateTokenEnvelope(secret.utente, secret.password, secret.wskey),
+    );
     const resp = (body.GenerateTokenResponse ?? {}) as Record<string, unknown>;
     const esito = readEsito(resp.result);
     if (!esito.esito) {
@@ -98,7 +101,10 @@ export class AlloggiatiSoapClient {
   }
 
   async authenticationTest(utente: string, token: string): Promise<void> {
-    const body = await this.call("Authentication_Test", buildAuthenticationTestEnvelope(utente, token));
+    const body = await this.call(
+      "Authentication_Test",
+      buildAuthenticationTestEnvelope(utente, token),
+    );
     const resp = (body.Authentication_TestResponse ?? {}) as Record<string, unknown>;
     const esito = readEsito(resp.Authentication_TestResult);
     if (!esito.esito) {
@@ -134,10 +140,18 @@ export class AlloggiatiSoapClient {
     const resp = (body[responseKey] ?? {}) as Record<string, unknown>;
     const overall = readEsito(resp[resultKey]);
     const result = (resp.result ?? {}) as Record<string, unknown>;
-    const dettaglio = toArray((result.Dettaglio as Record<string, unknown> | undefined)?.EsitoOperazioneServizio);
+    const dettaglio = toArray(
+      (result.Dettaglio as Record<string, unknown> | undefined)?.EsitoOperazioneServizio,
+    );
     const righe: BatchRowResult[] = dettaglio.map((d, i) => {
       const e = readEsito(d);
-      return { index: i, esito: e.esito, errorCod: e.errorCod, errorDes: e.errorDes, errorDettaglio: e.errorDettaglio };
+      return {
+        index: i,
+        esito: e.esito,
+        errorCod: e.errorCod,
+        errorDes: e.errorDes,
+        errorDettaglio: e.errorDettaglio,
+      };
     });
     return {
       overall,
@@ -184,7 +198,10 @@ export class AlloggiatiSoapClient {
         signal: controller.signal,
       });
     } catch (e) {
-      throw new AlloggiatiTransientError(`Errore di rete chiamando ${method}: ${(e as Error).message}`, { cause: e });
+      throw new AlloggiatiTransientError(
+        `Errore di rete chiamando ${method}: ${(e as Error).message}`,
+        { cause: e },
+      );
     } finally {
       clearTimeout(timer);
     }
@@ -195,12 +212,17 @@ export class AlloggiatiSoapClient {
       parsed = parseEnvelope(text);
     } catch (e) {
       if (!res.ok) {
-        throw new AlloggiatiTransientError(`HTTP ${res.status} su ${method}`, { httpStatus: res.status });
+        throw new AlloggiatiTransientError(`HTTP ${res.status} su ${method}`, {
+          httpStatus: res.status,
+        });
       }
-      throw new AlloggiatiProtocolError(`Risposta non interpretabile da ${method}: ${(e as Error).message}`, {
-        httpStatus: res.status,
-        bodyExcerpt: text.slice(0, 300),
-      });
+      throw new AlloggiatiProtocolError(
+        `Risposta non interpretabile da ${method}: ${(e as Error).message}`,
+        {
+          httpStatus: res.status,
+          bodyExcerpt: text.slice(0, 300),
+        },
+      );
     }
 
     // Un SOAP Fault è informativo anche con HTTP 500: lo gestiamo prima dello status.
@@ -211,7 +233,9 @@ export class AlloggiatiSoapClient {
       );
     }
     if (!res.ok) {
-      throw new AlloggiatiTransientError(`HTTP ${res.status} su ${method}`, { httpStatus: res.status });
+      throw new AlloggiatiTransientError(`HTTP ${res.status} su ${method}`, {
+        httpStatus: res.status,
+      });
     }
     return parsed.body;
   }

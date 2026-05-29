@@ -1,5 +1,9 @@
 import type { SchedinaRepository } from "../../alloggiati";
-import { buildSchedinaIntents, computeSendWindow, isArrivalWithinSendWindow } from "../domain/generation";
+import {
+  buildSchedinaIntents,
+  computeSendWindow,
+  isArrivalWithinSendWindow,
+} from "../domain/generation";
 import type { Party } from "../domain/parties";
 import type { CreateStayInput, ReferenceTablesLoader, StaysRepository } from "../ports";
 
@@ -44,7 +48,11 @@ export class StaysService {
     return this.stays.createStay(input);
   }
 
-  async addGuests(stayId: string, organizationId: string, parties: Party[]): Promise<{ guestIds: string[] }> {
+  async addGuests(
+    stayId: string,
+    organizationId: string,
+    parties: Party[],
+  ): Promise<{ guestIds: string[] }> {
     if (parties.length === 0) {
       throw new StaysError("Nessun ospite da aggiungere.");
     }

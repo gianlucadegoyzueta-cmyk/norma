@@ -92,7 +92,9 @@ export function resolveTracciatoInput(
   // --- Stato di nascita e Cittadinanza (SEMPRE obbligatori) ---
   const statoNascita = refs.country(guest.birthCountryId);
   if (!statoNascita) {
-    throw new ResolverError(`Stato di nascita non trovato in tabella (id "${guest.birthCountryId}").`);
+    throw new ResolverError(
+      `Stato di nascita non trovato in tabella (id "${guest.birthCountryId}").`,
+    );
   }
   const cittadinanza = refs.country(guest.citizenshipId);
   if (!cittadinanza) {
@@ -105,7 +107,9 @@ export function resolveTracciatoInput(
   if (guest.birthComuneId) {
     const comune = refs.comune(guest.birthComuneId);
     if (!comune) {
-      throw new ResolverError(`Comune di nascita non trovato in tabella (id "${guest.birthComuneId}").`);
+      throw new ResolverError(
+        `Comune di nascita non trovato in tabella (id "${guest.birthComuneId}").`,
+      );
     }
     comuneNascitaCode = comune.code;
     provinciaNascita = comune.provincia;
@@ -124,7 +128,9 @@ export function resolveTracciatoInput(
     }
     const tipoDoc = refs.documentType(guest.documentTypeId);
     if (!tipoDoc) {
-      throw new ResolverError(`Tipo documento non trovato in tabella (id "${guest.documentTypeId}").`);
+      throw new ResolverError(
+        `Tipo documento non trovato in tabella (id "${guest.documentTypeId}").`,
+      );
     }
     tipoDocumentoCode = tipoDoc.code;
     numeroDocumento = guest.documentNumber;

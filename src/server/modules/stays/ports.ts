@@ -25,6 +25,10 @@ export interface StayForGeneration {
 
 export interface StaysRepository {
   createStay(input: CreateStayInput): Promise<{ id: string }>;
-  addGuests(stayId: string, organizationId: string, parties: Party[]): Promise<{ guestIds: string[] }>;
+  addGuests(
+    stayId: string,
+    organizationId: string,
+    parties: Party[],
+  ): Promise<{ guestIds: string[] }>;
   loadForGeneration(stayId: string): Promise<StayForGeneration | null>;
 }

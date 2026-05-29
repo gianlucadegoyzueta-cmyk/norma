@@ -61,7 +61,11 @@ describe("decideFromSendAttempt", () => {
   });
 
   it("REJECTED → stato REJECTED, con codice/descrizione errore", () => {
-    const d = decideFromSendAttempt({ kind: "REJECTED", errorCod: "12", errorDes: "Data di Arrivo Errata" });
+    const d = decideFromSendAttempt({
+      kind: "REJECTED",
+      errorCod: "12",
+      errorDes: "Data di Arrivo Errata",
+    });
     expect(d).toEqual({ status: REJECTED, errorCod: "12", errorDes: "Data di Arrivo Errata" });
   });
 

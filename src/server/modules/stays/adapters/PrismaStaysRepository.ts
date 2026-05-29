@@ -19,10 +19,18 @@ export class PrismaStaysRepository implements StaysRepository {
     });
   }
 
-  async addGuests(stayId: string, organizationId: string, parties: Party[]): Promise<{ guestIds: string[] }> {
+  async addGuests(
+    stayId: string,
+    organizationId: string,
+    parties: Party[],
+  ): Promise<{ guestIds: string[] }> {
     return this.prisma.$transaction(async (tx) => {
       const guestIds: string[] = [];
-      const create = async (data: GuestData, tipo: TipoAlloggiato, leaderId: string | null): Promise<string> => {
+      const create = async (
+        data: GuestData,
+        tipo: TipoAlloggiato,
+        leaderId: string | null,
+      ): Promise<string> => {
         const g = await tx.guest.create({
           data: {
             organizationId,
@@ -51,7 +59,8 @@ export class PrismaStaysRepository implements StaysRepository {
           await create(party.ospite, tipi.capo, null);
         } else {
           const capoId = await create(party.capo, tipi.capo, null);
-          for (const membro of party.membri) await create(membro, tipi.membro as TipoAlloggiato, capoId);
+          for (const membro of party.membri)
+            await create(membro, tipi.membro as TipoAlloggiato, capoId);
         }
       }
       return { guestIds };

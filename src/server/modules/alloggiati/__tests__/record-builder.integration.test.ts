@@ -50,13 +50,24 @@ describe.skipIf(!runDb)("SchedinaRecordBuilder — integrazione (DB reale)", () 
     builder = new SchedinaRecordBuilder(prisma, loader);
 
     // Tabelle di riferimento (dati di esempio).
-    await prisma.comune.create({ data: { id: ids.comune, code: comuneCode, name: "ROMA", provincia: "RM" } });
+    await prisma.comune.create({
+      data: { id: ids.comune, code: comuneCode, name: "ROMA", provincia: "RM" },
+    });
     await prisma.country.create({ data: { id: ids.country, code: countryCode, name: "ITALIA" } });
-    await prisma.documentType.create({ data: { id: ids.docType, code: docTypeCode, name: "CARTA IDENTITA' ELETTRONICA" } });
+    await prisma.documentType.create({
+      data: { id: ids.docType, code: docTypeCode, name: "CARTA IDENTITA' ELETTRONICA" },
+    });
 
     await prisma.organization.create({ data: { id: ids.org, name: "RB Org" } });
     await prisma.alloggiatiCredential.create({
-      data: { id: ids.cred, organizationId: ids.org, label: "RB", category: "SINGOLA", provincia: "RM", secretRef: `rb_ref_${s}` },
+      data: {
+        id: ids.cred,
+        organizationId: ids.org,
+        label: "RB",
+        category: "SINGOLA",
+        provincia: "RM",
+        secretRef: `rb_ref_${s}`,
+      },
     });
     await prisma.property.create({
       data: {

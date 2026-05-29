@@ -88,7 +88,10 @@ export interface GenerationContext {
  * lancia un'eccezione e il chiamante non persiste nulla → niente schedine incomplete.
  * La dedup-key per ospite abilita l'anti-doppione lato repository (createIntent idempotente).
  */
-export function buildSchedinaIntents(ctx: GenerationContext, refs: ReferenceTables): CreateIntentInput[] {
+export function buildSchedinaIntents(
+  ctx: GenerationContext,
+  refs: ReferenceTables,
+): CreateIntentInput[] {
   if (ctx.guests.length === 0) {
     throw new GenerationError("Il soggiorno non ha ospiti: niente schedine da generare.");
   }

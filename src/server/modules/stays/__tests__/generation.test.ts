@@ -84,7 +84,13 @@ const stay = {
 describe("buildSchedinaIntents", () => {
   it("un intento per ospite, con deadline e dedup corretti", () => {
     const intents = buildSchedinaIntents(
-      { organizationId: "org_1", credentialId: "cred_1", alloggiatiApartmentId: null, stay, guests: [guest("g1")] },
+      {
+        organizationId: "org_1",
+        credentialId: "cred_1",
+        alloggiatiApartmentId: null,
+        stay,
+        guests: [guest("g1")],
+      },
       refs,
     );
     expect(intents).toHaveLength(1);
@@ -104,7 +110,13 @@ describe("buildSchedinaIntents", () => {
 
   it("soggiorno breve → deadline a +6h", () => {
     const intents = buildSchedinaIntents(
-      { organizationId: "org_1", credentialId: "cred_1", alloggiatiApartmentId: null, stay: { ...stay, isShortStay: true }, guests: [guest("g1")] },
+      {
+        organizationId: "org_1",
+        credentialId: "cred_1",
+        alloggiatiApartmentId: null,
+        stay: { ...stay, isShortStay: true },
+        guests: [guest("g1")],
+      },
       refs,
     );
     expect(intents[0].deadlineAt.toISOString()).toBe("2026-06-01T21:00:00.000Z");
@@ -112,16 +124,33 @@ describe("buildSchedinaIntents", () => {
 
   it("gestione appartamenti: idAppartamento finisce nella dedup", () => {
     const intents = buildSchedinaIntents(
-      { organizationId: "org_1", credentialId: "cred_1", alloggiatiApartmentId: "000004", stay, guests: [guest("g1")] },
+      {
+        organizationId: "org_1",
+        credentialId: "cred_1",
+        alloggiatiApartmentId: "000004",
+        stay,
+        guests: [guest("g1")],
+      },
       refs,
     );
     expect(intents[0].dedup.idAppartamento).toBe("000004");
   });
 
   it("membro famiglia senza documento: numeroDocumento vuoto nella dedup", () => {
-    const fam = guest("g2", { tipoAlloggiato: "FAMILIARE", documentTypeId: null, documentNumber: null, documentPlaceId: null });
+    const fam = guest("g2", {
+      tipoAlloggiato: "FAMILIARE",
+      documentTypeId: null,
+      documentNumber: null,
+      documentPlaceId: null,
+    });
     const intents = buildSchedinaIntents(
-      { organizationId: "org_1", credentialId: "cred_1", alloggiatiApartmentId: null, stay, guests: [fam] },
+      {
+        organizationId: "org_1",
+        credentialId: "cred_1",
+        alloggiatiApartmentId: null,
+        stay,
+        guests: [fam],
+      },
       refs,
     );
     expect(intents[0].dedup.numeroDocumento).toBe("");
@@ -131,7 +160,13 @@ describe("buildSchedinaIntents", () => {
     const bad = guest("g3", { documentNumber: null });
     expect(() =>
       buildSchedinaIntents(
-        { organizationId: "org_1", credentialId: "cred_1", alloggiatiApartmentId: null, stay, guests: [guest("g1"), bad] },
+        {
+          organizationId: "org_1",
+          credentialId: "cred_1",
+          alloggiatiApartmentId: null,
+          stay,
+          guests: [guest("g1"), bad],
+        },
         refs,
       ),
     ).toThrow();
@@ -139,7 +174,16 @@ describe("buildSchedinaIntents", () => {
 
   it("nessun ospite → GenerationError", () => {
     expect(() =>
-      buildSchedinaIntents({ organizationId: "org_1", credentialId: "cred_1", alloggiatiApartmentId: null, stay, guests: [] }, refs),
+      buildSchedinaIntents(
+        {
+          organizationId: "org_1",
+          credentialId: "cred_1",
+          alloggiatiApartmentId: null,
+          stay,
+          guests: [],
+        },
+        refs,
+      ),
     ).toThrow(GenerationError);
   });
 });

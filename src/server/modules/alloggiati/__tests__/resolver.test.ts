@@ -69,7 +69,8 @@ describe("resolveTracciatoInput — ospite italiano", () => {
   it("end-to-end: produce una riga valida di 168 caratteri", () => {
     const rec = buildRecordFromEntities(guestIT, stay, refs);
     expect(rec).toHaveLength(TRACCIATO_LEN);
-    const f = (n: keyof typeof FIELD_LAYOUT) => rec.slice(FIELD_LAYOUT[n].start, FIELD_LAYOUT[n].start + FIELD_LAYOUT[n].len);
+    const f = (n: keyof typeof FIELD_LAYOUT) =>
+      rec.slice(FIELD_LAYOUT[n].start, FIELD_LAYOUT[n].start + FIELD_LAYOUT[n].len);
     expect(f("tipoAlloggiato")).toBe("16");
     expect(f("provinciaNascita")).toBe("RM");
     expect(f("comuneNascita")).toBe("058091001");
@@ -105,8 +106,12 @@ describe("resolveTracciatoInput — ospite straniero", () => {
 
   it("end-to-end: comune e provincia in bianco nella riga", () => {
     const rec = buildRecordFromEntities(guestFR, stay, refs);
-    expect(rec.slice(FIELD_LAYOUT.comuneNascita.start, FIELD_LAYOUT.comuneNascita.start + 9)).toBe(" ".repeat(9));
-    expect(rec.slice(FIELD_LAYOUT.provinciaNascita.start, FIELD_LAYOUT.provinciaNascita.start + 2)).toBe("  ");
+    expect(rec.slice(FIELD_LAYOUT.comuneNascita.start, FIELD_LAYOUT.comuneNascita.start + 9)).toBe(
+      " ".repeat(9),
+    );
+    expect(
+      rec.slice(FIELD_LAYOUT.provinciaNascita.start, FIELD_LAYOUT.provinciaNascita.start + 2),
+    ).toBe("  ");
   });
 });
 
@@ -125,54 +130,79 @@ describe("resolveTracciatoInput — familiare/membro gruppo (19/20)", () => {
     expect(input.luogoRilascioCode).toBeUndefined();
     // la riga ha comunque i campi documento in bianco
     const rec = buildRecordFromEntities(fam, stay, refs);
-    expect(rec.slice(FIELD_LAYOUT.tipoDocumento.start, FIELD_LAYOUT.tipoDocumento.start + 5)).toBe("     ");
+    expect(rec.slice(FIELD_LAYOUT.tipoDocumento.start, FIELD_LAYOUT.tipoDocumento.start + 5)).toBe(
+      "     ",
+    );
   });
 });
 
 describe("resolveTracciatoInput — giorni di permanenza", () => {
   it("soggiorno in giornata (stessa data) → 1 giorno", () => {
-    const input = resolveTracciatoInput(guestIT, {
-      arrivalDate: new Date("2026-06-01T09:00:00.000Z"),
-      departureDate: new Date("2026-06-01T20:00:00.000Z"),
-    }, refs);
+    const input = resolveTracciatoInput(
+      guestIT,
+      {
+        arrivalDate: new Date("2026-06-01T09:00:00.000Z"),
+        departureDate: new Date("2026-06-01T20:00:00.000Z"),
+      },
+      refs,
+    );
     expect(input.giorniPermanenza).toBe(1);
   });
 
   it("partenza mancante → errore chiaro", () => {
-    expect(() => resolveTracciatoInput(guestIT, { arrivalDate: stay.arrivalDate, departureDate: null }, refs))
-      .toThrow(ResolverError);
+    expect(() =>
+      resolveTracciatoInput(guestIT, { arrivalDate: stay.arrivalDate, departureDate: null }, refs),
+    ).toThrow(ResolverError);
   });
 
   it("partenza prima dell'arrivo → errore", () => {
-    expect(() => resolveTracciatoInput(guestIT, {
-      arrivalDate: new Date("2026-06-10T00:00:00.000Z"),
-      departureDate: new Date("2026-06-08T00:00:00.000Z"),
-    }, refs)).toThrow(ResolverError);
+    expect(() =>
+      resolveTracciatoInput(
+        guestIT,
+        {
+          arrivalDate: new Date("2026-06-10T00:00:00.000Z"),
+          departureDate: new Date("2026-06-08T00:00:00.000Z"),
+        },
+        refs,
+      ),
+    ).toThrow(ResolverError);
   });
 });
 
 describe("resolveTracciatoInput — errori su dati mancanti/non trovati", () => {
   it("stato di nascita non in tabella → errore", () => {
-    expect(() => resolveTracciatoInput({ ...guestIT, birthCountryId: "ctry_ignoto" }, stay, refs)).toThrow(ResolverError);
+    expect(() =>
+      resolveTracciatoInput({ ...guestIT, birthCountryId: "ctry_ignoto" }, stay, refs),
+    ).toThrow(ResolverError);
   });
 
   it("cittadinanza non in tabella → errore", () => {
-    expect(() => resolveTracciatoInput({ ...guestIT, citizenshipId: "ctry_ignoto" }, stay, refs)).toThrow(ResolverError);
+    expect(() =>
+      resolveTracciatoInput({ ...guestIT, citizenshipId: "ctry_ignoto" }, stay, refs),
+    ).toThrow(ResolverError);
   });
 
   it("comune di nascita non in tabella → errore", () => {
-    expect(() => resolveTracciatoInput({ ...guestIT, birthComuneId: "com_ignoto" }, stay, refs)).toThrow(ResolverError);
+    expect(() =>
+      resolveTracciatoInput({ ...guestIT, birthComuneId: "com_ignoto" }, stay, refs),
+    ).toThrow(ResolverError);
   });
 
   it("16/17/18 senza numero documento → errore", () => {
-    expect(() => resolveTracciatoInput({ ...guestIT, documentNumber: null }, stay, refs)).toThrow(ResolverError);
+    expect(() => resolveTracciatoInput({ ...guestIT, documentNumber: null }, stay, refs)).toThrow(
+      ResolverError,
+    );
   });
 
   it("tipo documento non in tabella → errore", () => {
-    expect(() => resolveTracciatoInput({ ...guestIT, documentTypeId: "doc_ignoto" }, stay, refs)).toThrow(ResolverError);
+    expect(() =>
+      resolveTracciatoInput({ ...guestIT, documentTypeId: "doc_ignoto" }, stay, refs),
+    ).toThrow(ResolverError);
   });
 
   it("luogo di rilascio non trovato in nessuna tabella → errore", () => {
-    expect(() => resolveTracciatoInput({ ...guestIT, documentPlaceId: "xxx_ignoto" }, stay, refs)).toThrow(ResolverError);
+    expect(() =>
+      resolveTracciatoInput({ ...guestIT, documentPlaceId: "xxx_ignoto" }, stay, refs),
+    ).toThrow(ResolverError);
   });
 });

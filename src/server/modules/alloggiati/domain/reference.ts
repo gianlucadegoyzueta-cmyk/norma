@@ -114,8 +114,17 @@ export function parseLuoghiCsv(csv: string, opts: ParseOptions = {}): ParsedLuog
   const countries: ParsedCode[] = [];
   splitRows(csv, !!opts.skipHeader).forEach((cols, i) => {
     const line = i + 1;
-    const code = requireWidth(column(cols, COLUMNS.luoghi.code, "Luoghi.code", line), CODE_WIDTHS.comune, "Luoghi.code", line);
-    const name = requireNonEmpty(column(cols, COLUMNS.luoghi.name, "Luoghi.name", line), "Luoghi.name", line);
+    const code = requireWidth(
+      column(cols, COLUMNS.luoghi.code, "Luoghi.code", line),
+      CODE_WIDTHS.comune,
+      "Luoghi.code",
+      line,
+    );
+    const name = requireNonEmpty(
+      column(cols, COLUMNS.luoghi.name, "Luoghi.name", line),
+      "Luoghi.name",
+      line,
+    );
     const provincia = requireWidth(
       column(cols, COLUMNS.luoghi.provincia, "Luoghi.provincia", line),
       CODE_WIDTHS.provincia,
@@ -141,7 +150,11 @@ export function parseDocumentTypesCsv(csv: string, opts: ParseOptions = {}): Par
         "DocumentType.code",
         line,
       ),
-      name: requireNonEmpty(column(cols, COLUMNS.documentType.name, "DocumentType.name", line), "DocumentType.name", line),
+      name: requireNonEmpty(
+        column(cols, COLUMNS.documentType.name, "DocumentType.name", line),
+        "DocumentType.name",
+        line,
+      ),
     };
   });
 }
@@ -156,7 +169,11 @@ export function parseTipiAlloggiatoCsv(csv: string, opts: ParseOptions = {}): Pa
         "TipoAlloggiato.code",
         line,
       ),
-      name: requireNonEmpty(column(cols, COLUMNS.tipoAlloggiato.name, "TipoAlloggiato.name", line), "TipoAlloggiato.name", line),
+      name: requireNonEmpty(
+        column(cols, COLUMNS.tipoAlloggiato.name, "TipoAlloggiato.name", line),
+        "TipoAlloggiato.name",
+        line,
+      ),
     };
   });
 }

@@ -41,35 +41,35 @@ describe.skipIf(!enabled)("Alloggiati — sincronizzazione tabelle di riferiment
     await prisma?.$disconnect();
   });
 
-  it(
-    "scarica le 4 tabelle dal Web Service e fa l'upsert idempotente nel DB",
-    async () => {
-      const secret = { utente: utente as string, password: password as string, wskey: wskey as string };
-      const client = new AlloggiatiSoapClient({ timeoutMs: 120_000 }); // Luoghi è grande (~11k righe)
-      // TokenManager con provider inline: per uno script one-off il credentialId è irrilevante,
-      // restituiamo sempre il segreto preso dalle env.
-      const tokens = new TokenManager(client, { getSecret: async () => secret });
-      const tabellaClient = new SoapTabellaClient(tokens, client, "live");
-      const repo = new PrismaReferenceTableRepository(prisma);
+  it("scarica le 4 tabelle dal Web Service e fa l'upsert idempotente nel DB", async () => {
+    const secret = {
+      utente: utente as string,
+      password: password as string,
+      wskey: wskey as string,
+    };
+    const client = new AlloggiatiSoapClient({ timeoutMs: 120_000 }); // Luoghi è grande (~11k righe)
+    // TokenManager con provider inline: per uno script one-off il credentialId è irrilevante,
+    // restituiamo sempre il segreto preso dalle env.
+    const tokens = new TokenManager(client, { getSecret: async () => secret });
+    const tabellaClient = new SoapTabellaClient(tokens, client, "live");
+    const repo = new PrismaReferenceTableRepository(prisma);
 
-      const before = await checkReferenceTablesHealth(repo);
-      console.log(`[Prima]  ready=${before.ready} counts=${JSON.stringify(before.counts)}`);
+    const before = await checkReferenceTablesHealth(repo);
+    console.log(`[Prima]  ready=${before.ready} counts=${JSON.stringify(before.counts)}`);
 
-      const report = await new TableSyncService(tabellaClient, repo).syncAll();
-      console.log(
-        `[Sync]   nuovi → comuni=${report.comuni} stati=${report.countries} ` +
-          `documenti=${report.documentTypes} (tipiAlloggiato verificati=${report.tipiAlloggiatoChecked})`,
-      );
+    const report = await new TableSyncService(tabellaClient, repo).syncAll();
+    console.log(
+      `[Sync]   nuovi → comuni=${report.comuni} stati=${report.countries} ` +
+        `documenti=${report.documentTypes} (tipiAlloggiato verificati=${report.tipiAlloggiatoChecked})`,
+    );
 
-      const after = await checkReferenceTablesHealth(repo);
-      console.log(`[Dopo]   ready=${after.ready} counts=${JSON.stringify(after.counts)}`);
-      console.log(`[Esito]  ${after.message}`);
+    const after = await checkReferenceTablesHealth(repo);
+    console.log(`[Dopo]   ready=${after.ready} counts=${JSON.stringify(after.counts)}`);
+    console.log(`[Esito]  ${after.message}`);
 
-      expect(after.ready).toBe(true);
-      expect(after.counts.comuni).toBeGreaterThan(0);
-      expect(after.counts.countries).toBeGreaterThan(0);
-      expect(after.counts.documentTypes).toBeGreaterThan(0);
-    },
-    300_000, // i Comuni sono migliaia: ampio margine per download + insert
-  );
+    expect(after.ready).toBe(true);
+    expect(after.counts.comuni).toBeGreaterThan(0);
+    expect(after.counts.countries).toBeGreaterThan(0);
+    expect(after.counts.documentTypes).toBeGreaterThan(0);
+  }, 300_000); // i Comuni sono migliaia: ampio margine per download + insert
 });

@@ -5,6 +5,7 @@ Ogni cartella qui dentro è un **modulo** che incapsula la logica di un'area del
 chiamano questi moduli, mai il contrario.
 
 Convenzione suggerita per ogni modulo:
+
 - `*.service.ts` — logica e orchestrazione
 - `*.repository.ts` — query Prisma (quando conviene isolarle)
 - `*.types.ts` — tipi del modulo

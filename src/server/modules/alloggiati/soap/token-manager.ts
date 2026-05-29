@@ -2,7 +2,9 @@ import type { AlloggiatiSecret } from "../../../secrets";
 
 /** Minimo necessario per generare un token (lo implementa AlloggiatiSoapClient). */
 export interface TokenGenerator {
-  generateToken(secret: AlloggiatiSecret): Promise<{ utente: string; token: string; expires: Date }>;
+  generateToken(
+    secret: AlloggiatiSecret,
+  ): Promise<{ utente: string; token: string; expires: Date }>;
 }
 
 /** Fornisce i segreti (utente/password/wskey) di una credenziale, recuperandoli dal vault. */
@@ -73,7 +75,11 @@ export class TokenManager {
   private async doGenerate(credentialId: string): Promise<CachedToken> {
     const secret = await this.provider.getSecret(credentialId);
     const res = await this.client.generateToken(secret);
-    const cached: CachedToken = { utente: res.utente, token: res.token, expiresMs: res.expires.getTime() };
+    const cached: CachedToken = {
+      utente: res.utente,
+      token: res.token,
+      expiresMs: res.expires.getTime(),
+    };
     this.cache.set(credentialId, cached);
     return cached;
   }

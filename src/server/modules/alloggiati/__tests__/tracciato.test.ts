@@ -59,9 +59,20 @@ describe("buildTracciatoRecord — record standard (168)", () => {
 
   it("nessun campo si sovrappone: la concatenazione dei campi 0..167 ricompone la riga", () => {
     const order: (keyof typeof FIELD_LAYOUT)[] = [
-      "tipoAlloggiato", "dataArrivo", "giorniPermanenza", "cognome", "nome", "sesso",
-      "dataNascita", "comuneNascita", "provinciaNascita", "statoNascita", "cittadinanza",
-      "tipoDocumento", "numeroDocumento", "luogoRilascioDocumento",
+      "tipoAlloggiato",
+      "dataArrivo",
+      "giorniPermanenza",
+      "cognome",
+      "nome",
+      "sesso",
+      "dataNascita",
+      "comuneNascita",
+      "provinciaNascita",
+      "statoNascita",
+      "cittadinanza",
+      "tipoDocumento",
+      "numeroDocumento",
+      "luogoRilascioDocumento",
     ];
     expect(order.map((f) => field(rec, f)).join("")).toBe(rec);
   });
@@ -106,9 +117,15 @@ describe("regole sul documento (16/17/18 vs 19/20)", () => {
   });
 
   it("16/17/18 senza documento → errore", () => {
-    expect(() => buildTracciatoRecord({ ...base, tipoDocumentoCode: undefined })).toThrow(TracciatoError);
-    expect(() => buildTracciatoRecord({ ...base, numeroDocumento: undefined })).toThrow(TracciatoError);
-    expect(() => buildTracciatoRecord({ ...base, luogoRilascioCode: undefined })).toThrow(TracciatoError);
+    expect(() => buildTracciatoRecord({ ...base, tipoDocumentoCode: undefined })).toThrow(
+      TracciatoError,
+    );
+    expect(() => buildTracciatoRecord({ ...base, numeroDocumento: undefined })).toThrow(
+      TracciatoError,
+    );
+    expect(() => buildTracciatoRecord({ ...base, luogoRilascioCode: undefined })).toThrow(
+      TracciatoError,
+    );
   });
 });
 
@@ -129,8 +146,12 @@ describe("italiano vs straniero (comune/provincia)", () => {
   });
 
   it("incoerenza comune/provincia (uno solo presente) → errore", () => {
-    expect(() => buildTracciatoRecord({ ...base, provinciaNascita: undefined })).toThrow(TracciatoError);
-    expect(() => buildTracciatoRecord({ ...base, comuneNascitaCode: undefined })).toThrow(TracciatoError);
+    expect(() => buildTracciatoRecord({ ...base, provinciaNascita: undefined })).toThrow(
+      TracciatoError,
+    );
+    expect(() => buildTracciatoRecord({ ...base, comuneNascitaCode: undefined })).toThrow(
+      TracciatoError,
+    );
   });
 });
 
@@ -155,13 +176,21 @@ describe("validazioni dei campi", () => {
   });
 
   it("data in formato sbagliato → errore", () => {
-    expect(() => buildTracciatoRecord({ ...base, dataArrivo: "01-06-2026" })).toThrow(TracciatoError);
-    expect(() => buildTracciatoRecord({ ...base, dataNascita: "1990/05/20" })).toThrow(TracciatoError);
+    expect(() => buildTracciatoRecord({ ...base, dataArrivo: "01-06-2026" })).toThrow(
+      TracciatoError,
+    );
+    expect(() => buildTracciatoRecord({ ...base, dataNascita: "1990/05/20" })).toThrow(
+      TracciatoError,
+    );
   });
 
   it("codice di lunghezza errata → errore (protezione contro tabelle mal popolate)", () => {
-    expect(() => buildTracciatoRecord({ ...base, statoNascitaCode: "12345678" })).toThrow(TracciatoError); // 8 invece di 9
-    expect(() => buildTracciatoRecord({ ...base, provinciaNascita: "ROMA" })).toThrow(TracciatoError); // 4 invece di 2
+    expect(() => buildTracciatoRecord({ ...base, statoNascitaCode: "12345678" })).toThrow(
+      TracciatoError,
+    ); // 8 invece di 9
+    expect(() => buildTracciatoRecord({ ...base, provinciaNascita: "ROMA" })).toThrow(
+      TracciatoError,
+    ); // 4 invece di 2
   });
 
   it("sesso non valido → errore", () => {

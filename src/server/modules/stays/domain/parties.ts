@@ -31,7 +31,10 @@ export type Party =
  *  - FAMIGLIA → capo 17 (Capo Famiglia), membri 19 (Familiare)
  *  - GRUPPO   → capo 18 (Capo Gruppo),   membri 20 (Membro Gruppo)
  */
-export function tipiPerParty(tipo: PartyTipo): { capo: TipoAlloggiato; membro: TipoAlloggiato | null } {
+export function tipiPerParty(tipo: PartyTipo): {
+  capo: TipoAlloggiato;
+  membro: TipoAlloggiato | null;
+} {
   switch (tipo) {
     case "SINGOLO":
       return { capo: "OSPITE_SINGOLO", membro: null };

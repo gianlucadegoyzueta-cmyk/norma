@@ -55,36 +55,42 @@ describe.skipIf(!enabled)("Alloggiati SOAP — verifica live (Token + Test, nien
     });
   }
 
-  it(
-    "GenerateToken → idempotenza → Authentication_Test → Test (report dettagliato)",
-    async () => {
-      const t1 = await client.generateToken(secret);
-      console.log(`[GenerateToken #1] issued=${t1.issued.toISOString()} expires=${t1.expires.toISOString()} tokenLen=${t1.token.length}`);
-      expect(t1.token.length).toBeGreaterThan(0);
+  it("GenerateToken → idempotenza → Authentication_Test → Test (report dettagliato)", async () => {
+    const t1 = await client.generateToken(secret);
+    console.log(
+      `[GenerateToken #1] issued=${t1.issued.toISOString()} expires=${t1.expires.toISOString()} tokenLen=${t1.token.length}`,
+    );
+    expect(t1.token.length).toBeGreaterThan(0);
 
-      // Idempotenza: genero un 2° token e verifico se il 1° è ancora valido.
-      const t2 = await client.generateToken(secret);
-      console.log(`[GenerateToken #2] tokenLen=${t2.token.length} ugualeAl1=${t2.token === t1.token}`);
-      let primoAncoraValido = true;
-      try {
-        await client.authenticationTest(secret.utente, t1.token);
-      } catch {
-        primoAncoraValido = false;
-      }
-      console.log(`[Idempotenza] dopo un 2° GenerateToken, il 1° token è ancora valido? ${primoAncoraValido}`);
+    // Idempotenza: genero un 2° token e verifico se il 1° è ancora valido.
+    const t2 = await client.generateToken(secret);
+    console.log(
+      `[GenerateToken #2] tokenLen=${t2.token.length} ugualeAl1=${t2.token === t1.token}`,
+    );
+    let primoAncoraValido = true;
+    try {
+      await client.authenticationTest(secret.utente, t1.token);
+    } catch {
+      primoAncoraValido = false;
+    }
+    console.log(
+      `[Idempotenza] dopo un 2° GenerateToken, il 1° token è ancora valido? ${primoAncoraValido}`,
+    );
 
-      await client.authenticationTest(secret.utente, t2.token);
-      console.log("[Authentication_Test] token #2 valido");
+    await client.authenticationTest(secret.utente, t2.token);
+    console.log("[Authentication_Test] token #2 valido");
 
-      const riga = sampleSchedina();
-      console.log(`[Test] lunghezza riga=${riga.length}`);
-      const res = await client.test(secret.utente, t2.token, [riga]);
-      console.log(`[Test] overall.esito=${res.overall.esito} schedineValide=${res.schedineValide} overallErr=${res.overall.errorDes ?? "-"}`);
-      for (const r of res.righe) {
-        console.log(`  riga ${r.index}: esito=${r.esito} cod=${r.errorCod ?? "-"} des=${r.errorDes ?? "-"} dettaglio=${r.errorDettaglio ?? "-"}`);
-      }
-      expect(res).toBeDefined();
-    },
-    60_000,
-  );
+    const riga = sampleSchedina();
+    console.log(`[Test] lunghezza riga=${riga.length}`);
+    const res = await client.test(secret.utente, t2.token, [riga]);
+    console.log(
+      `[Test] overall.esito=${res.overall.esito} schedineValide=${res.schedineValide} overallErr=${res.overall.errorDes ?? "-"}`,
+    );
+    for (const r of res.righe) {
+      console.log(
+        `  riga ${r.index}: esito=${r.esito} cod=${r.errorCod ?? "-"} des=${r.errorDes ?? "-"} dettaglio=${r.errorDettaglio ?? "-"}`,
+      );
+    }
+    expect(res).toBeDefined();
+  }, 60_000);
 });

@@ -33,7 +33,9 @@ describe.skipIf(!runDb)("PrismaSchedinaRepository — integrazione (DB reale)", 
     repo = new PrismaSchedinaRepository(prisma);
 
     await prisma.organization.create({ data: { id: ids.org, name: "ITest Org" } });
-    await prisma.comune.create({ data: { id: ids.comune, code: `C${s}`, name: "Roma", provincia: "RM" } });
+    await prisma.comune.create({
+      data: { id: ids.comune, code: `C${s}`, name: "Roma", provincia: "RM" },
+    });
     await prisma.country.create({ data: { id: ids.country, code: `S${s}`, name: "ITALIA" } });
     await prisma.alloggiatiCredential.create({
       data: {
@@ -134,7 +136,9 @@ describe.skipIf(!runDb)("PrismaSchedinaRepository — integrazione (DB reale)", 
     const after = await prisma.schedina.findUniqueOrThrow({ where: { id: sched.id } });
     expect(after.status).toBe("ACQUIRED");
     expect(after.acquiredAt).not.toBeNull();
-    expect(await prisma.schedinaEvent.count({ where: { schedinaId: sched.id } })).toBeGreaterThanOrEqual(2);
+    expect(
+      await prisma.schedinaEvent.count({ where: { schedinaId: sched.id } }),
+    ).toBeGreaterThanOrEqual(2);
   });
 
   it("rifiuta una transizione illegale (ACQUIRED → SENDING)", async () => {

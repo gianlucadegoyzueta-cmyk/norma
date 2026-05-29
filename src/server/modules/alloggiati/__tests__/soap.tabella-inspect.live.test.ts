@@ -17,7 +17,7 @@ const wskey = process.env.ALLOGGIATI_WSKEY;
 const hasCreds = Boolean(utente && password && wskey);
 const enabled = hasCreds && process.env.RUN_TABLE_INSPECT === "1";
 
-function dump(label: string, csv: string, headN: number, tailN = 0): void {
+function _dump(label: string, csv: string, headN: number, tailN = 0): void {
   const lines = csv.split(/\r?\n/).filter((l) => l.length > 0);
   const cols = lines[0]?.split(";").length ?? 0;
   console.log(`\n[${label}] righe=${lines.length} colonne(1ª riga)=${cols}`);
@@ -31,21 +31,30 @@ function dump(label: string, csv: string, headN: number, tailN = 0): void {
   }
 }
 
-describe.skipIf(!enabled)("Alloggiati — ISPEZIONE tabelle (LIVE, read-only, niente DB/Send)", () => {
-  beforeAll(async () => {
-    await alloggiatiLiveBanner("Tabella → SCARICA e MOSTRA il CSV grezzo (nessuna scrittura, nessun Send)");
-  }, 15_000);
+describe.skipIf(!enabled)(
+  "Alloggiati — ISPEZIONE tabelle (LIVE, read-only, niente DB/Send)",
+  () => {
+    beforeAll(async () => {
+      await alloggiatiLiveBanner(
+        "Tabella → SCARICA e MOSTRA il CSV grezzo (nessuna scrittura, nessun Send)",
+      );
+    }, 15_000);
 
-  it(
-    "mostra il formato reale di Luoghi / Tipi_Documento / Tipi_Alloggiato",
-    async () => {
-      const secret = { utente: utente as string, password: password as string, wskey: wskey as string };
+    it("mostra il formato reale di Luoghi / Tipi_Documento / Tipi_Alloggiato", async () => {
+      const secret = {
+        utente: utente as string,
+        password: password as string,
+        wskey: wskey as string,
+      };
       const client = new AlloggiatiSoapClient({ timeoutMs: 120_000 }); // i Luoghi sono grandi
       const t = await client.generateToken(secret);
 
       // Analisi mirata di Luoghi: come si distinguono gli Stati esteri dai Comuni?
       const luoghi = await client.tabella(secret.utente, t.token, "Luoghi");
-      const rows = luoghi.split(/\r?\n/).filter((l) => l.length > 0).slice(1); // salta header
+      const rows = luoghi
+        .split(/\r?\n/)
+        .filter((l) => l.length > 0)
+        .slice(1); // salta header
       const byFirstDigit: Record<string, number> = {};
       let emptyProv = 0;
       const emptyProvSamples: string[] = [];
@@ -63,12 +72,13 @@ describe.skipIf(!enabled)("Alloggiati — ISPEZIONE tabelle (LIVE, read-only, ni
       console.log(`  righe con Provincia VUOTA = ${emptyProv} (candidati Stati esteri):`);
       for (const l of emptyProvSamples) console.log("   " + l);
       console.log("  righe che contengono nomi di Stato noti:");
-      for (const l of rows.filter((l) => /;(ITALIA|FRANCIA|GERMANIA|SVIZZERA|STATI UNITI|ALBANIA|ROMANIA);/.test(l)).slice(0, 12)) {
+      for (const l of rows
+        .filter((l) => /;(ITALIA|FRANCIA|GERMANIA|SVIZZERA|STATI UNITI|ALBANIA|ROMANIA);/.test(l))
+        .slice(0, 12)) {
         console.log("   " + l);
       }
 
       expect(luoghi.length).toBeGreaterThan(0);
-    },
-    180_000,
-  );
-});
+    }, 180_000);
+  },
+);

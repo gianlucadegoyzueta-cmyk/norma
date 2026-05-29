@@ -32,7 +32,9 @@ describe("computeDedupKey", () => {
   });
 
   it("cambia se cambia un dato identificativo", () => {
-    expect(computeDedupKey({ ...base, numeroDocumento: "ZZ9999999" })).not.toBe(computeDedupKey(base));
+    expect(computeDedupKey({ ...base, numeroDocumento: "ZZ9999999" })).not.toBe(
+      computeDedupKey(base),
+    );
     expect(computeDedupKey({ ...base, dataArrivo: "2026-06-02" })).not.toBe(computeDedupKey(base));
     expect(computeDedupKey({ ...base, dataNascita: "1991-05-20" })).not.toBe(computeDedupKey(base));
   });

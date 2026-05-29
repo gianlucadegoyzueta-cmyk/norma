@@ -41,67 +41,78 @@ describe.skipIf(!enabled)("Alloggiati — Test con DATI REALI (LIVE, niente Send
   beforeAll(async () => {
     await alloggiatiLiveBanner("Test con codici reali dal DB (validazione, NESSUN Send)");
     const { PrismaClient } = await import("@prisma/client");
-    prisma = new PrismaClient({ datasourceUrl: process.env.DIRECT_URL ?? process.env.DATABASE_URL });
+    prisma = new PrismaClient({
+      datasourceUrl: process.env.DIRECT_URL ?? process.env.DATABASE_URL,
+    });
   }, 15_000);
 
   afterAll(async () => {
     await prisma?.$disconnect();
   });
 
-  it(
-    "mappa la finestra valida della Data di Arrivo + verifica codici/accenti/maiuscole",
-    async () => {
-      const italia = await prisma.country.findFirst({ where: { name: "ITALIA" } });
-      const roma = await prisma.comune.findFirst({ where: { name: "ROMA" } });
-      const doc = await prisma.documentType.findFirst({ where: { code: "IDELE" } });
-      if (!italia || !roma || !doc) {
-        throw new Error("Tabelle di riferimento non popolate: esegui prima la Fase C (sync).");
-      }
-      console.log(`[codici reali] ITALIA=${italia.code}  ROMA=${roma.code}/${roma.provincia}  DOC=${doc.code}`);
+  it("mappa la finestra valida della Data di Arrivo + verifica codici/accenti/maiuscole", async () => {
+    const italia = await prisma.country.findFirst({ where: { name: "ITALIA" } });
+    const roma = await prisma.comune.findFirst({ where: { name: "ROMA" } });
+    const doc = await prisma.documentType.findFirst({ where: { code: "IDELE" } });
+    if (!italia || !roma || !doc) {
+      throw new Error("Tabelle di riferimento non popolate: esegui prima la Fase C (sync).");
+    }
+    console.log(
+      `[codici reali] ITALIA=${italia.code}  ROMA=${roma.code}/${roma.provincia}  DOC=${doc.code}`,
+    );
 
-      const client = new AlloggiatiSoapClient();
-      const secret = { utente: utente as string, password: password as string, wskey: wskey as string };
-      const t = await client.generateToken(secret);
-      console.log(`[server] issued=${t.issued.toISOString()} → oggi(Rome)=${romeDate(t.issued)}`);
+    const client = new AlloggiatiSoapClient();
+    const secret = {
+      utente: utente as string,
+      password: password as string,
+      wskey: wskey as string,
+    };
+    const t = await client.generateToken(secret);
+    console.log(`[server] issued=${t.issued.toISOString()} → oggi(Rome)=${romeDate(t.issued)}`);
 
-      const offsets = [0, 1, 2, 3];
-      const dates = offsets.map((o) => romeDate(new Date(t.issued.getTime() - o * 86_400_000)));
+    const offsets = [0, 1, 2, 3];
+    const dates = offsets.map((o) => romeDate(new Date(t.issued.getTime() - o * 86_400_000)));
 
-      const baseFields = {
-        tipoAlloggiato: "OSPITE_SINGOLO",
-        giorniPermanenza: 3,
-        cognome: "ROSSI",
-        nome: "MARIO",
-        sesso: "M",
-        dataNascita: "1985-03-15",
-        statoNascitaCode: italia.code,
-        cittadinanzaCode: italia.code,
-        comuneNascitaCode: roma.code,
-        provinciaNascita: roma.provincia,
-        tipoDocumentoCode: doc.code,
-        numeroDocumento: "AB1234567",
-        luogoRilascioCode: roma.code,
-      } satisfies Omit<TracciatoInput, "dataArrivo">;
+    const baseFields = {
+      tipoAlloggiato: "OSPITE_SINGOLO",
+      giorniPermanenza: 3,
+      cognome: "ROSSI",
+      nome: "MARIO",
+      sesso: "M",
+      dataNascita: "1985-03-15",
+      statoNascitaCode: italia.code,
+      cittadinanzaCode: italia.code,
+      comuneNascitaCode: roma.code,
+      provinciaNascita: roma.provincia,
+      tipoDocumentoCode: doc.code,
+      numeroDocumento: "AB1234567",
+      luogoRilascioCode: roma.code,
+    } satisfies Omit<TracciatoInput, "dataArrivo">;
 
-      const mk = (dataArrivo: string, over: Partial<TracciatoInput> = {}): string =>
-        buildTracciatoRecord({ ...baseFields, dataArrivo, ...over });
+    const mk = (dataArrivo: string, over: Partial<TracciatoInput> = {}): string =>
+      buildTracciatoRecord({ ...baseFields, dataArrivo, ...over });
 
-      const probes = [
-        ...dates.map((d, i) => ({ label: `arrivo ${d} (oggi-${offsets[i]}gg) UPPER`, riga: mk(d) })),
-        { label: `accento NICCOLÒ @${dates[0]}`, riga: mk(dates[0], { nome: "NICCOLÒ" }) },
-        { label: `minuscolo rossi/mario @${dates[0]}`, riga: mk(dates[0], { cognome: "rossi", nome: "mario" }) },
-      ];
+    const probes = [
+      ...dates.map((d, i) => ({ label: `arrivo ${d} (oggi-${offsets[i]}gg) UPPER`, riga: mk(d) })),
+      { label: `accento NICCOLÒ @${dates[0]}`, riga: mk(dates[0], { nome: "NICCOLÒ" }) },
+      {
+        label: `minuscolo rossi/mario @${dates[0]}`,
+        riga: mk(dates[0], { cognome: "rossi", nome: "mario" }),
+      },
+    ];
 
-      const res = await client.test(secret.utente, t.token, probes.map((p) => p.riga));
-      console.log(`[Test] overall.esito=${res.overall.esito} schedineValide=${res.schedineValide}`);
-      res.righe.forEach((r, i) => {
-        console.log(
-          `  [${probes[i].label}] esito=${r.esito} cod=${r.errorCod ?? "-"} des=${r.errorDes ?? "-"} dett=${r.errorDettaglio ?? "-"}`,
-        );
-      });
+    const res = await client.test(
+      secret.utente,
+      t.token,
+      probes.map((p) => p.riga),
+    );
+    console.log(`[Test] overall.esito=${res.overall.esito} schedineValide=${res.schedineValide}`);
+    res.righe.forEach((r, i) => {
+      console.log(
+        `  [${probes[i].label}] esito=${r.esito} cod=${r.errorCod ?? "-"} des=${r.errorDes ?? "-"} dett=${r.errorDettaglio ?? "-"}`,
+      );
+    });
 
-      expect(res.righe.length).toBe(probes.length);
-    },
-    60_000,
-  );
+    expect(res.righe.length).toBe(probes.length);
+  }, 60_000);
 });

@@ -57,7 +57,14 @@ describe("StaysService", () => {
     const family: Party = {
       tipo: "FAMIGLIA",
       capo: persona({ firstName: "Mario", documentNumber: "AB1" }),
-      membri: [persona({ firstName: "Lucia", documentTypeId: null, documentNumber: null, documentPlaceId: null })],
+      membri: [
+        persona({
+          firstName: "Lucia",
+          documentTypeId: null,
+          documentNumber: null,
+          documentPlaceId: null,
+        }),
+      ],
     };
     const { guestIds } = await service.addGuests(stayId, "org_1", [family]);
     return { stayId, guestIds };
@@ -125,22 +132,31 @@ describe("StaysService", () => {
       isShortStay: false,
     });
     // ospite singolo (richiede documento) ma senza numero documento
-    await service.addGuests(stayId, "org_1", [{ tipo: "SINGOLO", ospite: persona({ documentNumber: null }) }]);
+    await service.addGuests(stayId, "org_1", [
+      { tipo: "SINGOLO", ospite: persona({ documentNumber: null }) },
+    ]);
     await expect(service.generateSchedine(stayId)).rejects.toThrow();
   });
 
   it("createStay valida i dati (guestsCount ≥ 1, partenza ≥ arrivo)", async () => {
     await expect(
       service.createStay({
-        organizationId: "org_1", propertyId: "prop_1",
-        arrivalDate: new Date("2026-06-01T00:00:00.000Z"), departureDate: null, guestsCount: 0, isShortStay: false,
+        organizationId: "org_1",
+        propertyId: "prop_1",
+        arrivalDate: new Date("2026-06-01T00:00:00.000Z"),
+        departureDate: null,
+        guestsCount: 0,
+        isShortStay: false,
       }),
     ).rejects.toThrow(StaysError);
     await expect(
       service.createStay({
-        organizationId: "org_1", propertyId: "prop_1",
-        arrivalDate: new Date("2026-06-10T00:00:00.000Z"), departureDate: new Date("2026-06-08T00:00:00.000Z"),
-        guestsCount: 1, isShortStay: false,
+        organizationId: "org_1",
+        propertyId: "prop_1",
+        arrivalDate: new Date("2026-06-10T00:00:00.000Z"),
+        departureDate: new Date("2026-06-08T00:00:00.000Z"),
+        guestsCount: 1,
+        isShortStay: false,
       }),
     ).rejects.toThrow(StaysError);
   });

@@ -42,7 +42,11 @@ export class InMemoryStaysRepository implements StaysRepository {
     return { id };
   }
 
-  async addGuests(stayId: string, _organizationId: string, parties: Party[]): Promise<{ guestIds: string[] }> {
+  async addGuests(
+    stayId: string,
+    _organizationId: string,
+    parties: Party[],
+  ): Promise<{ guestIds: string[] }> {
     const guestIds: string[] = [];
     const create = (data: GuestData, tipo: TipoAlloggiato): void => {
       const id = `guest_${++this.seq}`;
@@ -64,13 +68,20 @@ export class InMemoryStaysRepository implements StaysRepository {
   async loadForGeneration(stayId: string): Promise<StayForGeneration | null> {
     const stay = this.stays.get(stayId);
     if (!stay) return null;
-    const property = this.properties.get(stay.propertyId) ?? { credentialId: null, alloggiatiApartmentId: null };
+    const property = this.properties.get(stay.propertyId) ?? {
+      credentialId: null,
+      alloggiatiApartmentId: null,
+    };
     const guests = [...this.guests.values()].filter((g) => g.stayId === stayId);
     return {
       organizationId: stay.organizationId,
       credentialId: property.credentialId,
       alloggiatiApartmentId: property.alloggiatiApartmentId,
-      stay: { arrivalDate: stay.arrivalDate, departureDate: stay.departureDate, isShortStay: stay.isShortStay },
+      stay: {
+        arrivalDate: stay.arrivalDate,
+        departureDate: stay.departureDate,
+        isShortStay: stay.isShortStay,
+      },
       guests,
     };
   }

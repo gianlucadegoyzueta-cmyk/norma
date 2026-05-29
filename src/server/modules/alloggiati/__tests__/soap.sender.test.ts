@@ -63,7 +63,10 @@ describe("SoapAlloggiatiSender", () => {
   });
 
   it("tutte acquisite → ACQUIRED per ogni correlationId, in ordine", async () => {
-    const sender = new SoapAlloggiatiSender(tokens, clientReturning(outcome(true, [{ esito: true }, { esito: true }])));
+    const sender = new SoapAlloggiatiSender(
+      tokens,
+      clientReturning(outcome(true, [{ esito: true }, { esito: true }])),
+    );
     const res = await sender.send(batch("s1", "s2"));
     expect(res.results).toEqual([
       { correlationId: "s1", outcome: "ACQUIRED" },
@@ -74,7 +77,9 @@ describe("SoapAlloggiatiSender", () => {
   it("misto: mappa per indice ACQUIRED/REJECTED con errorCod/errorDes", async () => {
     const sender = new SoapAlloggiatiSender(
       tokens,
-      clientReturning(outcome(true, [{ esito: true }, { esito: false, errorCod: "12", errorDes: "Data errata" }])),
+      clientReturning(
+        outcome(true, [{ esito: true }, { esito: false, errorCod: "12", errorDes: "Data errata" }]),
+      ),
     );
     const res = await sender.send(batch("s1", "s2"));
     expect(res.results[0]).toEqual({ correlationId: "s1", outcome: "ACQUIRED" });
@@ -93,12 +98,18 @@ describe("SoapAlloggiatiSender", () => {
 
   it("numero di dettagli ≠ schedine inviate → LANCIA (risposta ambigua)", async () => {
     // 1 dettaglio per 2 schedine inviate: non correlabile in sicurezza.
-    const sender = new SoapAlloggiatiSender(tokens, clientReturning(outcome(true, [{ esito: true }])));
+    const sender = new SoapAlloggiatiSender(
+      tokens,
+      clientReturning(outcome(true, [{ esito: true }])),
+    );
     await expect(sender.send(batch("s1", "s2"))).rejects.toBeInstanceOf(AlloggiatiProtocolError);
   });
 
   it("errore transitorio del client si propaga (mai inghiottito)", async () => {
-    const sender = new SoapAlloggiatiSender(tokens, clientThrowing(new AlloggiatiTransientError("timeout")));
+    const sender = new SoapAlloggiatiSender(
+      tokens,
+      clientThrowing(new AlloggiatiTransientError("timeout")),
+    );
     await expect(sender.send(batch("s1"))).rejects.toBeInstanceOf(AlloggiatiTransientError);
   });
 });
@@ -126,8 +137,13 @@ describe("SoapAlloggiatiSender + outbox (composizione)", () => {
   it("acquisizione → schedina ACQUIRED", async () => {
     const repo = new InMemorySchedinaRepository();
     const id = (await repo.createIntent(intent())).schedina.id;
-    const sender = new SoapAlloggiatiSender(tokens, clientReturning(outcome(true, [{ esito: true }])));
-    await new SchedinaOutboxService(repo, sender, () => "R".repeat(168)).processCredentialBatch(CRED);
+    const sender = new SoapAlloggiatiSender(
+      tokens,
+      clientReturning(outcome(true, [{ esito: true }])),
+    );
+    await new SchedinaOutboxService(repo, sender, () => "R".repeat(168)).processCredentialBatch(
+      CRED,
+    );
     expect((await repo.findById(id))?.status).toBe(SchedinaStatus.ACQUIRED);
   });
 
@@ -135,7 +151,9 @@ describe("SoapAlloggiatiSender + outbox (composizione)", () => {
     const repo = new InMemorySchedinaRepository();
     const id = (await repo.createIntent(intent())).schedina.id;
     const sender = new SoapAlloggiatiSender(tokens, clientReturning(outcome(false, [])));
-    await new SchedinaOutboxService(repo, sender, () => "R".repeat(168)).processCredentialBatch(CRED);
+    await new SchedinaOutboxService(repo, sender, () => "R".repeat(168)).processCredentialBatch(
+      CRED,
+    );
     expect((await repo.findById(id))?.status).toBe(SchedinaStatus.UNVERIFIED);
   });
 });

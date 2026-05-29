@@ -8,7 +8,9 @@ export async function alloggiatiLiveBanner(action: string, seconds = 5): Promise
   console.warn(`\n${line}`);
   console.warn("⚠️  ATTENZIONE — connessione al sistema REALE Alloggiati Web (Polizia di Stato).");
   console.warn(`    Azione: ${action}`);
-  console.warn("    Credenziali usate: ALLOGGIATI_UTENTE / ALLOGGIATI_PASSWORD / ALLOGGIATI_WSKEY.");
+  console.warn(
+    "    Credenziali usate: ALLOGGIATI_UTENTE / ALLOGGIATI_PASSWORD / ALLOGGIATI_WSKEY.",
+  );
   console.warn(`    >> Premi Ctrl-C entro ${seconds} secondi per ANNULLARE. <<`);
   console.warn(`${line}\n`);
   await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
