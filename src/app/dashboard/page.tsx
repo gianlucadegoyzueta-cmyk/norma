@@ -1,78 +1,110 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { Building2, ChevronRight, KeyRound, LogOut } from "lucide-react";
 import { signOut } from "@/auth";
 import { CURRENT_ORG_COOKIE, getCurrentContext } from "@/server/auth/session";
+import { SiteHeader } from "@/components/site-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const ctx = await getCurrentContext();
   if (!ctx) redirect("/login");
 
+  const signOutAction = async () => {
+    "use server";
+    await signOut({ redirectTo: "/login" });
+  };
+
   return (
-    <main
-      style={{
-        fontFamily: "system-ui, sans-serif",
-        maxWidth: 640,
-        margin: "0 auto",
-        padding: "3rem 1.5rem",
-        lineHeight: 1.6,
-      }}
-    >
-      <h1>Benvenuto, {ctx.user.email ?? ctx.user.name ?? "utente"}.</h1>
-      <p>
-        Sei in Organization <strong>{ctx.current.organizationName}</strong> — ruolo{" "}
-        <strong>{ctx.current.role}</strong>.
-      </p>
+    <div className="min-h-dvh">
+      <SiteHeader
+        actions={
+          <form action={signOutAction}>
+            <Button type="submit" variant="ghost" size="sm">
+              <LogOut />
+              Esci
+            </Button>
+          </form>
+        }
+      />
 
-      <nav style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", margin: "1.25rem 0" }}>
-        <Link
-          href="/credentials"
-          style={{
-            padding: "0.5rem 0.9rem",
-            border: "1px solid #ccc",
-            borderRadius: 6,
-            textDecoration: "none",
-          }}
-        >
-          🔑 Credenziali Alloggiati
-        </Link>
-      </nav>
-
-      {ctx.organizations.length > 1 && (
-        <section>
-          <h2 style={{ fontSize: "1rem" }}>Cambia Organization</h2>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            {ctx.organizations.map((o) => (
-              <form
-                key={o.organizationId}
-                action={async () => {
-                  "use server";
-                  (await cookies()).set(CURRENT_ORG_COOKIE, o.organizationId);
-                  redirect("/dashboard");
-                }}
-              >
-                <button
-                  type="submit"
-                  disabled={o.organizationId === ctx.current.organizationId}
-                  style={{ padding: "0.35rem 0.75rem" }}
-                >
-                  {o.organizationName} ({o.role})
-                </button>
-              </form>
-            ))}
+      <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Ciao, {ctx.user.name ?? ctx.user.email ?? "utente"}
+            </h1>
+            <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
+              <Building2 className="size-4" />
+              {ctx.current.organizationName}
+              <Badge variant="secondary">{ctx.current.role}</Badge>
+            </p>
           </div>
-        </section>
-      )}
+        </div>
 
-      <form
-        action={async () => {
-          "use server";
-          await signOut({ redirectTo: "/login" });
-        }}
-        style={{ marginTop: "2rem" }}
-      >
-        <button type="submit">Esci</button>
-      </form>
-    </main>
+        <section className="grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/credentials"
+            className="group focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
+          >
+            <Card className="h-full transition-shadow group-hover:shadow-md">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
+                    <KeyRound className="size-5" />
+                  </span>
+                  <ChevronRight className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5" />
+                </div>
+                <CardTitle className="mt-2">Credenziali Alloggiati</CardTitle>
+                <CardDescription>
+                  Gestisci le credenziali Alloggiati Web, salvate cifrate nel vault e verificate in
+                  tempo reale.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+        </section>
+
+        {ctx.organizations.length > 1 && (
+          <section className="mt-10">
+            <h2 className="text-muted-foreground mb-3 text-sm font-medium">
+              Cambia organizzazione
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {ctx.organizations.map((o) => {
+                const isCurrent = o.organizationId === ctx.current.organizationId;
+                return (
+                  <form
+                    key={o.organizationId}
+                    action={async () => {
+                      "use server";
+                      (await cookies()).set(CURRENT_ORG_COOKIE, o.organizationId);
+                      redirect("/dashboard");
+                    }}
+                  >
+                    <Button
+                      type="submit"
+                      variant={isCurrent ? "secondary" : "outline"}
+                      size="sm"
+                      disabled={isCurrent}
+                    >
+                      <Building2 />
+                      {o.organizationName}
+                      <span className="text-muted-foreground">· {o.role}</span>
+                    </Button>
+                  </form>
+                );
+              })}
+            </div>
+          </section>
+        )}
+      </main>
+    </div>
   );
 }
