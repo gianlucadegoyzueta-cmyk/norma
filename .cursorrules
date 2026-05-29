@@ -1,0 +1,63 @@
+# Compliance — SaaS Affitti Brevi (Italia)
+
+SaaS multi-tenant per la compliance degli affitti brevi. Il percorso critico
+è l'integrazione con **Alloggiati Web** (Polizia di Stato, SOAP).
+
+## Stack
+
+- Next.js 15 (App Router) + React 19 + TypeScript (strict)
+- PostgreSQL + Prisma (`prisma/schema.prisma`)
+- NextAuth v5 (beta) per l'autenticazione
+- Tailwind CSS v4 (token semantici in `src/app/globals.css`, dark mode via `.dark`)
+- Vitest per i test, ESLint flat config + Prettier (plugin Tailwind)
+- Node.js 20+ (vedi `.nvmrc`)
+
+## Struttura
+
+- `src/app/` — UI e route (App Router)
+- `src/components/` — design system: primitive in `ui/`, header, brand, theme toggle
+- `src/lib/` — utility condivise (`utils.ts` con `cn()`, `env.ts`)
+- `src/server/` — logica server: `db.ts` (client Prisma), `secrets/` (SecretsVault), `modules/` (domini)
+- `prisma/` — schema dati e migrazioni
+- `docs/` — analisi tecnica di Alloggiati Web (fattibilità + architettura)
+
+## Architettura a moduli
+
+- Ogni cartella in `src/server/modules/` è un **modulo di dominio** che incapsula
+  servizi, regole di business e accesso ai dati.
+- La UI (`src/app`) e le route API chiamano i moduli, **mai il contrario**.
+- Convenzione file per modulo:
+  - `*.service.ts` — logica e orchestrazione
+  - `*.repository.ts` — query Prisma (quando conviene isolarle)
+  - `*.types.ts` — tipi del modulo
+- Pattern **ports & adapters**: il dominio dipende da interfacce; gli adapter
+  (es. `PrismaAuthRepository`, `InMemoryAuthRepository`) le implementano.
+  Per i test usa l'adapter in-memory, non mockare Prisma a mano.
+
+## Principi non negoziabili
+
+- **Segreti**: le credenziali Alloggiati non sono MAI salvate in chiaro.
+  Passano sempre dal `SecretsVault` (`src/server/secrets/`).
+- **Outbox**: gli invii ad Alloggiati seguono il pattern outbox. `Send` è
+  irreversibile e non idempotente — non ritentare invii senza dedup.
+- Validare gli input al confine (form, route API); fidarsi del codice interno.
+
+## Stile
+
+- Lingua: italiano per testo di dominio, UI, commenti e messaggi. Codice/identificatori in inglese.
+- Commenti solo quando il "perché" non è ovvio. Niente commenti che ripetono il "cosa".
+- TypeScript strict: niente `any` non giustificato, preferire tipi espliciti ai confini.
+- Componenti UI: riusare le primitive in `src/components/ui/` invece di reinventarle.
+
+## Comandi
+
+- `npm run dev` — dev server su http://localhost:3000
+- `npm run typecheck` — `tsc --noEmit`
+- `npm run lint` / `npm run format`
+- `npm test` — Vitest (`npm run test:coverage` per la copertura)
+- `npm run db:migrate` — `prisma migrate dev`
+
+## Prima di considerare un task completo
+
+- `npm run typecheck` e `npm test` devono passare.
+- I test sui SOAP "live" girano solo con le env flag dedicate (`alloggiati:*`); non lanciarli per default.
