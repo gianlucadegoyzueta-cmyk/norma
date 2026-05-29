@@ -138,6 +138,30 @@ describe("StaysService", () => {
     await expect(service.generateSchedine(stayId)).rejects.toThrow();
   });
 
+  it("elenca i soggiorni dell'org con conteggio ospiti inseriti", async () => {
+    staysRepo.setProperty("prop_1", {
+      credentialId: "cred_1",
+      alloggiatiApartmentId: null,
+      name: "Bilocale Trastevere",
+      comuneName: "Roma",
+      provincia: "RM",
+    });
+    const { stayId } = await setupStayWithFamily();
+    const list = await service.listStays("org_1");
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({
+      id: stayId,
+      propertyName: "Bilocale Trastevere",
+      provincia: "RM",
+      hasCredential: true,
+      guestsAdded: 2,
+    });
+    // Senza outbox in memoria, il riepilogo schedine è a zero.
+    expect(list[0].schedine.total).toBe(0);
+    // Isolamento: un'altra org non vede questi soggiorni.
+    expect(await service.listStays("org_2")).toHaveLength(0);
+  });
+
   it("createStay valida i dati (guestsCount ≥ 1, partenza ≥ arrivo)", async () => {
     await expect(
       service.createStay({

@@ -5,7 +5,13 @@ import {
   isArrivalWithinSendWindow,
 } from "../domain/generation";
 import type { Party } from "../domain/parties";
-import type { CreateStayInput, ReferenceTablesLoader, StaysRepository } from "../ports";
+import type {
+  CreateStayInput,
+  ReferenceTablesLoader,
+  StayDetail,
+  StayListItem,
+  StaysRepository,
+} from "../ports";
 
 export class StaysError extends Error {
   constructor(message: string) {
@@ -46,6 +52,14 @@ export class StaysService {
       throw new StaysError("La data di partenza non può precedere quella di arrivo.");
     }
     return this.stays.createStay(input);
+  }
+
+  async listStays(organizationId: string): Promise<StayListItem[]> {
+    return this.stays.listByOrganization(organizationId);
+  }
+
+  async getStayDetail(stayId: string, organizationId: string): Promise<StayDetail | null> {
+    return this.stays.getStayDetail(stayId, organizationId);
   }
 
   async addGuests(
