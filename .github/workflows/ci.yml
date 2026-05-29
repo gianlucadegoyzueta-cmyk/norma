@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Annulla run precedenti sullo stesso ref se ne parte una nuova.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint · Typecheck · Test · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Valori fittizi: il codice legge gli env in modo lazy a runtime,
+          # ma li forniamo per non far fallire eventuali check in fase di build.
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/db?schema=public"
+          DIRECT_URL: "postgresql://user:pass@localhost:5432/db?schema=public"
+          AUTH_SECRET: "ci-build-secret-placeholder-not-used-at-runtime"
+          SECRETS_LOCAL_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+          EMAIL_FROM: "no-reply@example.com"
