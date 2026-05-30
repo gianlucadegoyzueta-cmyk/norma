@@ -40,6 +40,15 @@ export class SoapAlloggiatiSender implements AlloggiatiSender {
     private readonly client: SendClient,
   ) {}
 
+  /**
+   * Pre-autenticazione: ottiene un token valido SENZA inviare schedine. Se le credenziali sono
+   * errate lancia AlloggiatiAuthError (deterministico) → l'outbox lascia le schedine PENDING.
+   * Niente Send parte mai senza un token valido.
+   */
+  async prepare(credentialId: string): Promise<void> {
+    await this.tokens.getToken(credentialId);
+  }
+
   async send(batch: SendBatch): Promise<SendBatchResult> {
     const { utente, token } = await this.tokens.getToken(batch.credentialId);
     const records = batch.rows.map((r) => r.record);

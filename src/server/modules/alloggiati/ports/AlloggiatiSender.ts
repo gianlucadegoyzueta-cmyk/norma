@@ -30,5 +30,14 @@ export interface SendBatchResult {
  * in caso di timeout/assenza di risposta: l'outbox la tratterà come NO_RESPONSE → UNVERIFIED.
  */
 export interface AlloggiatiSender {
+  /**
+   * Pre-autenticazione OPZIONALE, invocata dall'outbox PRIMA di marcare le schedine SENDING.
+   * Garantisce che la credenziale sia valida e che un token sia disponibile, SENZA inviare nulla.
+   * Se fallisce (credenziali errate → AlloggiatiAuthError; rete giù → errore transitorio) l'outbox
+   * NON tocca lo stato: le schedine restano PENDING (nulla è stato inviato) e l'errore si propaga.
+   * Distingue così un fallimento di autenticazione (deterministico) dal timeout dell'invio vero
+   * (esito ignoto → UNVERIFIED). I sender che si autenticano (SOAP) la implementano; un Fake può ometterla.
+   */
+  prepare?(credentialId: string): Promise<void>;
   send(batch: SendBatch): Promise<SendBatchResult>;
 }

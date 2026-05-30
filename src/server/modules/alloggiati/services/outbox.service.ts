@@ -41,6 +41,13 @@ export class SchedinaOutboxService {
     const pending = await this.repo.listPendingByCredential(credentialId);
     if (pending.length === 0) return;
 
+    // 0) PRE-AUTENTICAZIONE (se il sender la espone): ottiene il token SENZA inviare nulla.
+    //    Un fallimento di AUTENTICAZIONE è deterministico e avviene PRIMA di qualsiasi invio →
+    //    lo lasciamo PROPAGARE: nessuna schedina cambia stato, restano PENDING (ri-provabili dopo
+    //    il re-onboarding). NON va confuso con il timeout dell'invio vero (→ UNVERIFIED, sotto).
+    //    Così non marchiamo mai SENDING/UNVERIFIED schedine che non sono mai partite.
+    await this.sender.prepare?.(credentialId);
+
     // 1) Costruisci TUTTE le righe PRIMA di toccare lo stato. Se un record non è costruibile
     //    (es. tabelle di riferimento vuote) si lancia qui e NESSUNA schedina passa a SENDING.
     const built: { schedina: SchedinaRecord; record: string }[] = [];
