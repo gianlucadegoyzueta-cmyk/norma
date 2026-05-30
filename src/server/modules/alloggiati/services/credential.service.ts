@@ -62,8 +62,8 @@ export class CredentialService {
    *  - su errore TRANSITORIO (rete/protocollo) RILANCIA: lo stato resta PENDING_REONBOARDING e
    *    il chiamante mostra l'errore (riprovabile più tardi).
    */
-  async verify(credentialId: string): Promise<CredentialStatus> {
-    const cred = await this.repo.getById(credentialId);
+  async verify(credentialId: string, organizationId: string): Promise<CredentialStatus> {
+    const cred = await this.repo.getById(credentialId, organizationId);
     if (!cred) throw new Error(`Credenziale non trovata: ${credentialId}`);
     const secret = await this.vault.retrieve(cred.secretRef);
     try {

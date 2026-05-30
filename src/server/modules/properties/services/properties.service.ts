@@ -45,9 +45,10 @@ export class PropertiesService {
 
     let credentialId: string | null = null;
     if (input.credentialId) {
-      const cred = await this.credentials.get(input.credentialId);
-      // Isolamento: mai collegare a una credenziale di un'altra organizzazione.
-      if (!cred || cred.organizationId !== input.organizationId) {
+      // Il lookup filtra per organizationId: una credenziale di un'altra org → null. Il controllo
+      // manuale "cred.organizationId !== input.organizationId" è quindi ridondante e rimosso.
+      const cred = await this.credentials.get(input.credentialId, input.organizationId);
+      if (!cred) {
         throw new PropertiesError("Credenziale non trovata per questa organizzazione.");
       }
       if (!comuneProvinciaMatchesCredential(comuneProvincia, cred.provincia)) {

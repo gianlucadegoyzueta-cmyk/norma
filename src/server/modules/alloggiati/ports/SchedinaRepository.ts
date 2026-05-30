@@ -34,7 +34,9 @@ export interface CreateIntentResult {
 export interface SchedinaRepository {
   /** Crea l'intento in modo IDEMPOTENTE: due intenti identici → una sola riga. */
   createIntent(input: CreateIntentInput): Promise<CreateIntentResult>;
-  findById(id: string): Promise<SchedinaRecord | null>;
+  /** Lettura per id SEMPRE filtrata per organizationId: un record di un'altra org NON è
+   *  restituibile, indipendentemente dal chiamante (isolamento garantito dal repository). */
+  findById(id: string, organizationId: string): Promise<SchedinaRecord | null>;
   listPendingByCredential(credentialId: string): Promise<SchedinaRecord[]>;
   /** Porta una schedina in SENDING (validando la transizione). */
   markSending(id: string): Promise<void>;

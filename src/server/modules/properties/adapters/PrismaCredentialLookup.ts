@@ -13,8 +13,8 @@ export class PrismaCredentialLookup implements CredentialLookup {
     this.repo = new PrismaCredentialRepository(prisma);
   }
 
-  async get(credentialId: string) {
-    const c = await this.repo.getById(credentialId);
+  async get(credentialId: string, organizationId: string) {
+    const c = await this.repo.getById(credentialId, organizationId);
     if (!c) return null;
     return {
       id: c.id,

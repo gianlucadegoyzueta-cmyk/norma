@@ -72,8 +72,9 @@ export class PrismaSchedinaRepository implements SchedinaRepository {
     }
   }
 
-  async findById(id: string): Promise<SchedinaRecord | null> {
-    return this.prisma.schedina.findUnique({ where: { id }, select: SELECT });
+  async findById(id: string, organizationId: string): Promise<SchedinaRecord | null> {
+    // findFirst con (id, organizationId): un id di un'altra org → null. Isolamento a livello query.
+    return this.prisma.schedina.findFirst({ where: { id, organizationId }, select: SELECT });
   }
 
   async listPendingByCredential(credentialId: string): Promise<SchedinaRecord[]> {

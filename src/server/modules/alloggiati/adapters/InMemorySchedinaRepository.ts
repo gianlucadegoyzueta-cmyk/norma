@@ -46,9 +46,10 @@ export class InMemorySchedinaRepository implements SchedinaRepository {
     return { schedina: this.view(row), created: true };
   }
 
-  async findById(id: string): Promise<SchedinaRecord | null> {
+  async findById(id: string, organizationId: string): Promise<SchedinaRecord | null> {
     const row = this.rows.get(id);
-    return row ? this.view(row) : null;
+    // Stesso isolamento dell'adapter Prisma: id di un'altra org → null.
+    return row && row.organizationId === organizationId ? this.view(row) : null;
   }
 
   async listPendingByCredential(credentialId: string): Promise<SchedinaRecord[]> {

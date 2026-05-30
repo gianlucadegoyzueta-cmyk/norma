@@ -82,7 +82,7 @@ describe("StaysService", () => {
     expect(res.existing).toBe(0);
     expect(res.schedinaIds).toHaveLength(guestIds.length);
     for (const sid of res.schedinaIds) {
-      expect((await schedineRepo.findById(sid))?.status).toBe(SchedinaStatus.PENDING);
+      expect((await schedineRepo.findById(sid, "org_1"))?.status).toBe(SchedinaStatus.PENDING);
     }
   });
 

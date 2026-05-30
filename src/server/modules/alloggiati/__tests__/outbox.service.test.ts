@@ -66,7 +66,7 @@ describe("SchedinaOutboxService — orchestrazione", () => {
   it("percorso felice: PENDING → SENDING → ACQUIRED", async () => {
     sender.setBehaviour({ mode: "all-acquired" });
     await service.processCredentialBatch(CRED);
-    expect((await repo.findById(schedinaId))?.status).toBe(SchedinaStatus.ACQUIRED);
+    expect((await repo.findById(schedinaId, ORG))?.status).toBe(SchedinaStatus.ACQUIRED);
     expect(sender.calls).toHaveLength(1);
   });
 
@@ -77,13 +77,13 @@ describe("SchedinaOutboxService — orchestrazione", () => {
       errorDes: "Data di Arrivo Errata",
     });
     await service.processCredentialBatch(CRED);
-    expect((await repo.findById(schedinaId))?.status).toBe(SchedinaStatus.REJECTED);
+    expect((await repo.findById(schedinaId, ORG))?.status).toBe(SchedinaStatus.REJECTED);
   });
 
   it("timeout/nessuna risposta: PENDING → SENDING → UNVERIFIED (mai doppio invio)", async () => {
     sender.setBehaviour({ mode: "throw" });
     await service.processCredentialBatch(CRED);
-    expect((await repo.findById(schedinaId))?.status).toBe(SchedinaStatus.UNVERIFIED);
+    expect((await repo.findById(schedinaId, ORG))?.status).toBe(SchedinaStatus.UNVERIFIED);
   });
 
   it("non invia nulla se non ci sono schedine PENDING", async () => {

@@ -144,7 +144,7 @@ describe("SoapAlloggiatiSender + outbox (composizione)", () => {
     await new SchedinaOutboxService(repo, sender, () => "R".repeat(168)).processCredentialBatch(
       CRED,
     );
-    expect((await repo.findById(id))?.status).toBe(SchedinaStatus.ACQUIRED);
+    expect((await repo.findById(id, "org_1"))?.status).toBe(SchedinaStatus.ACQUIRED);
   });
 
   it("risposta ambigua → schedina UNVERIFIED (mai doppio invio)", async () => {
@@ -154,6 +154,6 @@ describe("SoapAlloggiatiSender + outbox (composizione)", () => {
     await new SchedinaOutboxService(repo, sender, () => "R".repeat(168)).processCredentialBatch(
       CRED,
     );
-    expect((await repo.findById(id))?.status).toBe(SchedinaStatus.UNVERIFIED);
+    expect((await repo.findById(id, "org_1"))?.status).toBe(SchedinaStatus.UNVERIFIED);
   });
 });

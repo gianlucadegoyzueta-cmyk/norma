@@ -16,7 +16,14 @@ const credentials: Record<
     label: "Di un'altra org",
   },
 };
-const credentialLookup: CredentialLookup = { get: async (id) => credentials[id] ?? null };
+// Test double con lo stesso isolamento dell'adapter reale: ritorna la credenziale solo se
+// appartiene all'organizationId richiesto (altrimenti null).
+const credentialLookup: CredentialLookup = {
+  get: async (id, organizationId) => {
+    const c = credentials[id];
+    return c && c.organizationId === organizationId ? c : null;
+  },
+};
 
 function validInput(over: Partial<Parameters<PropertiesService["createProperty"]>[0]> = {}) {
   return {

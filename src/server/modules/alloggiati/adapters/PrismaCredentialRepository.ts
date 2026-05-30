@@ -41,8 +41,26 @@ export class PrismaCredentialRepository {
     return this.prisma.alloggiatiCredential.create({ data: row, select: SELECT });
   }
 
-  async getById(id: string): Promise<CredentialMetadata | null> {
-    return this.prisma.alloggiatiCredential.findUnique({ where: { id }, select: SELECT });
+  async getById(id: string, organizationId: string): Promise<CredentialMetadata | null> {
+    // findFirst con (id, organizationId): una credenziale di un'altra org → null. Isolamento
+    // garantito dalla query, non dal chiamante.
+    return this.prisma.alloggiatiCredential.findFirst({
+      where: { id, organizationId },
+      select: SELECT,
+    });
+  }
+
+  /**
+   * Lettura INTERNA per il provider del vault: dal credentialId al solo `secretRef` opaco.
+   * NON filtra per organizationId perché è invocata DENTRO il flusso di invio, che è già
+   * autorizzato a monte (`guardCredential` esegue `getById(id, org)` prima di procedere).
+   * Restituisce solo il riferimento opaco al vault, mai metadati o segreti di tenant.
+   */
+  async findSecretRef(id: string): Promise<{ secretRef: string } | null> {
+    return this.prisma.alloggiatiCredential.findUnique({
+      where: { id },
+      select: { secretRef: true },
+    });
   }
 
   async listByOrganization(organizationId: string): Promise<CredentialMetadata[]> {

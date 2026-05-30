@@ -49,7 +49,9 @@ export interface PropertyRepository {
  * un'interfaccia evita di dipendere dall'adapter Prisma di Alloggiati nei test.
  */
 export interface CredentialLookup {
+  /** Filtrata per organizationId: una credenziale di un'altra org → null (isolamento by query). */
   get(
     credentialId: string,
+    organizationId: string,
   ): Promise<{ id: string; organizationId: string; provincia: string; label: string } | null>;
 }

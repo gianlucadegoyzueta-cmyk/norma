@@ -24,7 +24,12 @@ type Result = { ok: boolean; message: string };
 function deps() {
   const client = new AlloggiatiSoapClient();
   const credRepo = new PrismaCredentialRepository(prisma);
-  const tokens = new TokenManager(client, new VaultCredentialProvider(credRepo, getSecretsVault()));
+  // Il provider del vault risolve credentialId → secretRef (lettura interna post-autorizzazione:
+  // il batch parte solo dopo guardCredential, che ha già verificato l'appartenenza all'org).
+  const tokens = new TokenManager(
+    client,
+    new VaultCredentialProvider({ getById: (id) => credRepo.findSecretRef(id) }, getSecretsVault()),
+  );
   const schedinaRepo = new PrismaSchedinaRepository(prisma);
   const recordBuilder = new SchedinaRecordBuilder(prisma, new PrismaReferenceTablesLoader(prisma));
   const build = (id: string) => recordBuilder.build(id);
@@ -40,8 +45,10 @@ async function guardCredential(
   credentialId: string,
   organizationId: string,
 ): Promise<string | null> {
-  const cred = await credRepo.getById(credentialId);
-  if (!cred || cred.organizationId !== organizationId) {
+  // getById ora filtra per organizationId: se la credenziale è di un'altra org → null (il
+  // controllo manuale "cred.organizationId !== organizationId" è ridondante e rimosso).
+  const cred = await credRepo.getById(credentialId, organizationId);
+  if (!cred) {
     return "Credenziale non trovata per questa organizzazione.";
   }
   if (cred.status !== "ACTIVE") {

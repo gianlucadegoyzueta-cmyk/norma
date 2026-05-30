@@ -62,7 +62,7 @@ export async function onboardCredentialAction(
   // Verifica live. Best-effort: un errore transitorio lascia lo stato PENDING.
   let status = "PENDING_REONBOARDING";
   try {
-    status = await service.verify(credId);
+    status = await service.verify(credId, ctx.current.organizationId);
   } catch {
     // errore transitorio di rete/protocollo
   }
