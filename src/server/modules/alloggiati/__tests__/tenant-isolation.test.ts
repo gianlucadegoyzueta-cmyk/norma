@@ -17,11 +17,24 @@ import { PrismaSchedinaRepository } from "../adapters/PrismaSchedinaRepository";
  */
 type Row = Record<string, unknown>;
 
-/** Modello Prisma finto: `findFirst` ritorna la prima riga che soddisfa TUTTE le chiavi di `where`. */
+/**
+ * Modello Prisma finto. `findFirst` e `updateMany` filtrano su TUTTE le chiavi di `where`: se un
+ * metodo del repository dimenticasse `organizationId`, una lettura/scrittura cross-org colpirebbe
+ * la riga e i test fallirebbero. `updateMany` muta le righe corrispondenti e ritorna `{ count }`
+ * come Prisma.
+ */
+function matches(row: Row, where: Row): boolean {
+  return Object.entries(where).every(([k, v]) => row[k] === v);
+}
+
 function fakeModel(rows: Row[]) {
   return {
-    findFirst: async ({ where }: { where: Row }) =>
-      rows.find((r) => Object.entries(where).every(([k, v]) => r[k] === v)) ?? null,
+    findFirst: async ({ where }: { where: Row }) => rows.find((r) => matches(r, where)) ?? null,
+    updateMany: async ({ where, data }: { where: Row; data: Row }) => {
+      const hit = rows.filter((r) => matches(r, where));
+      for (const r of hit) Object.assign(r, data);
+      return { count: hit.length };
+    },
   };
 }
 
@@ -92,6 +105,47 @@ describe("Isolamento multi-tenant nei repository", () => {
       });
       expect(await repo.findById(schedina.id, "orgB")).toBeNull();
       expect((await repo.findById(schedina.id, "orgA"))?.id).toBe(schedina.id);
+    });
+  });
+
+  describe("PrismaCredentialRepository write — updateStatus / markVerified", () => {
+    function setup() {
+      const rows: Row[] = [
+        {
+          id: "credA",
+          organizationId: "orgA",
+          status: "PENDING_REONBOARDING",
+          lastVerifiedAt: null,
+        },
+      ];
+      const prisma = { alloggiatiCredential: fakeModel(rows) } as unknown as PrismaClient;
+      return { rows, repo: new PrismaCredentialRepository(prisma) };
+    }
+
+    it("updateStatus da un'altra org (B) → NON modifica la credenziale di A", async () => {
+      const { rows, repo } = setup();
+      await repo.updateStatus("credA", "orgB", "INVALID");
+      expect(rows[0].status).toBe("PENDING_REONBOARDING"); // invariato
+    });
+
+    it("updateStatus dalla stessa org (A) → aggiorna", async () => {
+      const { rows, repo } = setup();
+      await repo.updateStatus("credA", "orgA", "INVALID");
+      expect(rows[0].status).toBe("INVALID");
+    });
+
+    it("markVerified da un'altra org (B) → NON marca ACTIVE la credenziale di A", async () => {
+      const { rows, repo } = setup();
+      await repo.markVerified("credA", "orgB");
+      expect(rows[0].status).toBe("PENDING_REONBOARDING");
+      expect(rows[0].lastVerifiedAt).toBeNull();
+    });
+
+    it("markVerified dalla stessa org (A) → ACTIVE + lastVerifiedAt valorizzato", async () => {
+      const { rows, repo } = setup();
+      await repo.markVerified("credA", "orgA");
+      expect(rows[0].status).toBe("ACTIVE");
+      expect(rows[0].lastVerifiedAt).toBeInstanceOf(Date);
     });
   });
 });

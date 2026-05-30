@@ -67,14 +67,19 @@ export class PrismaCredentialRepository {
     return this.prisma.alloggiatiCredential.findMany({ where: { organizationId }, select: SELECT });
   }
 
-  async updateStatus(id: string, status: CredentialStatus): Promise<void> {
-    await this.prisma.alloggiatiCredential.update({ where: { id }, data: { status } });
+  async updateStatus(id: string, organizationId: string, status: CredentialStatus): Promise<void> {
+    // updateMany con (id, organizationId): una credenziale di un'altra org non viene aggiornata
+    // (0 righe), mai un'eccezione e mai una scrittura cross-tenant. Isolamento by query.
+    await this.prisma.alloggiatiCredential.updateMany({
+      where: { id, organizationId },
+      data: { status },
+    });
   }
 
   /** Da chiamare dopo un Authentication_Test andato a buon fine. */
-  async markVerified(id: string): Promise<void> {
-    await this.prisma.alloggiatiCredential.update({
-      where: { id },
+  async markVerified(id: string, organizationId: string): Promise<void> {
+    await this.prisma.alloggiatiCredential.updateMany({
+      where: { id, organizationId },
       data: { status: "ACTIVE", lastVerifiedAt: new Date() },
     });
   }

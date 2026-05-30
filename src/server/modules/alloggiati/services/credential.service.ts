@@ -69,11 +69,11 @@ export class CredentialService {
     try {
       const { utente, token } = await this.client.generateToken(secret);
       await this.client.authenticationTest(utente, token);
-      await this.repo.markVerified(credentialId);
+      await this.repo.markVerified(credentialId, organizationId);
       return "ACTIVE";
     } catch (e) {
       if (e instanceof AlloggiatiAuthError) {
-        await this.repo.updateStatus(credentialId, "INVALID");
+        await this.repo.updateStatus(credentialId, organizationId, "INVALID");
         return "INVALID";
       }
       throw e;
