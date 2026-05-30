@@ -2,9 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { BedDouble, Building2, ChevronRight, FileText, KeyRound, LogOut } from "lucide-react";
+import {
+  ArrowRight,
+  BedDouble,
+  Building2,
+  ChevronRight,
+  FileText,
+  KeyRound,
+  LogOut,
+} from "lucide-react";
 import { signOut } from "@/auth";
 import { CURRENT_ORG_COOKIE, getCurrentContext } from "@/server/auth/session";
+import { prisma } from "@/server/db";
+import { getOnboardingState } from "@/server/modules/onboarding/state";
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +25,9 @@ export const metadata: Metadata = { title: "Dashboard" };
 export default async function DashboardPage() {
   const ctx = await getCurrentContext();
   if (!ctx) redirect("/login");
+
+  // Stato di configurazione (derivato dai dati): mostra il promemoria finché non è completo.
+  const onboarding = await getOnboardingState(prisma, ctx.current.organizationId);
 
   const signOutAction = async () => {
     "use server";
@@ -47,6 +60,34 @@ export default async function DashboardPage() {
             </p>
           </div>
         </div>
+
+        {!onboarding.ready && (
+          <Link href="/onboarding" className="group mb-6 block">
+            <Card className="border-primary/40 bg-primary/[0.03] transition-shadow hover:shadow-md">
+              <CardHeader>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <CardTitle className="text-base">Completa la configurazione</CardTitle>
+                    <CardDescription className="mt-1">
+                      {onboarding.completed} di {onboarding.total} passi completati. Finisci per
+                      iniziare a inviare le schedine.
+                    </CardDescription>
+                  </div>
+                  <span className="text-primary inline-flex shrink-0 items-center gap-1 text-sm font-medium">
+                    Continua
+                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </div>
+                <div className="bg-muted mt-2 h-1.5 w-full overflow-hidden rounded-full">
+                  <div
+                    className="bg-primary h-full rounded-full transition-all"
+                    style={{ width: `${(onboarding.completed / onboarding.total) * 100}%` }}
+                  />
+                </div>
+              </CardHeader>
+            </Card>
+          </Link>
+        )}
 
         <section className="grid gap-4 sm:grid-cols-2">
           <Link
