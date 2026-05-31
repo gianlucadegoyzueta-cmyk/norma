@@ -70,6 +70,12 @@ enum SubmissionChannel {
   PEC // fallback: PEC alla Questura quando il portale è giù
 }
 
+/// Tipo di utente, raccolto nell'onboarding per personalizzare copy e passi del wizard.
+enum OnboardingUserType {
+  HOST_SINGOLO // gestisce una o poche strutture proprie
+  PROPERTY_MANAGER // gestisce strutture di terzi / molte strutture
+}
+
 // -------------------------- TENANT & UTENTI --------------------------
 
 /// Il tenant/cliente. Può essere un host con una sola struttura
@@ -87,6 +93,26 @@ model Organization {
   guests                 Guest[]
   schedine               Schedina[]
   touristTaxDeclarations TouristTaxDeclaration[]
+  onboardingProgress     OnboardingProgress?
+}
+
+/// Stato "soft" del wizard di onboarding di un'Organization: i passi NON derivabili dai dati di
+/// dominio (benvenuto/identità, tipo utente, n° strutture, ultimo step visitato). I passi "duri"
+/// (credenziale ATTIVA, tabelle, immobile) restano DERIVATI da getOnboardingState — qui non si
+/// duplicano. 1:1 con Organization (organizationId UNIQUE).
+model OnboardingProgress {
+  id              String              @id @default(cuid())
+  organizationId  String              @unique
+  userType        OnboardingUserType?
+  structuresCount Int? // stima dichiarata in fase di onboarding (solo per personalizzare il copy)
+  welcomedAt      DateTime? // step 0 visto
+  identityDoneAt  DateTime? // step 1 (attività) completato
+  currentStep     Int                 @default(0) // ultimo step visitato → ripresa refresh-safe
+  completedAt     DateTime? // wizard concluso (step finale)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }
 
 /// Persona che accede all'app. Campi compatibili con Auth.js.
