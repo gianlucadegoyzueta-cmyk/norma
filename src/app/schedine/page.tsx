@@ -5,17 +5,14 @@ import { AlertTriangle, ArrowLeft, FileText } from "lucide-react";
 import type { SchedinaStatus } from "@prisma/client";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
-import {
-  PrismaCredentialRepository,
-  PrismaSchedinaRepository,
-  type SchedinaListItem,
-} from "@/server/modules/alloggiati";
+import { PrismaCredentialRepository, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
 import { ReopenRejectedButton } from "@/components/reopen-rejected-button";
 import { SiteHeader } from "@/components/site-header";
 import { UnverifiedNote } from "@/components/unverified-note";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { isOverdue } from "@/lib/schedina-status";
 import { cn } from "@/lib/utils";
 import { CredentialOutboxControls } from "./CredentialOutboxControls";
 import { mapAlloggiatiError } from "./error-codes";
@@ -38,12 +35,6 @@ const STATUS: Record<SchedinaStatus, { text: string; variant: BadgeProps["varian
   REJECTED: { text: "Respinta", variant: "destructive" },
   UNVERIFIED: { text: "Da verificare", variant: "warning" },
 };
-
-/** Una schedina ancora "aperta" (non acquisita) la cui deadline è passata è in ritardo. */
-function isOverdue(s: SchedinaListItem, now: number): boolean {
-  const open = s.status === "PENDING" || s.status === "SENDING" || s.status === "UNVERIFIED";
-  return open && s.deadlineAt.getTime() < now;
-}
 
 export default async function SchedinePage() {
   const ctx = await getCurrentContext();

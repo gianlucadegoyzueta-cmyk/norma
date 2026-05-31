@@ -3,6 +3,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
+  AlertTriangle,
   ArrowRight,
   BedDouble,
   Building2,
@@ -19,6 +20,7 @@ import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { OPEN_SCHEDINA_STATUSES } from "@/lib/schedina-status";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -28,6 +30,16 @@ export default async function DashboardPage() {
 
   // Stato di configurazione (derivato dai dati): mostra il promemoria finché non è completo.
   const onboarding = await getOnboardingState(prisma, ctx.current.organizationId);
+
+  // Schedine OLTRE SCADENZA (aperte con deadline passata): è il rischio legale più urgente, quindi
+  // l'alert precede tutto. Conteggio a livello DB (usa gli indici status/deadlineAt), niente cambi al dominio.
+  const overdueCount = await prisma.schedina.count({
+    where: {
+      organizationId: ctx.current.organizationId,
+      status: { in: OPEN_SCHEDINA_STATUSES },
+      deadlineAt: { lt: new Date() },
+    },
+  });
 
   const signOutAction = async () => {
     "use server";
@@ -60,6 +72,39 @@ export default async function DashboardPage() {
             </p>
           </div>
         </div>
+
+        {overdueCount > 0 && (
+          <Link
+            href="/schedine"
+            className="group focus-visible:ring-ring mb-6 block rounded-xl outline-none focus-visible:ring-2"
+          >
+            <Card className="border-destructive/40 bg-destructive/5 transition-shadow hover:shadow-md">
+              <CardHeader>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="bg-destructive/12 text-destructive flex size-10 shrink-0 items-center justify-center rounded-lg">
+                      <AlertTriangle className="size-5" aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <CardTitle className="text-destructive text-base">
+                        {overdueCount}{" "}
+                        {overdueCount === 1 ? "schedina oltre scadenza" : "schedine oltre scadenza"}
+                      </CardTitle>
+                      <CardDescription className="mt-1">
+                        Vanno gestite subito: una comunicazione tardiva ad Alloggiati è una
+                        violazione.
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <span className="text-destructive inline-flex shrink-0 items-center gap-1 text-sm font-medium">
+                    Apri
+                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </div>
+              </CardHeader>
+            </Card>
+          </Link>
+        )}
 
         {!onboarding.ready && (
           <Link href="/onboarding" className="group mb-6 block">
