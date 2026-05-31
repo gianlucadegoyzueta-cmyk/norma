@@ -21,8 +21,9 @@ export type NightCapScope = "CONSECUTIVE_SAME_STRUCTURE" | "PER_CALENDAR_YEAR" |
 
 export type DeclarationPeriod = "MONTHLY" | "QUARTERLY" | "ANNUAL";
 
-/** Canale di versamento per-comune. MANUAL_EXPORT è il default sicuro, sempre disponibile. */
-export type RemittanceChannel = "MANUAL_EXPORT" | "GECOS" | "PAGOPA" | "COMUNE_PORTAL";
+/** Canale di versamento per-comune (identificatore). L'interfaccia operativa del canale è il port
+ *  `RemittanceChannel` in ports/. MANUAL_EXPORT è il default sicuro, sempre disponibile. */
+export type RemittanceChannelId = "MANUAL_EXPORT" | "GECOS" | "PAGOPA" | "COMUNE_PORTAL";
 
 /** Stagione applicata a una tariffa: "ALL" = nessun aggiustamento; oppure finestre MM-DD con
  *  modificatore percentuale (es. Venezia bassa stagione -30%). Le finestre possono SCAVALCARE
@@ -60,7 +61,7 @@ export interface AgeReduction {
 }
 
 export interface RemittanceConfig {
-  channel: RemittanceChannel;
+  channel: RemittanceChannelId;
   url?: string;
   notes?: string;
 }
@@ -152,7 +153,10 @@ function parseSeason(v: unknown, path: string): Season {
     fail(`${path}.ranges`, "almeno un intervallo");
   const ranges = v.ranges.map((r, i) => {
     if (!isObject(r)) fail(`${path}.ranges[${i}]`, "oggetto { from, to }");
-    return { from: assertMMDD(r.from, `${path}.ranges[${i}].from`), to: assertMMDD(r.to, `${path}.ranges[${i}].to`) };
+    return {
+      from: assertMMDD(r.from, `${path}.ranges[${i}].from`),
+      to: assertMMDD(r.to, `${path}.ranges[${i}].to`),
+    };
   });
   return { ranges, modifierPct: v.modifierPct };
 }
@@ -164,7 +168,8 @@ function parseRate(v: unknown, path: string): TaxRate {
     amountCents: asCents(v.amountCents, `${path}.amountCents`),
   };
   if (v.accommodationCategory !== undefined) {
-    if (typeof v.accommodationCategory !== "string") fail(`${path}.accommodationCategory`, "stringa");
+    if (typeof v.accommodationCategory !== "string")
+      fail(`${path}.accommodationCategory`, "stringa");
     rate.accommodationCategory = v.accommodationCategory;
   }
   if (v.zone !== undefined) {
@@ -176,7 +181,8 @@ function parseRate(v: unknown, path: string): TaxRate {
 
 function parseSurcharge(v: unknown, path: string): TaxSurcharge {
   if (!isObject(v)) fail(path, "oggetto sovrattassa atteso");
-  if (typeof v.reason !== "string" || v.reason.length === 0) fail(`${path}.reason`, "stringa non vuota");
+  if (typeof v.reason !== "string" || v.reason.length === 0)
+    fail(`${path}.reason`, "stringa non vuota");
   return {
     reason: v.reason,
     amountCents: asCents(v.amountCents, `${path}.amountCents`),
@@ -193,19 +199,20 @@ function parseAgeReduction(v: unknown, path: string): AgeReduction {
 }
 
 const PERIODS: DeclarationPeriod[] = ["MONTHLY", "QUARTERLY", "ANNUAL"];
-const CHANNELS: RemittanceChannel[] = ["MANUAL_EXPORT", "GECOS", "PAGOPA", "COMUNE_PORTAL"];
+const CHANNELS: RemittanceChannelId[] = ["MANUAL_EXPORT", "GECOS", "PAGOPA", "COMUNE_PORTAL"];
 const SCOPES: NightCapScope[] = ["CONSECUTIVE_SAME_STRUCTURE", "PER_CALENDAR_YEAR", "PER_STAY"];
 
 function parseDeclaration(v: unknown, path: string): DeclarationConfig {
   if (!isObject(v)) fail(path, "oggetto dichiarazione atteso");
-  if (!PERIODS.includes(v.period as DeclarationPeriod)) fail(`${path}.period`, `uno di ${PERIODS.join("|")}`);
+  if (!PERIODS.includes(v.period as DeclarationPeriod))
+    fail(`${path}.period`, `uno di ${PERIODS.join("|")}`);
   const dueDay = asInt(v.dueDay, `${path}.dueDay`);
   if (dueDay < 1 || dueDay > 31) fail(`${path}.dueDay`, "1..31");
   if (!isObject(v.remittance)) fail(`${path}.remittance`, "oggetto atteso");
   const rem = v.remittance;
-  if (!CHANNELS.includes(rem.channel as RemittanceChannel))
+  if (!CHANNELS.includes(rem.channel as RemittanceChannelId))
     fail(`${path}.remittance.channel`, `uno di ${CHANNELS.join("|")}`);
-  const remittance: RemittanceConfig = { channel: rem.channel as RemittanceChannel };
+  const remittance: RemittanceConfig = { channel: rem.channel as RemittanceChannelId };
   if (rem.url !== undefined) {
     if (typeof rem.url !== "string") fail(`${path}.remittance.url`, "stringa");
     remittance.url = rem.url;
@@ -236,8 +243,7 @@ export function parseTouristTaxRule(input: unknown): TouristTaxRule {
   if (!SCOPES.includes(input.nightCapScope as NightCapScope))
     fail("nightCapScope", `uno di ${SCOPES.join("|")}`);
 
-  if (!Array.isArray(input.rates) || input.rates.length === 0)
-    fail("rates", "almeno una tariffa");
+  if (!Array.isArray(input.rates) || input.rates.length === 0) fail("rates", "almeno una tariffa");
   const rates = input.rates.map((r, i) => parseRate(r, `rates[${i}]`));
 
   const surcharges = Array.isArray(input.surcharges)
