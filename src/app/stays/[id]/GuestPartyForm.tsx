@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useId, useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { CheckCircle2, Loader2, Plus, Trash2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ComboBox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -16,45 +17,10 @@ type Option = { id: string; label: string };
 type Result = { ok: boolean; message: string };
 type PartyTipo = "SINGOLO" | "FAMIGLIA" | "GRUPPO";
 
-/** Input con typeahead (datalist condivisa) che risolve l'etichetta scelta nell'id, in un hidden. */
-function ComboBox({
-  name,
-  listId,
-  options,
-  placeholder,
-  required,
-}: {
-  name: string;
-  listId: string;
-  options: Option[];
-  placeholder?: string;
-  required?: boolean;
-}) {
-  const [label, setLabel] = useState("");
-  const id = useMemo(() => options.find((o) => o.label === label)?.id ?? "", [label, options]);
-  const unmatched = label !== "" && id === "";
-  return (
-    <>
-      <Input
-        list={listId}
-        value={label}
-        onChange={(e) => setLabel(e.target.value)}
-        placeholder={placeholder}
-        aria-invalid={unmatched}
-        className={cn(unmatched && "border-destructive")}
-      />
-      {/* L'id risolto è ciò che viene inviato; se non corrisponde a un'opzione resta vuoto. */}
-      <input type="hidden" name={name} value={id} required={required} />
-    </>
-  );
-}
-
 function PersonFields({
   idx,
   withDocument,
   countries,
-  comuniListId,
-  luoghiListId,
   comuni,
   luoghi,
   documentTypes,
@@ -62,8 +28,6 @@ function PersonFields({
   idx: number;
   withDocument: boolean;
   countries: Country[];
-  comuniListId: string;
-  luoghiListId: string;
   comuni: Option[];
   luoghi: Option[];
   documentTypes: DocumentType[];
@@ -114,10 +78,10 @@ function PersonFields({
           </Select>
         </div>
         <div className="grid gap-1.5">
-          <Label>Comune di nascita (se in Italia)</Label>
+          <Label htmlFor={`${f("birthComuneId")}-cb`}>Comune di nascita (se in Italia)</Label>
           <ComboBox
+            id={`${f("birthComuneId")}-cb`}
             name={f("birthComuneId")}
-            listId={comuniListId}
             options={comuni}
             placeholder="Solo se nato in Italia"
           />
@@ -163,8 +127,12 @@ function PersonFields({
             </div>
           </div>
           <div className="grid gap-1.5">
-            <Label>Luogo di rilascio (Comune o Stato)</Label>
-            <ComboBox name={f("documentPlaceId")} listId={luoghiListId} options={luoghi} />
+            <Label htmlFor={`${f("documentPlaceId")}-cb`}>Luogo di rilascio (Comune o Stato)</Label>
+            <ComboBox
+              id={`${f("documentPlaceId")}-cb`}
+              name={f("documentPlaceId")}
+              options={luoghi}
+            />
           </div>
         </div>
       )}
@@ -191,9 +159,6 @@ export function GuestPartyForm({
   // Numero di MEMBRI extra oltre al capo (solo FAMIGLIA/GRUPPO).
   const [extraMembers, setExtraMembers] = useState(0);
 
-  const comuniListId = useId();
-  const luoghiListId = useId();
-
   // Opzioni per le combobox (etichetta univoca con sigla provincia).
   const comuneOptions = useMemo<Option[]>(
     () => comuni.map((c) => ({ id: c.id, label: `${c.name} (${c.provincia})` })),
@@ -213,18 +178,6 @@ export function GuestPartyForm({
       <input type="hidden" name="stayId" value={stayId} />
       <input type="hidden" name="partyTipo" value={tipo} />
       <input type="hidden" name="personCount" value={personCount} />
-
-      {/* Datalist condivise: renderizzate una volta, riusate da tutte le combobox. */}
-      <datalist id={comuniListId}>
-        {comuneOptions.map((o) => (
-          <option key={o.id} value={o.label} />
-        ))}
-      </datalist>
-      <datalist id={luoghiListId}>
-        {luogoOptions.map((o) => (
-          <option key={o.id} value={o.label} />
-        ))}
-      </datalist>
 
       <div className="grid gap-1.5">
         <Label htmlFor="party-tipo">Tipo comitiva</Label>
@@ -248,8 +201,6 @@ export function GuestPartyForm({
           idx={0}
           withDocument
           countries={countries}
-          comuniListId={comuniListId}
-          luoghiListId={luoghiListId}
           comuni={comuneOptions}
           luoghi={luogoOptions}
           documentTypes={documentTypes}
@@ -279,8 +230,6 @@ export function GuestPartyForm({
                 idx={idx}
                 withDocument={false}
                 countries={countries}
-                comuniListId={comuniListId}
-                luoghiListId={luoghiListId}
                 comuni={comuneOptions}
                 luoghi={luogoOptions}
                 documentTypes={documentTypes}
