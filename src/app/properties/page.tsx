@@ -5,15 +5,16 @@ import { ArrowLeft, Building2, KeyRound, MapPin } from "lucide-react";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaCredentialRepository } from "@/server/modules/alloggiati";
+import { CinService, PrismaCinRepository, propertyNeedsCin } from "@/server/modules/cin";
 import { PrismaPropertyRepository } from "@/server/modules/properties";
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CinInlineForm } from "./CinInlineForm";
 import { PropertyForm } from "./PropertyForm";
 
 export const metadata: Metadata = { title: "Immobili" };
 
-// Pagina sempre dinamica (legge sessione + DB per utente).
 export const dynamic = "force-dynamic";
 
 export default async function PropertiesPage() {
@@ -22,18 +23,18 @@ export default async function PropertiesPage() {
 
   const orgId = ctx.current.organizationId;
   const propertyRepo = new PrismaPropertyRepository(prisma);
+  const cinService = new CinService(new PrismaCinRepository(prisma));
 
-  // Credenziali collegabili: tutte tranne quelle disattivate (così si può collegare anche una
-  // credenziale ancora "da verificare"). Le province coperte filtrano i Comuni selezionabili.
   const allCredentials = await new PrismaCredentialRepository(prisma).listByOrganization(orgId);
   const credentials = allCredentials
     .filter((c) => c.status !== "DISABLED")
     .map((c) => ({ id: c.id, label: c.label, provincia: c.provincia }));
 
   const province = [...new Set(credentials.map((c) => c.provincia))];
-  const [properties, comuni] = await Promise.all([
+  const [properties, comuni, cinByPropertyId] = await Promise.all([
     propertyRepo.listByOrganization(orgId),
     propertyRepo.listSelectableComuni(province),
+    cinService.listProperties(orgId).then((rows) => new Map(rows.map((r) => [r.id, r]))),
   ]);
 
   return (
@@ -74,31 +75,49 @@ export default async function PropertiesPage() {
             </Card>
           ) : (
             <ul className="grid gap-2">
-              {properties.map((p) => (
-                <li key={p.id}>
-                  <Card>
-                    <CardContent className="flex items-center justify-between gap-4 px-4 py-3">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{p.name}</p>
-                        <p className="text-muted-foreground flex items-center gap-1 truncate text-xs">
-                          <MapPin className="size-3 shrink-0" />
-                          {p.address} · {p.comune.name} ({p.comune.provincia}) · {p.proprietario}
-                        </p>
-                      </div>
-                      {p.credential ? (
-                        <Badge variant="secondary" className="shrink-0">
-                          <KeyRound className="size-3" />
-                          {p.credential.label}
-                        </Badge>
-                      ) : (
-                        <Badge variant="warning" className="shrink-0">
-                          Senza credenziale
-                        </Badge>
-                      )}
-                    </CardContent>
-                  </Card>
-                </li>
-              ))}
+              {properties.map((p) => {
+                const cin = cinByPropertyId.get(p.id);
+                const needsCin = cin ? propertyNeedsCin(cin.cinStatus) : true;
+                return (
+                  <li key={p.id}>
+                    <Card>
+                      <CardContent className="px-4 py-3">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="truncate font-medium">{p.name}</p>
+                            <p className="text-muted-foreground flex items-center gap-1 truncate text-xs">
+                              <MapPin className="size-3 shrink-0" />
+                              {p.address} · {p.comune.name} ({p.comune.provincia}) · {p.proprietario}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 flex-col items-end gap-1">
+                            {p.credential ? (
+                              <Badge variant="secondary">
+                                <KeyRound className="size-3" />
+                                {p.credential.label}
+                              </Badge>
+                            ) : (
+                              <Badge variant="warning">Senza credenziale</Badge>
+                            )}
+                            {needsCin && (
+                              <Badge variant="warning" className="text-xs">
+                                Senza CIN
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        {cin && (
+                          <CinInlineForm
+                            propertyId={p.id}
+                            cin={cin.cin}
+                            cinStatus={cin.cinStatus}
+                          />
+                        )}
+                      </CardContent>
+                    </Card>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
