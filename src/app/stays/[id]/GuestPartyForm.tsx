@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Loader2, Plus, Trash2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ComboBox } from "@/components/ui/combobox";
@@ -9,12 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { addGuestPartyAction } from "../actions";
+import type { GuestPartyState } from "../types";
 
 type Country = { id: string; name: string };
 type Comune = { id: string; name: string; provincia: string };
 type DocumentType = { id: string; name: string };
 type Option = { id: string; label: string };
-type Result = { ok: boolean; message: string };
 type PartyTipo = "SINGOLO" | "FAMIGLIA" | "GRUPPO";
 
 function PersonFields({
@@ -24,6 +24,7 @@ function PersonFields({
   comuni,
   luoghi,
   documentTypes,
+  errors,
 }: {
   idx: number;
   withDocument: boolean;
@@ -31,42 +32,77 @@ function PersonFields({
   comuni: Option[];
   luoghi: Option[];
   documentTypes: DocumentType[];
+  errors?: Record<string, string>;
 }) {
   const f = (k: string) => `p${idx}.${k}`;
+  const err = (k: string) => errors?.[f(k)];
+  // Props ARIA + bordo rosso per un campo in errore (il messaggio è collegato via aria-describedby).
+  const errProps = (k: string) =>
+    err(k)
+      ? {
+          "aria-invalid": true as const,
+          "aria-describedby": `${f(k)}-error`,
+          className: "border-destructive",
+        }
+      : {};
+  // Messaggio d'errore del campo: NON role="alert" (annuncio gestito dal riepilogo + focus).
+  const fieldError = (k: string) =>
+    err(k) ? (
+      <p id={`${f(k)}-error`} className="text-destructive text-xs">
+        {err(k)}
+      </p>
+    ) : null;
+
   return (
     <div className="grid gap-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-1.5">
           <Label htmlFor={f("lastName")}>Cognome</Label>
-          <Input id={f("lastName")} name={f("lastName")} required />
+          <Input id={f("lastName")} name={f("lastName")} required {...errProps("lastName")} />
+          {fieldError("lastName")}
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor={f("firstName")}>Nome</Label>
-          <Input id={f("firstName")} name={f("firstName")} required />
+          <Input id={f("firstName")} name={f("firstName")} required {...errProps("firstName")} />
+          {fieldError("firstName")}
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-1.5">
           <Label htmlFor={f("sex")}>Sesso</Label>
-          <Select id={f("sex")} name={f("sex")} required defaultValue="">
+          <Select id={f("sex")} name={f("sex")} required defaultValue="" {...errProps("sex")}>
             <option value="" disabled>
               Seleziona
             </option>
             <option value="M">Maschile</option>
             <option value="F">Femminile</option>
           </Select>
+          {fieldError("sex")}
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor={f("birthDate")}>Data di nascita</Label>
-          <Input id={f("birthDate")} name={f("birthDate")} type="date" required />
+          <Input
+            id={f("birthDate")}
+            name={f("birthDate")}
+            type="date"
+            required
+            {...errProps("birthDate")}
+          />
+          {fieldError("birthDate")}
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-1.5">
           <Label htmlFor={f("birthCountryId")}>Stato di nascita</Label>
-          <Select id={f("birthCountryId")} name={f("birthCountryId")} required defaultValue="">
+          <Select
+            id={f("birthCountryId")}
+            name={f("birthCountryId")}
+            required
+            defaultValue=""
+            {...errProps("birthCountryId")}
+          >
             <option value="" disabled>
               Seleziona
             </option>
@@ -76,6 +112,7 @@ function PersonFields({
               </option>
             ))}
           </Select>
+          {fieldError("birthCountryId")}
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor={`${f("birthComuneId")}-cb`}>Comune di nascita (se in Italia)</Label>
@@ -90,7 +127,13 @@ function PersonFields({
 
       <div className="grid gap-1.5">
         <Label htmlFor={f("citizenshipId")}>Cittadinanza</Label>
-        <Select id={f("citizenshipId")} name={f("citizenshipId")} required defaultValue="">
+        <Select
+          id={f("citizenshipId")}
+          name={f("citizenshipId")}
+          required
+          defaultValue=""
+          {...errProps("citizenshipId")}
+        >
           <option value="" disabled>
             Seleziona
           </option>
@@ -100,6 +143,7 @@ function PersonFields({
             </option>
           ))}
         </Select>
+        {fieldError("citizenshipId")}
       </div>
 
       {withDocument && (
@@ -151,7 +195,7 @@ export function GuestPartyForm({
   comuni: Comune[];
   documentTypes: DocumentType[];
 }) {
-  const [state, action, pending] = useActionState<Result | null, FormData>(
+  const [state, action, pending] = useActionState<GuestPartyState | null, FormData>(
     addGuestPartyAction,
     null,
   );
@@ -170,6 +214,19 @@ export function GuestPartyForm({
     [comuneOptions, countries],
   );
 
+  // Dopo un submit con errori per campo: scroll + focus al PRIMO campo errato (in ordine persona/campo).
+  useEffect(() => {
+    if (state && !state.ok && state.fieldErrors) {
+      const first = Object.keys(state.fieldErrors)[0];
+      if (first) {
+        const el = document.getElementById(first);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        el?.focus();
+      }
+    }
+  }, [state]);
+
+  const fieldErrors = state && !state.ok ? state.fieldErrors : undefined;
   const isGroup = tipo !== "SINGOLO";
   const personCount = isGroup ? 1 + extraMembers : 1;
 
@@ -178,6 +235,17 @@ export function GuestPartyForm({
       <input type="hidden" name="stayId" value={stayId} />
       <input type="hidden" name="partyTipo" value={tipo} />
       <input type="hidden" name="personCount" value={personCount} />
+
+      {fieldErrors && (
+        <div
+          role="alert"
+          className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
+        >
+          {state?.message ?? "Controlla i campi evidenziati."} (
+          {Object.keys(fieldErrors).length}{" "}
+          {Object.keys(fieldErrors).length === 1 ? "campo da correggere" : "campi da correggere"})
+        </div>
+      )}
 
       <div className="grid gap-1.5">
         <Label htmlFor="party-tipo">Tipo comitiva</Label>
@@ -204,6 +272,7 @@ export function GuestPartyForm({
           comuni={comuneOptions}
           luoghi={luogoOptions}
           documentTypes={documentTypes}
+          errors={fieldErrors}
         />
       </div>
 
@@ -233,6 +302,7 @@ export function GuestPartyForm({
                 comuni={comuneOptions}
                 luoghi={luogoOptions}
                 documentTypes={documentTypes}
+                errors={fieldErrors}
               />
               <p className="text-muted-foreground text-xs">
                 Per familiari/membri i campi documento restano in bianco (tracciato Alloggiati
@@ -260,7 +330,9 @@ export function GuestPartyForm({
         {pending ? "Salvataggio…" : "Aggiungi ospiti"}
       </Button>
 
-      {state && (
+      {/* Esito generale: successo o errore NON legato ai campi (gli errori per campo hanno il
+          riepilogo in cima + evidenziazione inline). */}
+      {state && (state.ok || !fieldErrors) && (
         <p
           role="status"
           className={cn(
@@ -269,9 +341,9 @@ export function GuestPartyForm({
           )}
         >
           {state.ok ? (
-            <CheckCircle2 className="size-4 shrink-0" />
+            <CheckCircle2 className="size-4 shrink-0" aria-hidden />
           ) : (
-            <XCircle className="size-4 shrink-0" />
+            <XCircle className="size-4 shrink-0" aria-hidden />
           )}
           {state.message}
         </p>
