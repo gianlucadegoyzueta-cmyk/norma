@@ -22,3 +22,6 @@ next-env.d.ts
 *.log
 npm-debug.log*
 .vercel
+
+# Gate #0 — artefatti diagnostici Ricevuta PDF (live, non versionati)
+/tmp/gate0-ricevuta/
