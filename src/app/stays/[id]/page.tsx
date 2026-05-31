@@ -12,6 +12,8 @@ import {
   checkReferenceTablesHealth,
 } from "@/server/modules/alloggiati";
 import { PrismaStaysRepository, StaysService } from "@/server/modules/stays";
+import { mapAlloggiatiError } from "@/app/schedine/error-codes";
+import { ReopenRejectedButton } from "@/components/reopen-rejected-button";
 import { SiteHeader } from "@/components/site-header";
 import { UnverifiedNote } from "@/components/unverified-note";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
@@ -69,6 +71,20 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
     }),
     prisma.documentType.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
+
+  // Schedine REJECTED del soggiorno → mappa per ospite (id schedina + messaggio azionabile).
+  // Query di pagina: serve l'id schedina (per il reopen) e gli errori, non esposti da StayDetail.
+  const rejectedRows = await prisma.schedina.findMany({
+    where: { organizationId: orgId, status: "REJECTED", guest: { stayId: id } },
+    select: { id: true, guestId: true, lastErrorCod: true, lastErrorDes: true },
+  });
+  const rejectedByGuest = new Map<string, { schedinaId: string; message: string }>();
+  for (const r of rejectedRows) {
+    rejectedByGuest.set(r.guestId, {
+      schedinaId: r.id,
+      message: mapAlloggiatiError(r.lastErrorCod, r.lastErrorDes),
+    });
+  }
 
   // Capi/singoli (leaderId null) e relativi membri.
   const leaders = stay.guests.filter((g) => g.leaderId === null);
@@ -133,10 +149,10 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
                   <li key={leader.id}>
                     <Card>
                       <CardContent className="grid gap-2 px-4 py-3">
-                        <GuestRow guest={leader} />
+                        <GuestRow guest={leader} rejected={rejectedByGuest.get(leader.id)} />
                         {members.map((m) => (
                           <div key={m.id} className="border-border/60 border-l-2 pl-3">
-                            <GuestRow guest={m} nested />
+                            <GuestRow guest={m} nested rejected={rejectedByGuest.get(m.id)} />
                           </div>
                         ))}
                       </CardContent>
@@ -196,6 +212,7 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
 function GuestRow({
   guest,
   nested,
+  rejected,
 }: {
   guest: {
     firstName: string;
@@ -204,6 +221,7 @@ function GuestRow({
     schedinaStatus: string | null;
   };
   nested?: boolean;
+  rejected?: { schedinaId: string; message: string };
 }) {
   const badge = guest.schedinaStatus ? SCHEDINA_BADGE[guest.schedinaStatus] : null;
   return (
@@ -232,6 +250,12 @@ function GuestRow({
         )}
       </div>
       {guest.schedinaStatus === "UNVERIFIED" && <UnverifiedNote />}
+      {rejected ? (
+        <div className="grid gap-1.5">
+          <p className="text-destructive text-xs">{rejected.message}</p>
+          <ReopenRejectedButton schedinaId={rejected.schedinaId} />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -160,3 +160,43 @@ export async function sendCredentialAction(
   revalidatePath("/schedine");
   return { ok: true, message: "Invio elaborato.", summary };
 }
+
+/**
+ * Rimette in coda una schedina REJECTED (transizione REJECTED → PENDING, già prevista dal dominio):
+ * dopo aver corretto i dati dell'ospite, l'host può ri-tentare l'invio senza vicoli ciechi.
+ * NON è un re-invio: riporta solo lo stato a "da inviare". Isolamento verificato via findById(org).
+ */
+export async function reopenRejectedAction(
+  _prev: OutboxResult | null,
+  formData: FormData,
+): Promise<OutboxResult> {
+  const ctx = await getCurrentContext();
+  if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+
+  const schedinaId = String(formData.get("schedinaId") ?? "").trim();
+  if (!schedinaId) return { ok: false, message: "Schedina non indicata." };
+
+  const schedinaRepo = new PrismaSchedinaRepository(prisma);
+  const found = await schedinaRepo.findById(schedinaId, ctx.current.organizationId);
+  if (!found) return { ok: false, message: "Schedina non trovata per questa organizzazione." };
+  if (found.status !== "REJECTED") {
+    return { ok: false, message: "Solo le schedine respinte si possono rimettere in coda." };
+  }
+
+  try {
+    // La transizione valida from=REJECTED→to=PENDING e azzera gli errori (logica di dominio esistente).
+    await schedinaRepo.applyDecision(schedinaId, {
+      status: "PENDING",
+      errorCod: null,
+      errorDes: null,
+    });
+  } catch (err) {
+    return {
+      ok: false,
+      message: `Impossibile rimettere in coda: ${err instanceof Error ? err.message : "errore inatteso"}.`,
+    };
+  }
+
+  revalidatePath("/schedine");
+  return { ok: true, message: "Rimessa in coda: ora è di nuovo da inviare." };
+}
