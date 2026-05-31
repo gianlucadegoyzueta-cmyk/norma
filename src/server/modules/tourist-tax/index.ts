@@ -8,3 +8,4 @@ export * from "./domain/version-select";
 export * from "./domain/seed-data";
 export * from "./ports/TouristTaxConfigRepository";
 export * from "./adapters/PrismaTouristTaxConfigRepository";
+export * from "./services/estimate.service";
