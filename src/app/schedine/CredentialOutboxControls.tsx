@@ -95,6 +95,10 @@ export function CredentialOutboxControls({
     null,
   );
   const [confirming, setConfirming] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(false);
+  // "Test eseguito con esito positivo" nella sessione corrente: abbassa l'attrito sulla conferma.
+  const testedOk = verifyState?.ok === true;
+  const ackId = `ack-${credentialId}`;
 
   if (!active) {
     return (
@@ -115,17 +119,56 @@ export function CredentialOutboxControls({
           </Button>
         </form>
 
-        {!confirming ? (
+        {!confirming && (
           <Button type="button" size="sm" disabled={sending} onClick={() => setConfirming(true)}>
             <Send aria-hidden />
             Invia {pendingCount}…
           </Button>
-        ) : (
-          <form action={sendAction} className="flex items-center gap-2">
+        )}
+      </div>
+
+      {confirming && (
+        <div className="border-border grid gap-2 rounded-md border p-3">
+          <p className="text-muted-foreground text-xs">
+            L&apos;invio è <strong>irreversibile</strong>: una schedina acquisita non può essere
+            cancellata.
+          </p>
+
+          {/* Error-prevention: senza un Test positivo in sessione, alziamo l'attrito (checkbox
+              obbligatoria), senza bloccare del tutto (il Test può fallire per rete). */}
+          {!testedOk && (
+            <label className="flex items-start gap-2 text-xs">
+              <input
+                type="checkbox"
+                checked={acknowledged}
+                onChange={(e) => setAcknowledged(e.target.checked)}
+                className="accent-primary focus-visible:ring-ring mt-0.5 size-4 shrink-0 focus-visible:ring-2 focus-visible:ring-offset-1"
+                aria-describedby={ackId}
+              />
+              <span id={ackId}>
+                <strong className="text-warning-foreground dark:text-warning">
+                  Test non eseguito
+                </strong>{" "}
+                in questa sessione. Consigliato: prima “Verifica (Test)”. Confermo di voler inviare
+                comunque.
+              </span>
+            </label>
+          )}
+
+          <form action={sendAction} className="flex flex-wrap items-center gap-2">
             <input type="hidden" name="credentialId" value={credentialId} />
             <input type="hidden" name="confirm" value="yes" />
-            <Button type="submit" size="sm" variant="destructive" disabled={sending}>
-              {sending ? <Loader2 className="animate-spin" aria-hidden /> : <AlertTriangle aria-hidden />}
+            <Button
+              type="submit"
+              size="sm"
+              variant="destructive"
+              disabled={sending || (!testedOk && !acknowledged)}
+            >
+              {sending ? (
+                <Loader2 className="animate-spin" aria-hidden />
+              ) : (
+                <AlertTriangle aria-hidden />
+              )}
               {sending ? "Invio…" : `Conferma invio irreversibile di ${pendingCount}`}
             </Button>
             <Button
@@ -133,19 +176,15 @@ export function CredentialOutboxControls({
               size="sm"
               variant="ghost"
               disabled={sending}
-              onClick={() => setConfirming(false)}
+              onClick={() => {
+                setConfirming(false);
+                setAcknowledged(false);
+              }}
             >
               Annulla
             </Button>
           </form>
-        )}
-      </div>
-
-      {confirming && !sendState && (
-        <p className="text-muted-foreground text-xs">
-          L&apos;invio è <strong>irreversibile</strong>: una schedina acquisita non può essere
-          cancellata. Verifica prima con “Test”.
-        </p>
+        </div>
       )}
       <Feedback state={verifyState} />
       {/* Esito invio: riepilogo ricco se disponibile, altrimenti messaggio semplice (errore/no-op). */}
