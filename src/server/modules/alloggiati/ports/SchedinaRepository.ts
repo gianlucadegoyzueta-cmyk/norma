@@ -56,4 +56,10 @@ export interface SchedinaRepository {
   getPayloadSnapshot(id: string): Promise<string | null>;
   /** Applica la decisione (ACQUIRED/REJECTED/UNVERIFIED) validando la transizione. */
   applyDecision(id: string, decision: StatusDecision): Promise<void>;
+
+  /**
+   * Schedine in SENDING da più di `staleAfterMs` → UNVERIFIED (esito ignoto post-crash).
+   * Ritorna quante righe sono state recuperate.
+   */
+  recoverStaleSending(credentialId: string, staleAfterMs: number): Promise<number>;
 }

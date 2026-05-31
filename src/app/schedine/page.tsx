@@ -15,6 +15,7 @@ import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { CredentialOutboxControls } from "./CredentialOutboxControls";
+import { ReconcileControls } from "./ReconcileControls";
 
 export const metadata: Metadata = { title: "Schedine" };
 export const dynamic = "force-dynamic";
@@ -55,12 +56,26 @@ export default async function SchedinePage() {
   // Schedine PENDING raggruppate per credenziale: una riga di invio per ciascuna.
   const credStatus = new Map(credentials.map((c) => [c.id, c.status]));
   const pendingByCredential = new Map<string, { label: string; count: number }>();
+  const unverifiedByCredential = new Map<string, { label: string; count: number }>();
   for (const s of schedine) {
-    if (s.status !== "PENDING") continue;
-    const cur = pendingByCredential.get(s.credentialId);
-    if (cur) cur.count += 1;
-    else pendingByCredential.set(s.credentialId, { label: s.credentialLabel, count: 1 });
+    if (s.status === "PENDING") {
+      const cur = pendingByCredential.get(s.credentialId);
+      if (cur) cur.count += 1;
+      else pendingByCredential.set(s.credentialId, { label: s.credentialLabel, count: 1 });
+    }
+    if (s.status === "UNVERIFIED") {
+      const cur = unverifiedByCredential.get(s.credentialId);
+      if (cur) cur.count += 1;
+      else unverifiedByCredential.set(s.credentialId, { label: s.credentialLabel, count: 1 });
+    }
   }
+
+  const romeYesterday = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(Date.now() - 86_400_000));
 
   const counts = schedine.reduce<Record<string, number>>((acc, s) => {
     acc[s.status] = (acc[s.status] ?? 0) + 1;
@@ -128,6 +143,35 @@ export default async function SchedinePage() {
                     credentialId={credId}
                     pendingCount={count}
                     active={credStatus.get(credId) === "ACTIVE"}
+                  />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {unverifiedByCredential.size > 0 && (
+          <Card className="mb-6 border-warning/40">
+            <CardHeader>
+              <CardTitle>Da verificare (esito ignoto)</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <p className="text-muted-foreground text-sm">
+                Dopo un timeout di rete l&apos;invio potrebbe essere andato a buon fine lo stesso.
+                Usa la Ricevuta del giorno dell&apos;invio (T+1) per confermare o ri-accodare in
+                sicurezza — <strong>mai</strong> re-inviare alla cieca.
+              </p>
+              {[...unverifiedByCredential.entries()].map(([credId, { label, count }]) => (
+                <div key={credId} className="border-border grid gap-2 rounded-md border p-3">
+                  <p className="text-sm font-medium">
+                    {label}{" "}
+                    <span className="text-muted-foreground">· {count} da verificare</span>
+                  </p>
+                  <ReconcileControls
+                    credentialId={credId}
+                    unverifiedCount={count}
+                    active={credStatus.get(credId) === "ACTIVE"}
+                    defaultReceiptDate={romeYesterday}
                   />
                 </div>
               ))}

@@ -27,7 +27,13 @@ Branch: `feat/backend-hardening`. Corsia A: Gate #0 PDF + fix core invio/outbox.
 - `SoapAcquisitionReceiptReader`: adapter produzione; unavailable → `[]` per riconciliazione T+1.
 - `parseReceiptPdfBase64`: parser mock + stub esplicito per PDF reali (%PDF-).
 
+## Fix #2 — Recupero SENDING stale + riconciliazione T+1 in UI (2026-06-01)
+
+- `recoverStaleSending`: schedine in SENDING > 2 min → UNVERIFIED (crash post-claim).
+- Outbox invoca il recovery all'avvio di ogni batch.
+- Action `reconcileCredentialAction` + sezione "Da verificare" su `/schedine` con data Ricevuta.
+
 ## Fix da scrivere (dopo Gate #0 con PDF reale)
 
-2. Parser PDF reale in `parseReceiptPdfBase64` (campione Gate #0)
-3. … (outbox, timeout, altri gap da mappare)
+3. Parser PDF reale in `parseReceiptPdfBase64` (campione Gate #0)
+4. … (altri gap outbox/timeout da mappare)

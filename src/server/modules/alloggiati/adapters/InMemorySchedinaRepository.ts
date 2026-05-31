@@ -1,6 +1,6 @@
 import { SchedinaStatus } from "@prisma/client";
 import { computeDedupKey } from "../domain/dedup";
-import { assertValidTransition, type StatusDecision } from "../domain/transitions";
+import { assertValidTransition, decideFromSendAttempt, type StatusDecision } from "../domain/transitions";
 import type {
   CreateIntentInput,
   CreateIntentResult,
@@ -12,6 +12,7 @@ interface Row extends SchedinaRecord {
   errorCod: string | null;
   errorDes: string | null;
   payloadSnapshot: string | null;
+  sentAt: Date | null;
 }
 
 /**
@@ -41,6 +42,7 @@ export class InMemorySchedinaRepository implements SchedinaRepository {
       errorCod: null,
       errorDes: null,
       payloadSnapshot: null,
+      sentAt: null,
     };
     this.rows.set(row.id, row);
     return { schedina: this.view(row), created: true };
@@ -79,6 +81,7 @@ export class InMemorySchedinaRepository implements SchedinaRepository {
     const row = this.must(id);
     if (row.status !== SchedinaStatus.PENDING) return false;
     row.status = SchedinaStatus.SENDING;
+    row.sentAt = new Date();
     return true;
   }
 
@@ -96,6 +99,23 @@ export class InMemorySchedinaRepository implements SchedinaRepository {
     row.status = decision.status;
     row.errorCod = decision.errorCod;
     row.errorDes = decision.errorDes;
+  }
+
+  async recoverStaleSending(credentialId: string, staleAfterMs: number): Promise<number> {
+    const cutoff = Date.now() - staleAfterMs;
+    let count = 0;
+    for (const row of this.rows.values()) {
+      if (row.credentialId !== credentialId || row.status !== SchedinaStatus.SENDING) continue;
+      if (!row.sentAt || row.sentAt.getTime() > cutoff) continue;
+      await this.applyDecision(row.id, decideFromSendAttempt({ kind: "NO_RESPONSE" }));
+      count += 1;
+    }
+    return count;
+  }
+
+  /** Solo test: simula un invio SENDING abbandonato impostando sentAt nel passato. */
+  setSentAtForTest(id: string, sentAt: Date): void {
+    this.must(id).sentAt = sentAt;
   }
 
   private must(id: string): Row {

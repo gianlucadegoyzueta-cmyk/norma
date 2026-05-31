@@ -11,7 +11,9 @@ import {
   PrismaSchedinaRepository,
   SchedinaOutboxService,
   SchedinaRecordBuilder,
+  SchedinaReconcileService,
   SchedinaVerifyService,
+  SoapAcquisitionReceiptReader,
   SoapAlloggiatiSender,
   TokenManager,
   VaultCredentialProvider,
@@ -142,4 +144,68 @@ export async function sendCredentialAction(
 
   revalidatePath("/schedine");
   return { ok: true, message: "Invio elaborato. Controlla gli stati aggiornati qui sotto." };
+}
+
+/** Data in fuso Europe/Rome come "YYYY-MM-DD". */
+function romeDateIso(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
+
+function romeYesterdayIso(): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - 1);
+  return romeDateIso(d);
+}
+
+/**
+ * Riconciliazione T+1: confronta le schedine UNVERIFIED con la Ricevuta di un giorno passato.
+ * Confermate → ACQUIRED; assenti → PENDING (re-inviabili in sicurezza).
+ */
+export async function reconcileCredentialAction(
+  _prev: Result | null,
+  formData: FormData,
+): Promise<Result> {
+  const ctx = await getCurrentContext();
+  if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+
+  const credentialId = String(formData.get("credentialId") ?? "").trim();
+  const receiptDateRaw = String(formData.get("receiptDate") ?? "").trim();
+  const receiptDateIso = receiptDateRaw || romeYesterdayIso();
+
+  const { client, credRepo, tokens, schedinaRepo } = deps();
+  const denied = await guardCredential(credRepo, credentialId, ctx.current.organizationId);
+  if (denied) return { ok: false, message: denied };
+
+  try {
+    const reconcile = new SchedinaReconcileService(
+      schedinaRepo,
+      new SoapAcquisitionReceiptReader(tokens, client),
+    );
+    const result = await reconcile.reconcileCredential(credentialId, receiptDateIso);
+
+    if (result.total === 0) {
+      return { ok: true, message: "Nessuna schedina da verificare per questa credenziale." };
+    }
+
+    revalidatePath("/schedine");
+    return {
+      ok: true,
+      message:
+        `Riconciliazione ${receiptDateIso}: ${result.confirmed} confermate, ` +
+        `${result.requeued} ri-accodate su ${result.total} da verificare.`,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      message:
+        err instanceof Error
+          ? err.message
+          : "Riconciliazione non riuscita (rete, Ricevuta o credenziali).",
+    };
+  }
 }
