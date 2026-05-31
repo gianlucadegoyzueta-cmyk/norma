@@ -56,14 +56,21 @@ export class SchedinaOutboxService {
       built.push({ schedina: s, record: await this.buildRecord(s.id) });
     }
 
-    // 2) PENDING → SENDING (persistito PRIMA della rete), salvando lo snapshot del tracciato.
-    for (const { schedina, record } of built) {
-      if (record) await this.repo.setPayloadSnapshot(schedina.id, record);
-      await this.repo.markSending(schedina.id);
+    // 2) CLAIM ATOMICO PENDING → SENDING (persistito PRIMA della rete). Solo le righe che QUESTO
+    //    processo rivendica (claim true) vengono inviate: un batch concorrente sulla stessa
+    //    credenziale vedrebbe claim=false e le salterebbe → mai doppio invio. Lo snapshot del
+    //    tracciato si salva solo dopo aver vinto il claim.
+    const claimed: { schedina: SchedinaRecord; record: string }[] = [];
+    for (const item of built) {
+      const won = await this.repo.claimForSending(item.schedina.id);
+      if (!won) continue; // rivendicata da un altro invio in corso: la salto
+      if (item.record) await this.repo.setPayloadSnapshot(item.schedina.id, item.record);
+      claimed.push(item);
     }
+    if (claimed.length === 0) return; // nulla da inviare (tutte già rivendicate altrove)
 
-    // 3) invio del batch
-    const rows: SendRow[] = built.map(({ schedina, record }) => ({
+    // 3) invio del batch (solo le righe rivendicate da noi)
+    const rows: SendRow[] = claimed.map(({ schedina, record }) => ({
       correlationId: schedina.id,
       record,
     }));
@@ -73,18 +80,18 @@ export class SchedinaOutboxService {
       const res = await this.sender.send({ credentialId, rows });
       resultsById = new Map(res.results.map((r) => [r.correlationId, r]));
     } catch {
-      // nessuna risposta: esito ignoto → UNVERIFIED per tutte le schedine in volo
-      for (const s of pending) {
-        await this.repo.applyDecision(s.id, decideFromSendAttempt({ kind: "NO_RESPONSE" }));
+      // nessuna risposta: esito ignoto → UNVERIFIED per tutte le schedine in volo (rivendicate da noi)
+      for (const { schedina } of claimed) {
+        await this.repo.applyDecision(schedina.id, decideFromSendAttempt({ kind: "NO_RESPONSE" }));
       }
       return;
     }
 
-    // 3) applica la decisione per ciascuna schedina
-    for (const s of pending) {
-      const r = resultsById.get(s.id);
+    // 4) applica la decisione per ciascuna schedina rivendicata
+    for (const { schedina } of claimed) {
+      const r = resultsById.get(schedina.id);
       const attempt: SendAttempt = mapResultToAttempt(r);
-      await this.repo.applyDecision(s.id, decideFromSendAttempt(attempt));
+      await this.repo.applyDecision(schedina.id, decideFromSendAttempt(attempt));
     }
   }
 }

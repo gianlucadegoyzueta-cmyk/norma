@@ -91,3 +91,55 @@ describe("SchedinaOutboxService — orchestrazione", () => {
     expect(sender.calls).toHaveLength(0);
   });
 });
+
+describe("SchedinaOutboxService — concorrenza (claim atomico anti-doppio-invio)", () => {
+  /**
+   * Sender che CEDE il controllo (await su un gate) dopo aver registrato la chiamata, così due
+   * processCredentialBatch in volo si interlacciano DAVVERO. Senza claim atomico, entrambi
+   * leggerebbero la stessa PENDING e la invierebbero → doppione. Col claim, una sola vince.
+   */
+  it("due batch paralleli sulla stessa credenziale → UN SOLO invio della riga (no doppione)", async () => {
+    const repo = new InMemorySchedinaRepository();
+    const { schedina } = await repo.createIntent(intent());
+
+    let release!: () => void;
+    const gate = new Promise<void>((res) => {
+      release = res;
+    });
+    let sends = 0;
+    const sentCorrelationIds: string[] = [];
+    const slowSender = {
+      async send(batch: { rows: { correlationId: string }[] }) {
+        sends += 1;
+        for (const r of batch.rows) sentCorrelationIds.push(r.correlationId);
+        await gate; // entrambi i batch arrivano qui prima che uno qualunque completi
+        return {
+          results: batch.rows.map((r) => ({
+            correlationId: r.correlationId,
+            outcome: "ACQUIRED" as const,
+          })),
+        };
+      },
+    };
+    const service = new SchedinaOutboxService(repo, slowSender);
+
+    // Avvia due batch in parallelo; sblocca il gate quando sono entrambi "in volo".
+    const p1 = service.processCredentialBatch(CRED);
+    const p2 = service.processCredentialBatch(CRED);
+    await Promise.resolve(); // lascia girare i microtask fino al claim
+    release();
+    await Promise.all([p1, p2]);
+
+    // Solo UNA delle due esecuzioni ha potuto rivendicare e inviare la riga.
+    expect(sends).toBe(1);
+    expect(sentCorrelationIds).toEqual([schedina.id]);
+    expect((await repo.findById(schedina.id, ORG))?.status).toBe(SchedinaStatus.ACQUIRED);
+  });
+
+  it("claimForSending è one-shot: il secondo claim sulla stessa riga ritorna false", async () => {
+    const repo = new InMemorySchedinaRepository();
+    const { schedina } = await repo.createIntent(intent());
+    expect(await repo.claimForSending(schedina.id)).toBe(true);
+    expect(await repo.claimForSending(schedina.id)).toBe(false); // già SENDING
+  });
+});

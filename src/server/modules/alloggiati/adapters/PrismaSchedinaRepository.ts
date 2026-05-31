@@ -84,6 +84,21 @@ export class PrismaSchedinaRepository implements SchedinaRepository {
     });
   }
 
+  async listUnverifiedByCredential(credentialId: string): Promise<SchedinaRecord[]> {
+    return this.prisma.schedina.findMany({
+      where: { credentialId, status: "UNVERIFIED" },
+      select: SELECT,
+    });
+  }
+
+  async getPayloadSnapshot(id: string): Promise<string | null> {
+    const row = await this.prisma.schedina.findUnique({
+      where: { id },
+      select: { payloadSnapshot: true },
+    });
+    return row?.payloadSnapshot ?? null;
+  }
+
   /**
    * Elenco delle schedine di un'organizzazione per la dashboard outbox. Lettura di sola
    * visualizzazione (non fa parte del PORT, focalizzato sulla meccanica dell'invio).
@@ -135,6 +150,26 @@ export class PrismaSchedinaRepository implements SchedinaRepository {
     await this.transition(id, "SENDING", null, null);
   }
 
+  /**
+   * Claim atomico PENDING→SENDING. `updateMany` con guardia `status: PENDING` è la sezione critica:
+   * il DB applica l'update a UNA sola transazione vincente (count 1); un invio concorrente vede
+   * count 0 e salta la riga. Niente doppio invio anche con due batch paralleli sulla credenziale.
+   * Registra `sentAt`/`attempts` e l'evento di audit SOLO se il claim è andato a buon fine.
+   */
+  async claimForSending(id: string): Promise<boolean> {
+    return this.prisma.$transaction(async (tx) => {
+      const res = await tx.schedina.updateMany({
+        where: { id, status: "PENDING" },
+        data: { status: "SENDING", sentAt: new Date(), attempts: { increment: 1 } },
+      });
+      if (res.count === 0) return false; // già rivendicata altrove, o non più PENDING
+      await tx.schedinaEvent.create({
+        data: { schedinaId: id, fromStatus: "PENDING", toStatus: "SENDING", message: null },
+      });
+      return true;
+    });
+  }
+
   async setPayloadSnapshot(id: string, payloadSnapshot: string): Promise<void> {
     await this.prisma.schedina.update({ where: { id }, data: { payloadSnapshot } });
   }
@@ -166,6 +201,11 @@ export class PrismaSchedinaRepository implements SchedinaRepository {
       } else if (to === "REJECTED") {
         data.lastErrorCod = errorCod;
         data.lastErrorDes = errorDes;
+      }
+      // Uscita da UNVERIFIED = esito della riconciliazione T+1 (→ ACQUIRED confermata o → PENDING
+      // ri-accodata): segna quando è avvenuto, per audit del controllo differito.
+      if (current.status === "UNVERIFIED") {
+        data.reconciledAt = new Date();
       }
 
       await tx.schedina.update({ where: { id }, data });

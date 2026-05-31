@@ -38,10 +38,22 @@ export interface SchedinaRepository {
    *  restituibile, indipendentemente dal chiamante (isolamento garantito dal repository). */
   findById(id: string, organizationId: string): Promise<SchedinaRecord | null>;
   listPendingByCredential(credentialId: string): Promise<SchedinaRecord[]>;
+  /** Schedine UNVERIFIED di una credenziale: esito ignoto, da chiarire con la riconciliazione T+1. */
+  listUnverifiedByCredential(credentialId: string): Promise<SchedinaRecord[]>;
   /** Porta una schedina in SENDING (validando la transizione). */
   markSending(id: string): Promise<void>;
+  /**
+   * CLAIM ATOMICO per l'invio: porta la schedina da PENDING a SENDING SOLO se è ancora PENDING,
+   * in un'unica operazione condizionale. Ritorna `true` se l'ha rivendicata QUESTO processo,
+   * `false` se era già stata presa (da un invio concorrente) o non è più PENDING.
+   * È la barriera anti-doppio-invio quando due batch girano in parallelo sulla stessa credenziale:
+   * solo chi ottiene `true` può inviare quella riga; gli altri la saltano. Un doppione è irreversibile.
+   */
+  claimForSending(id: string): Promise<boolean>;
   /** Salva la riga di tracciato come snapshot di audit (ciò che verrà/è stato inviato). */
   setPayloadSnapshot(id: string, payloadSnapshot: string): Promise<void>;
+  /** Legge lo snapshot del tracciato salvato (serve alla riconciliazione per ricavare l'identità). */
+  getPayloadSnapshot(id: string): Promise<string | null>;
   /** Applica la decisione (ACQUIRED/REJECTED/UNVERIFIED) validando la transizione. */
   applyDecision(id: string, decision: StatusDecision): Promise<void>;
 }

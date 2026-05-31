@@ -58,18 +58,35 @@ export class InMemorySchedinaRepository implements SchedinaRepository {
       .map((r) => this.view(r));
   }
 
+  async listUnverifiedByCredential(credentialId: string): Promise<SchedinaRecord[]> {
+    return [...this.rows.values()]
+      .filter((r) => r.credentialId === credentialId && r.status === SchedinaStatus.UNVERIFIED)
+      .map((r) => this.view(r));
+  }
+
   async markSending(id: string): Promise<void> {
     const row = this.must(id);
     assertValidTransition(row.status, SchedinaStatus.SENDING);
     row.status = SchedinaStatus.SENDING;
   }
 
+  /**
+   * Claim atomico PENDING→SENDING: `true` solo se la riga era PENDING (e la rivendica), `false`
+   * altrimenti. In JS single-thread il check-and-set è di per sé atomico; rispecchia il contratto
+   * del DB (updateMany condizionale) per testare la protezione anti-doppio-invio concorrente.
+   */
+  async claimForSending(id: string): Promise<boolean> {
+    const row = this.must(id);
+    if (row.status !== SchedinaStatus.PENDING) return false;
+    row.status = SchedinaStatus.SENDING;
+    return true;
+  }
+
   async setPayloadSnapshot(id: string, payloadSnapshot: string): Promise<void> {
     this.must(id).payloadSnapshot = payloadSnapshot;
   }
 
-  /** Aiuto per i test (non fa parte del port): legge lo snapshot salvato. */
-  getPayloadSnapshot(id: string): string | null {
+  async getPayloadSnapshot(id: string): Promise<string | null> {
     return this.rows.get(id)?.payloadSnapshot ?? null;
   }
 
