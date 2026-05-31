@@ -15,8 +15,9 @@ export interface AuthContext {
 
 /**
  * Recupera la sessione + l'Organization corrente, con ISOLAMENTO:
- *  - legge la sessione (server-side, validata contro il DB);
- *  - carica le Organization dell'utente;
+ *  - legge la sessione (server-side; con strategia JWT è validata per firma sul cookie);
+ *  - carica SEMPRE le Organization dell'utente DAL DB (non dal token): è qui che si garantisce
+ *    l'isolamento, a prescindere da cosa contenga il token;
  *  - applica il cookie di "Org corrente" se valido, altrimenti la prima (un cookie che punta
  *    a un'Org non più sua viene ignorato → mai dati di altre Org).
  * Restituisce null se non autenticato.
