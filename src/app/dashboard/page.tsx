@@ -52,21 +52,21 @@ export default async function DashboardPage() {
         actions={
           <form action={signOutAction}>
             <Button type="submit" variant="ghost" size="sm">
-              <LogOut />
+              <LogOut aria-hidden />
               Esci
             </Button>
           </form>
         }
       />
 
-      <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-5xl px-4 py-8 outline-none sm:px-6 sm:py-10">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
               Ciao, {ctx.user.name ?? ctx.user.email ?? "utente"}
             </h1>
             <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
-              <Building2 className="size-4" />
+              <Building2 className="size-4" aria-hidden />
               {ctx.current.organizationName}
               <Badge variant="secondary">{ctx.current.role}</Badge>
             </p>
@@ -98,7 +98,10 @@ export default async function DashboardPage() {
                   </div>
                   <span className="text-destructive inline-flex shrink-0 items-center gap-1 text-sm font-medium">
                     Apri
-                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                    <ArrowRight
+                    aria-hidden
+                    className="size-4 transition-transform group-hover:translate-x-0.5"
+                  />
                   </span>
                 </div>
               </CardHeader>
@@ -120,7 +123,10 @@ export default async function DashboardPage() {
                   </div>
                   <span className="text-primary inline-flex shrink-0 items-center gap-1 text-sm font-medium">
                     Continua
-                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                    <ArrowRight
+                    aria-hidden
+                    className="size-4 transition-transform group-hover:translate-x-0.5"
+                  />
                   </span>
                 </div>
                 <div className="bg-muted mt-2 h-1.5 w-full overflow-hidden rounded-full">
@@ -143,9 +149,12 @@ export default async function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
-                    <KeyRound className="size-5" />
+                    <KeyRound className="size-5" aria-hidden />
                   </span>
-                  <ChevronRight className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5" />
+                  <ChevronRight
+                    aria-hidden
+                    className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5"
+                  />
                 </div>
                 <CardTitle className="mt-2">Credenziali Alloggiati</CardTitle>
                 <CardDescription>
@@ -164,9 +173,12 @@ export default async function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
-                    <Building2 className="size-5" />
+                    <Building2 className="size-5" aria-hidden />
                   </span>
-                  <ChevronRight className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5" />
+                  <ChevronRight
+                    aria-hidden
+                    className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5"
+                  />
                 </div>
                 <CardTitle className="mt-2">Immobili</CardTitle>
                 <CardDescription>
@@ -185,9 +197,12 @@ export default async function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
-                    <BedDouble className="size-5" />
+                    <BedDouble className="size-5" aria-hidden />
                   </span>
-                  <ChevronRight className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5" />
+                  <ChevronRight
+                    aria-hidden
+                    className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5"
+                  />
                 </div>
                 <CardTitle className="mt-2">Soggiorni</CardTitle>
                 <CardDescription>
@@ -205,9 +220,12 @@ export default async function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
-                    <FileText className="size-5" />
+                    <FileText className="size-5" aria-hidden />
                   </span>
-                  <ChevronRight className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5" />
+                  <ChevronRight
+                    aria-hidden
+                    className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5"
+                  />
                 </div>
                 <CardTitle className="mt-2">Schedine</CardTitle>
                 <CardDescription>
@@ -242,7 +260,7 @@ export default async function DashboardPage() {
                       size="sm"
                       disabled={isCurrent}
                     >
-                      <Building2 />
+                      <Building2 aria-hidden />
                       {o.organizationName}
                       <span className="text-muted-foreground">· {o.role}</span>
                     </Button>

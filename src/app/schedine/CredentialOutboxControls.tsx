@@ -110,17 +110,29 @@ export function CredentialOutboxControls({
 
   return (
     <div className="grid gap-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <form action={verifyAction}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <form action={verifyAction} className="w-full sm:w-auto">
           <input type="hidden" name="credentialId" value={credentialId} />
-          <Button type="submit" variant="outline" size="sm" disabled={verifying || sending}>
+          <Button
+            type="submit"
+            variant="outline"
+            size="sm"
+            disabled={verifying || sending}
+            className="w-full sm:w-auto"
+          >
             {verifying ? <Loader2 className="animate-spin" aria-hidden /> : <ShieldCheck aria-hidden />}
             {verifying ? "Verifica…" : "Verifica (Test)"}
           </Button>
         </form>
 
         {!confirming && (
-          <Button type="button" size="sm" disabled={sending} onClick={() => setConfirming(true)}>
+          <Button
+            type="button"
+            size="sm"
+            disabled={sending}
+            onClick={() => setConfirming(true)}
+            className="w-full sm:w-auto"
+          >
             <Send aria-hidden />
             Invia {pendingCount}…
           </Button>
@@ -130,7 +142,8 @@ export function CredentialOutboxControls({
       {confirming && (
         <div className="border-border grid gap-2 rounded-md border p-3">
           <p className="text-muted-foreground text-xs">
-            L&apos;invio è <strong>irreversibile</strong>: una schedina acquisita non può essere
+            Invio <strong>irreversibile</strong> di {pendingCount}{" "}
+            {pendingCount === 1 ? "schedina" : "schedine"}: una volta acquisita non può essere
             cancellata.
           </p>
 
@@ -155,7 +168,10 @@ export function CredentialOutboxControls({
             </label>
           )}
 
-          <form action={sendAction} className="flex flex-wrap items-center gap-2">
+          <form
+            action={sendAction}
+            className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center"
+          >
             <input type="hidden" name="credentialId" value={credentialId} />
             <input type="hidden" name="confirm" value="yes" />
             <Button
@@ -163,13 +179,14 @@ export function CredentialOutboxControls({
               size="sm"
               variant="destructive"
               disabled={sending || (!testedOk && !acknowledged)}
+              className="w-full sm:w-auto"
             >
               {sending ? (
                 <Loader2 className="animate-spin" aria-hidden />
               ) : (
                 <AlertTriangle aria-hidden />
               )}
-              {sending ? "Invio…" : `Conferma invio irreversibile di ${pendingCount}`}
+              {sending ? "Invio…" : "Conferma invio"}
             </Button>
             <Button
               type="button"
@@ -180,6 +197,7 @@ export function CredentialOutboxControls({
                 setConfirming(false);
                 setAcknowledged(false);
               }}
+              className="w-full sm:w-auto"
             >
               Annulla
             </Button>

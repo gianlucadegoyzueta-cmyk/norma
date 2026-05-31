@@ -17,9 +17,11 @@ export function PageSkeleton({
     <div className="min-h-dvh">
       <SiteHeader />
       <main
+        id="main-content"
+        tabIndex={-1}
         aria-busy
         aria-label="Caricamento in corso"
-        className={cn("mx-auto w-full px-4 py-8 sm:px-6 sm:py-10", maxWidth)}
+        className={cn("mx-auto w-full px-4 py-8 outline-none sm:px-6 sm:py-10", maxWidth)}
       >
         <Skeleton className="mb-6 h-4 w-24" />
         <Skeleton className="mb-3 h-8 w-48" />
