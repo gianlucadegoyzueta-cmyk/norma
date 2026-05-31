@@ -63,7 +63,7 @@ export default async function DashboardPage() {
 
         {!onboarding.ready && (
           <Link href="/onboarding" className="group mb-6 block">
-            <Card className="border-primary/40 bg-primary/[0.03] transition-shadow hover:shadow-md">
+            <Card className="border-primary/40 bg-primary/3 transition-shadow hover:shadow-md">
               <CardHeader>
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
