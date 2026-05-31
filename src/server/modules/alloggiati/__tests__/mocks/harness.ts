@@ -12,7 +12,9 @@ import { AlloggiatiSoapClient } from "../../soap/client";
 import { TokenManager, type AlloggiatiCredentialProvider } from "../../soap/token-manager";
 import { SchedinaOutboxService } from "../../services/outbox.service";
 import { SchedinaVerifyService } from "../../services/verify.service";
+import { SchedinaReconcileService } from "../../services/reconcile.service";
 import type { AlloggiatiMockServer } from "./AlloggiatiMockServer";
+import { MockReceiptReader } from "./MockReceiptReader";
 
 export interface AlloggiatiStack {
   repo: InMemorySchedinaRepository;
@@ -23,6 +25,9 @@ export interface AlloggiatiStack {
   sender: SoapAlloggiatiSender;
   outbox: SchedinaOutboxService;
   verify: SchedinaVerifyService;
+  /** Lettore della Ricevuta (mock-backed, ma via client SOAP reale) per la riconciliazione T+1. */
+  receiptReader: MockReceiptReader;
+  reconcile: SchedinaReconcileService;
 }
 
 export function createAlloggiatiStack(opts: {
@@ -53,6 +58,8 @@ export function createAlloggiatiStack(opts: {
 
   const outbox = new SchedinaOutboxService(repo, sender, buildRecord);
   const verify = new SchedinaVerifyService(repo, tokens, client, buildRecord);
+  const receiptReader = new MockReceiptReader(tokens, client);
+  const reconcile = new SchedinaReconcileService(repo, receiptReader);
 
-  return { repo, records, client, tokens, sender, outbox, verify };
+  return { repo, records, client, tokens, sender, outbox, verify, receiptReader, reconcile };
 }

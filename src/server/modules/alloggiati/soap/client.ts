@@ -8,6 +8,7 @@ import {
 import {
   buildAuthenticationTestEnvelope,
   buildGenerateTokenEnvelope,
+  buildRicevutaEnvelope,
   buildSendEnvelope,
   buildTabellaEnvelope,
   buildTestEnvelope,
@@ -181,6 +182,31 @@ export class AlloggiatiSoapClient {
       throw new AlloggiatiProtocolError(`Tabella "${tipo}": risposta priva del campo CSV.`);
     }
     return csv;
+  }
+
+  /**
+   * Scarica la RICEVUTA (PDF, codificato base64) delle schedine acquisite in un dato giorno.
+   * ⚠️ Vincolo reale: SOLO giorni passati — il server rifiuta il giorno corrente (esito false).
+   * ⚠️ [SUPPOSIZIONE] struttura della risposta (`RicevutaResponse` → `RicevutaResult` esito + `PDF`
+   * base64) e nome del campo da confermare sul WSDL reale. Il CONTENUTO del PDF è opaco e NON
+   * documentato: l'estrazione dei nominativi (per la riconciliazione T+1) è demandata a un adapter
+   * dedicato — vedi il port AcquisitionReceiptReader — perché qui non possiamo assumerne il formato.
+   */
+  async ricevuta(utente: string, token: string, data: string): Promise<{ pdfBase64: string }> {
+    const body = await this.call("Ricevuta", buildRicevutaEnvelope(utente, token, data));
+    const resp = (body.RicevutaResponse ?? {}) as Record<string, unknown>;
+    const esito = readEsito(resp.RicevutaResult);
+    if (!esito.esito) {
+      throw new AlloggiatiAuthError(
+        `Ricevuta "${data}" non disponibile: ${esito.errorDes ?? esito.errorCod ?? "giorno non consentito o token non valido"}`,
+        esito,
+      );
+    }
+    const pdfBase64 = normalizeStr(resp.PDF);
+    if (pdfBase64 === undefined) {
+      throw new AlloggiatiProtocolError(`Ricevuta "${data}": risposta priva del campo PDF.`);
+    }
+    return { pdfBase64 };
   }
 
   private async call(method: string, envelope: string): Promise<Record<string, unknown>> {

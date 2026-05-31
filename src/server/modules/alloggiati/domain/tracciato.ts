@@ -306,3 +306,48 @@ export function buildTracciatoRecord(
 export function toISODateUTC(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
+
+/**
+ * Identità "umana" di una schedina: ciò che si può leggere sia dal nostro tracciato sia da una
+ * ricevuta nominativa. È la chiave usata dalla riconciliazione T+1 (vedi SchedinaReconcileService)
+ * per correlare uno snapshot inviato a un nominativo che risulta acquisito.
+ */
+export interface RecordIdentity {
+  cognome: string;
+  nome: string;
+  /** Data di nascita ISO "YYYY-MM-DD". */
+  dataNascita: string;
+}
+
+function leggiCampo(record: string, field: { start: number; len: number }): string {
+  return record.slice(field.start, field.start + field.len).trim();
+}
+
+/** Converte "gg/mm/aaaa" → ISO "YYYY-MM-DD"; stringa vuota se non interpretabile. */
+function dateITtoISO(value: string): string {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value.trim());
+  if (!m) return "";
+  const [, dd, mm, yyyy] = m;
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+/**
+ * Estrae l'identità (cognome, nome, data di nascita ISO) da una riga di tracciato già costruita.
+ * PURA: inverte gli stessi offset di `buildTracciatoRecord` (unica fonte di verità: FIELD_LAYOUT).
+ */
+export function parseIdentityFromRecord(record: string): RecordIdentity {
+  return {
+    cognome: leggiCampo(record, FIELD_LAYOUT.cognome),
+    nome: leggiCampo(record, FIELD_LAYOUT.nome),
+    dataNascita: dateITtoISO(leggiCampo(record, FIELD_LAYOUT.dataNascita)),
+  };
+}
+
+/**
+ * Chiave canonica per il confronto delle identità (case/spazi-insensibile su nome e cognome).
+ * Serve a rendere robusto il match in riconciliazione anche se la ricevuta normalizza diversamente.
+ */
+export function canonicalIdentityKey(identity: RecordIdentity): string {
+  const norm = (s: string) => s.trim().toUpperCase().replace(/\s+/g, " ");
+  return `${norm(identity.cognome)}|${norm(identity.nome)}|${identity.dataNascita.trim()}`;
+}

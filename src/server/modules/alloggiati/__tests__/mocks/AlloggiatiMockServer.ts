@@ -32,7 +32,12 @@
 
 import { XMLParser } from "fast-xml-parser";
 import { toArray } from "../../soap/parse";
-import { TRACCIATO_FILE_UNICO_LEN, TRACCIATO_LEN } from "../../domain/tracciato";
+import {
+  TRACCIATO_FILE_UNICO_LEN,
+  TRACCIATO_LEN,
+  parseIdentityFromRecord,
+  type RecordIdentity,
+} from "../../domain/tracciato";
 
 /** Credenziale considerata valida dal mock (utente+password+wskey). */
 export interface MockCredential {
@@ -112,7 +117,18 @@ export interface MockCall {
   token?: string;
   records?: string[];
   tabella?: string;
+  data?: string;
 }
+
+/**
+ * [MOCK] Errore di Ricevuta richiesta per il giorno corrente/futuro. Il vincolo "solo giorni
+ * passati" è REALE [VERIFICATO], ma il codice/descrizione del rifiuto NON sono attestati nel
+ * manuale → marcato [MOCK], mai spacciato per ufficiale.
+ */
+const RICEVUTA_GIORNO_NON_CONSENTITO: RowRejection = {
+  errorCod: "MOCK-RIC-01",
+  errorDes: "[MOCK] Ricevuta disponibile solo per i giorni passati",
+};
 
 const NS = "AlloggiatiService";
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1h, come il portale reale (token orario).
@@ -138,6 +154,11 @@ export class AlloggiatiMockServer {
   readonly calls: MockCall[] = [];
   /** Quante volte ogni record è stato ACQUISITO lato server (per asserire l'assenza di doppioni). */
   readonly acquired = new Map<string, number>();
+  /**
+   * Righe acquisite per GIORNO (data ISO = il "today" del mock al momento del Send). Alimenta la
+   * Ricevuta T+1: una riga acquisita oggi diventa interrogabile da domani (Ricevuta esclude oggi).
+   */
+  readonly acquiredByDate = new Map<string, Set<string>>();
 
   private readonly credentials: MockCredential[];
   private readonly tokens = new Map<string, { utente: string; expiresMs: number }>();
@@ -206,6 +227,8 @@ export class AlloggiatiMockServer {
         return this.handleBatch(soapBody, "Send", init?.signal);
       case "Tabella":
         return this.handleTabella(soapBody);
+      case "Ricevuta":
+        return this.handleRicevuta(soapBody);
       default:
         return new Response(this.faultEnvelope(`Metodo sconosciuto: ${method}`), { status: 500 });
     }
@@ -283,10 +306,17 @@ export class AlloggiatiMockServer {
     // Esito riga-per-riga: prima i codici UFFICIALI derivati dal record (11, 12), poi il custom.
     const esiti = records.map((rec, i) => this.judgeRow(rec, i));
 
-    // SOLO Send ha effetti: registra le righe valide come acquisite (per le asserzioni anti-doppione).
+    // SOLO Send ha effetti: registra le righe valide come acquisite (per le asserzioni anti-doppione
+    // e per alimentare la Ricevuta del giorno).
     if (op === "Send") {
+      const acqDate = this.scenario.today ?? new Date().toISOString().slice(0, 10);
       records.forEach((rec, i) => {
-        if (esiti[i] === null) this.acquired.set(rec, (this.acquired.get(rec) ?? 0) + 1);
+        if (esiti[i] === null) {
+          this.acquired.set(rec, (this.acquired.get(rec) ?? 0) + 1);
+          let perDay = this.acquiredByDate.get(acqDate);
+          if (!perDay) this.acquiredByDate.set(acqDate, (perDay = new Set<string>()));
+          perDay.add(rec);
+        }
       });
       // CASO CRITICO: acquisito lato server, poi la connessione muore → il client vede un timeout.
       if (this.scenario.dropResponseAfterAcquire) {
@@ -355,6 +385,42 @@ export class AlloggiatiMockServer {
     return this.soap(
       "TabellaResponse",
       `<TabellaResult>${esitoXml(true)}</TabellaResult><CSV>${esc(csv)}</CSV>`,
+    );
+  }
+
+  /**
+   * `Ricevuta(Data)`: PDF (base64) delle schedine acquisite in un giorno PASSATO.
+   * Modella i due vincoli REALI: (a) token valido; (b) SOLO giorni passati — oggi/futuro è rifiutato.
+   * Il PDF è un placeholder [MOCK] (formato reale ignoto): vedi encodeMockReceiptPdf.
+   */
+  private handleRicevuta(soapBody: Record<string, unknown>): Response {
+    const node = (soapBody.Ricevuta ?? {}) as Record<string, unknown>;
+    const utente = str(node.Utente);
+    const token = str(node.token);
+    const data = str(node.Data);
+    this.calls.push({ method: "Ricevuta", utente, token, data });
+
+    if (!this.tokenValid(token, utente)) {
+      return this.soap(
+        "RicevutaResponse",
+        `<RicevutaResult>${esitoXml(false, ALLOGGIATI_ERROR.CREDENZIALI_NON_VALIDE)}</RicevutaResult>`,
+      );
+    }
+
+    // SOLO giorni passati: il confronto lessicale su ISO "YYYY-MM-DD" è anche cronologico.
+    const todayIso = this.scenario.today ?? new Date().toISOString().slice(0, 10);
+    if (!data || data >= todayIso) {
+      return this.soap(
+        "RicevutaResponse",
+        `<RicevutaResult>${esitoXml(false, RICEVUTA_GIORNO_NON_CONSENTITO)}</RicevutaResult>`,
+      );
+    }
+
+    const records = [...(this.acquiredByDate.get(data) ?? new Set<string>())];
+    const pdfBase64 = encodeMockReceiptPdf(records);
+    return this.soap(
+      "RicevutaResponse",
+      `<RicevutaResult>${esitoXml(true)}</RicevutaResult><PDF>${pdfBase64}</PDF>`,
     );
   }
 
@@ -429,4 +495,42 @@ function esitoXml(esito: boolean, err?: RowRejection): string {
 function abortReason(signal: AbortSignal): Error {
   const r = signal.reason;
   return r instanceof Error ? r : new Error("aborted");
+}
+
+// ----------------------------- ricevuta [MOCK] -----------------------------
+//
+// ⚠️ Il PDF reale della Ricevuta è OPACO e NON documentato (vedi docs/architettura §1.3 e il port
+// AcquisitionReceiptReader). Qui NON simuliamo un PDF: produciamo un payload base64 di righe
+// NOMINATIVE "cognome\tnome\tdataNascitaISO" (una per schedina acquisita), che è il CONTENUTO utile
+// che un adapter reale dovrebbe comunque estrarre dai nominativi. Encode/decode stanno insieme per
+// tenere il formato [MOCK] in un solo posto.
+
+const RECEIPT_SEP = "\t";
+// Riga di intestazione SEMPRE presente: così una ricevuta VUOTA (zero acquisizioni quel giorno) è
+// comunque un payload base64 non vuoto e valido — non un "campo PDF mancante".
+const RECEIPT_HEADER = "#MOCK-RICEVUTA";
+
+/** Serializza le identità acquisite in un "PDF" [MOCK] base64 (header + righe nominative). */
+function encodeMockReceiptPdf(records: string[]): string {
+  const lines = [
+    RECEIPT_HEADER,
+    ...records.map((rec) => {
+      const id = parseIdentityFromRecord(rec);
+      return [id.cognome, id.nome, id.dataNascita].join(RECEIPT_SEP);
+    }),
+  ];
+  return Buffer.from(lines.join("\n"), "utf8").toString("base64");
+}
+
+/** Inverso di encodeMockReceiptPdf: usato dal reader di test per estrarre le identità acquisite. */
+export function decodeMockReceiptPdf(pdfBase64: string): RecordIdentity[] {
+  const text = Buffer.from(pdfBase64, "base64").toString("utf8");
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line !== "" && !line.startsWith("#"))
+    .map((line) => {
+      const [cognome = "", nome = "", dataNascita = ""] = line.split(RECEIPT_SEP);
+      return { cognome, nome, dataNascita };
+    });
 }

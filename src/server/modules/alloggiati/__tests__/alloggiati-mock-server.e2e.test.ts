@@ -424,6 +424,78 @@ describe("Mock Alloggiati — Casi-limite reali delle schedine", () => {
   });
 });
 
+describe("Mock Alloggiati — Scenario 6: riconciliazione T+1 (Ricevuta)", () => {
+  const TOMORROW = "2026-05-31";
+
+  it("UNVERIFIED + acquisita lato server → la Ricevuta di T+1 conferma → ACQUIRED", async () => {
+    // Round 1 (oggi): il server acquisisce davvero ma la risposta si perde → UNVERIFIED.
+    const mock = new AlloggiatiMockServer(SECRET, { today: TODAY, dropResponseAfterAcquire: true });
+    const stack = createAlloggiatiStack({ mock, secret: SECRET, timeoutMs: 40 });
+    const id = await addPending(stack, recItalianoOk(), { numeroDocumento: "REC-1" });
+
+    await stack.outbox.processCredentialBatch(CRED);
+    expect((await stack.repo.findById(id, ORG))?.status).toBe(SchedinaStatus.UNVERIFIED);
+
+    // Round 2 (domani): la Ricevuta del giorno dell'invio è ora interrogabile e contiene l'identità.
+    mock.setScenario({ today: TOMORROW });
+    const result = await stack.reconcile.reconcileCredential(CRED, TODAY);
+
+    expect(result.confirmed).toBe(1);
+    expect(result.requeued).toBe(0);
+    expect((await stack.repo.findById(id, ORG))?.status).toBe(SchedinaStatus.ACQUIRED);
+    expect(mock.callCount("Send")).toBe(1); // mai re-inviata: confermata dalla ricevuta
+  });
+
+  it("UNVERIFIED ma NON acquisita (timeout prima dell'acquisizione) → Ricevuta vuota → torna PENDING e si può re-inviare", async () => {
+    const mock = new AlloggiatiMockServer(SECRET, { today: TODAY });
+    const stack = createAlloggiatiStack({ mock, secret: SECRET, timeoutMs: 40 });
+    const record = recItalianoOk();
+    const id = await addPending(stack, record, { numeroDocumento: "REC-2" });
+
+    // Token già in cache, poi la rete cade sull'INVIO → niente acquisito lato server, schedina UNVERIFIED.
+    await stack.tokens.getToken(CRED);
+    mock.setScenario({ today: TODAY, transport: "timeout" });
+    await stack.outbox.processCredentialBatch(CRED);
+    expect((await stack.repo.findById(id, ORG))?.status).toBe(SchedinaStatus.UNVERIFIED);
+
+    // T+1: la ricevuta del giorno NON contiene l'identità → ri-accodata come PENDING.
+    mock.setScenario({ today: TOMORROW });
+    const result = await stack.reconcile.reconcileCredential(CRED, TODAY);
+
+    expect(result.confirmed).toBe(0);
+    expect(result.requeued).toBe(1);
+    expect((await stack.repo.findById(id, ORG))?.status).toBe(SchedinaStatus.PENDING);
+
+    // Ora il re-invio è SICURO (non era stata acquisita): un nuovo giro la porta ad ACQUIRED.
+    await stack.outbox.processCredentialBatch(CRED);
+    expect((await stack.repo.findById(id, ORG))?.status).toBe(SchedinaStatus.ACQUIRED);
+    expect(mock.acquired.get(record)).toBe(1); // acquisita UNA sola volta: nessun doppione
+  });
+
+  it("la Ricevuta del giorno CORRENTE è rifiutata (solo giorni passati)", async () => {
+    const mock = new AlloggiatiMockServer(SECRET, { today: TODAY });
+    const stack = createAlloggiatiStack({ mock, secret: SECRET });
+    await addPending(stack, recItalianoOk());
+    await stack.outbox.processCredentialBatch(CRED); // acquisita oggi
+
+    // Chiedere la ricevuta di OGGI → il server rifiuta (esito false) → il client lancia AuthError.
+    const { utente, token } = await stack.tokens.getToken(CRED);
+    await expect(stack.client.ricevuta(utente, token, TODAY)).rejects.toBeInstanceOf(
+      AlloggiatiAuthError,
+    );
+  });
+
+  it("riconciliazione senza UNVERIFIED → no-op (non scarica nemmeno la ricevuta)", async () => {
+    const mock = new AlloggiatiMockServer(SECRET, { today: TODAY });
+    const stack = createAlloggiatiStack({ mock, secret: SECRET });
+
+    const result = await stack.reconcile.reconcileCredential(CRED, "2026-05-29");
+
+    expect(result).toEqual({ total: 0, confirmed: 0, requeued: 0, rows: [] });
+    expect(mock.callCount("Ricevuta")).toBe(0);
+  });
+});
+
 describe("Mock Alloggiati — Flusso completo: genera → verifica → invia → conferma", () => {
   it("verifica (Test) NON ha effetti; poi Send applica gli esiti per-riga", async () => {
     const mock = new AlloggiatiMockServer(SECRET, { today: TODAY });

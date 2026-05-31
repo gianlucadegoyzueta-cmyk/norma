@@ -89,6 +89,22 @@ export function buildTabellaEnvelope(utente: string, token: string, tipo: string
   );
 }
 
+/**
+ * Richiesta `Ricevuta`: scarica la ricevuta (PDF) delle schedine acquisite in un dato giorno.
+ * Vincolo reale [VERIFICATO, docs/architettura §1.3]: SOLO giorni passati (NON il giorno corrente).
+ * ⚠️ [SUPPOSIZIONE] nome del parametro data (`Data`) e forma esatta da confermare sul WSDL reale.
+ * `data` è in formato ISO "YYYY-MM-DD" lato nostro; qui lo passiamo verbatim al servizio.
+ */
+export function buildRicevutaEnvelope(utente: string, token: string, data: string): string {
+  return envelope(
+    `<Ricevuta xmlns="${SERVICE_NS}">` +
+      `<Utente>${escapeXml(utente)}</Utente>` +
+      `<token>${escapeXml(token)}</token>` +
+      `<Data>${escapeXml(data)}</Data>` +
+      "</Ricevuta>",
+  );
+}
+
 /** Valore dell'header SOAPAction (SOAP 1.1) per un metodo. */
 export function soapAction(method: string): string {
   return `${SERVICE_NS}/${method}`;

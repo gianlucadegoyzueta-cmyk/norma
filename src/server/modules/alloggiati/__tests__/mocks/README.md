@@ -15,9 +15,12 @@ const client = new AlloggiatiSoapClient({ fetchImpl: mock.fetch });
 // ...oppure usa createAlloggiatiStack(...) (harness.ts) per l'intera catena outbox/verify.
 ```
 
-- `AlloggiatiMockServer.ts` — il server SOAP finto (stateful: credenziali, token, registro acquisizioni).
-- `harness.ts` — cabla lo stack di produzione (TokenManager → client → sender → outbox/verify) sul mock.
-- `../alloggiati-mock-server.e2e.test.ts` — suite end-to-end su tutti gli scenari.
+- `AlloggiatiMockServer.ts` — il server SOAP finto (stateful: credenziali, token, registro acquisizioni
+  per-giorno, `Ricevuta`).
+- `harness.ts` — cabla lo stack di produzione (TokenManager → client → sender → outbox/verify/reconcile) sul mock.
+- `MockReceiptReader.ts` — adapter di test del port `AcquisitionReceiptReader`: chiama il `Ricevuta`
+  reale via client SOAP e decodifica il payload [MOCK] (vedi sotto).
+- `../alloggiati-mock-server.e2e.test.ts` — suite end-to-end su tutti gli scenari (incl. riconciliazione T+1).
 
 ## Cosa replica fedelmente (sulla base del codice/manuale REALI)
 
@@ -40,8 +43,14 @@ const client = new AlloggiatiSoapClient({ fetchImpl: mock.fetch });
   irreversibili. Il mock tiene un registro `acquired` solo per **asserire** quante volte una riga è
   arrivata al server; i test verificano la **protezione lato nostro** (la macchina a stati non
   re-invia mai una schedina già ACQUIRED/UNVERIFIED), non un comportamento del server non documentato.
-- **Ricevuta / riconciliazione T+1 non modellate.** Il metodo `Ricevuta` (PDF, solo giorni passati)
-  e il job di riconciliazione non sono simulati: il mock usa `SchedineValide` come semplice proxy.
+- **Ricevuta / riconciliazione T+1: modellate, ma con un PDF [MOCK].** Il metodo `Ricevuta` ora è
+  simulato fedelmente nei suoi VINCOLI reali (token valido; **solo giorni passati** → oggi/futuro
+  rifiutato) e alimenta il `SchedinaReconcileService`: un `UNVERIFIED` confermato dalla ricevuta del
+  giorno → `ACQUIRED`, altrimenti → `PENDING` (re-inviabile senza doppioni). ⚠️ Il **contenuto del PDF
+  reale è ignoto/non documentato**: il mock NON simula un PDF, ma un payload base64 di righe nominative
+  (`cognome\tnome\tdataNascita`) — il contenuto utile che un adapter reale dovrebbe comunque estrarre.
+  La lettura/parsing del PDF è isolata dietro il port `AcquisitionReceiptReader`: in produzione va
+  sostituita con un parser del PDF vero, **una volta verificato il formato sul campo**.
 - **Validazione delle tabelle (Comuni/Stati/Documenti) non semantica.** Il mock controlla la
   _forma_ del record (lunghezza, finestra data), non la validità dei singoli codici contro le
   tabelle ufficiali (il server reale lo fa; qui i codici di esempio sono placeholder a larghezza giusta).
