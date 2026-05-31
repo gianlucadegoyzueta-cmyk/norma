@@ -30,7 +30,9 @@ export function analyzeReceiptPdfBuffer(buf: Buffer): Gate0PdfAnalysis {
 
   const parserHints: string[] = [];
   if (!isPdfMagic) {
-    parserHints.push("Il payload decodificato NON inizia con %PDF- — verificare encoding/campo SOAP.");
+    parserHints.push(
+      "Il payload decodificato NON inizia con %PDF- — verificare encoding/campo SOAP.",
+    );
   }
   if (printableSnippets.length === 0) {
     parserHints.push(

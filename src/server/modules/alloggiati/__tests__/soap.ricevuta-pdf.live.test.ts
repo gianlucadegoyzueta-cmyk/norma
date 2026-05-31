@@ -117,7 +117,9 @@ describe.skipIf(!enabled)("Gate #0 — Ricevuta PDF diagnostico (LIVE, niente Se
       console.warn(
         "[Gate #0] Nessuna Ricevuta scaricata. Serve un giorno PASSATO con acquisizioni sul portale.",
       );
-      console.warn("  Suggerimento: ALLOGGIATI_RICEVUTA_DATES=YYYY-MM-DD npm run alloggiati:gate0-pdf");
+      console.warn(
+        "  Suggerimento: ALLOGGIATI_RICEVUTA_DATES=YYYY-MM-DD npm run alloggiati:gate0-pdf",
+      );
     }
 
     // Gate #0: passa se Ricevuta risponde ( anche con ERRORE_RECUPERO_RICEVUTA su giorni vuoti).
