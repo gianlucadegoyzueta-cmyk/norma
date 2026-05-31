@@ -13,6 +13,7 @@ import {
 } from "@/server/modules/alloggiati";
 import { PrismaStaysRepository, StaysService } from "@/server/modules/stays";
 import { SiteHeader } from "@/components/site-header";
+import { UnverifiedNote } from "@/components/unverified-note";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GenerateSchedineButton } from "./GenerateSchedineButton";
@@ -206,25 +207,31 @@ function GuestRow({
 }) {
   const badge = guest.schedinaStatus ? SCHEDINA_BADGE[guest.schedinaStatus] : null;
   return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-2">
-        <User className={nested ? "text-muted-foreground size-3.5" : "size-4"} />
-        <span className="truncate text-sm">
-          <span className="font-medium">
-            {guest.lastName} {guest.firstName}
+    <div className="grid gap-1">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <User
+            aria-hidden
+            className={nested ? "text-muted-foreground size-3.5" : "size-4"}
+          />
+          <span className="truncate text-sm">
+            <span className="font-medium">
+              {guest.lastName} {guest.firstName}
+            </span>
+            <span className="text-muted-foreground"> · {TIPO_LABEL[guest.tipoAlloggiato]}</span>
           </span>
-          <span className="text-muted-foreground"> · {TIPO_LABEL[guest.tipoAlloggiato]}</span>
-        </span>
+        </div>
+        {badge ? (
+          <Badge variant={badge.variant} className="shrink-0">
+            {badge.text}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="shrink-0">
+            No schedina
+          </Badge>
+        )}
       </div>
-      {badge ? (
-        <Badge variant={badge.variant} className="shrink-0">
-          {badge.text}
-        </Badge>
-      ) : (
-        <Badge variant="outline" className="shrink-0">
-          No schedina
-        </Badge>
-      )}
+      {guest.schedinaStatus === "UNVERIFIED" && <UnverifiedNote />}
     </div>
   );
 }

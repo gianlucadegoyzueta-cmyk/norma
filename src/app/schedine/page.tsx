@@ -11,6 +11,7 @@ import {
   type SchedinaListItem,
 } from "@/server/modules/alloggiati";
 import { SiteHeader } from "@/components/site-header";
+import { UnverifiedNote } from "@/components/unverified-note";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -169,6 +170,7 @@ export default async function SchedinePage() {
                             {s.lastErrorDes}
                           </p>
                         )}
+                        {s.status === "UNVERIFIED" && <UnverifiedNote className="mt-1" />}
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1">
                         <Badge variant={STATUS[s.status].variant}>{STATUS[s.status].text}</Badge>
