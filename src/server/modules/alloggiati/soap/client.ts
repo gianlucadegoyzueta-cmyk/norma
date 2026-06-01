@@ -2,9 +2,12 @@ import type { AlloggiatiSecret } from "../../../secrets";
 import {
   AlloggiatiAuthError,
   AlloggiatiProtocolError,
+  AlloggiatiReceiptError,
+  AlloggiatiReceiptUnavailableError,
   AlloggiatiTransientError,
   type EsitoServizio,
 } from "./errors";
+import { isReceiptUnavailable } from "./receipt-codes";
 import {
   buildAuthenticationTestEnvelope,
   buildGenerateTokenEnvelope,
@@ -197,10 +200,15 @@ export class AlloggiatiSoapClient {
     const resp = (body.RicevutaResponse ?? {}) as Record<string, unknown>;
     const esito = readEsito(resp.RicevutaResult);
     if (!esito.esito) {
-      throw new AlloggiatiAuthError(
-        `Ricevuta "${data}" non disponibile: ${esito.errorDes ?? esito.errorCod ?? "giorno non consentito o token non valido"}`,
-        esito,
-      );
+      const msg = `Ricevuta "${data}" non disponibile: ${esito.errorDes ?? esito.errorCod ?? "errore sconosciuto"}`;
+      if (isReceiptUnavailable(esito)) {
+        throw new AlloggiatiReceiptUnavailableError(msg, esito);
+      }
+      // Token/credenziali invalide su Ricevuta restano auth (cod. 1 osservato altrove).
+      if (esito.errorCod === "1") {
+        throw new AlloggiatiAuthError(msg, esito);
+      }
+      throw new AlloggiatiReceiptError(msg, esito);
     }
     const pdfBase64 = normalizeStr(resp.PDF);
     if (pdfBase64 === undefined) {

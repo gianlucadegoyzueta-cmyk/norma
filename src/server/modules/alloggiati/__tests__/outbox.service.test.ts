@@ -90,6 +90,13 @@ describe("SchedinaOutboxService — orchestrazione", () => {
     await service.processCredentialBatch("credenziale-senza-schedine");
     expect(sender.calls).toHaveLength(0);
   });
+
+  it("recoverStaleSending: SENDING abbandonato → UNVERIFIED", async () => {
+    await repo.claimForSending(schedinaId);
+    repo.setSentAtForTest(schedinaId, new Date(0));
+    expect(await repo.recoverStaleSending(CRED, 60_000)).toBe(1);
+    expect((await repo.findById(schedinaId, ORG))?.status).toBe(SchedinaStatus.UNVERIFIED);
+  });
 });
 
 describe("SchedinaOutboxService — concorrenza (claim atomico anti-doppio-invio)", () => {

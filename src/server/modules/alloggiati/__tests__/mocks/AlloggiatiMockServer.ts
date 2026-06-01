@@ -74,6 +74,14 @@ export const ALLOGGIATI_ERROR = {
     errorDes: "SCHEDINA_CAMPO_NON_CORRETTO",
     errorDettaglio: "Data di Arrivo Errata",
   } as RowRejection,
+  /**
+   * [VERIFICATO Gate #0 live] Ricevuta per giorno passato senza PDF/acquisizioni interrogabili.
+   * Allineato al comportamento reale (non restituisce PDF vuoto).
+   */
+  RICEVUTA_NON_DISPONIBILE: {
+    errorCod: "ERRORE_RECUPERO_RICEVUTA",
+    errorDes: "ERRORE_RECUPERO_RICEVUTA",
+  } as RowRejection,
 } as const;
 
 /** Modalità di TRASPORTO: simula la rete prima ancora del contenuto applicativo. */
@@ -417,6 +425,12 @@ export class AlloggiatiMockServer {
     }
 
     const records = [...(this.acquiredByDate.get(data) ?? new Set<string>())];
+    if (records.length === 0) {
+      return this.soap(
+        "RicevutaResponse",
+        `<RicevutaResult>${esitoXml(false, ALLOGGIATI_ERROR.RICEVUTA_NON_DISPONIBILE)}</RicevutaResult>`,
+      );
+    }
     const pdfBase64 = encodeMockReceiptPdf(records);
     return this.soap(
       "RicevutaResponse",
@@ -506,8 +520,7 @@ function abortReason(signal: AbortSignal): Error {
 // tenere il formato [MOCK] in un solo posto.
 
 const RECEIPT_SEP = "\t";
-// Riga di intestazione SEMPRE presente: così una ricevuta VUOTA (zero acquisizioni quel giorno) è
-// comunque un payload base64 non vuoto e valido — non un "campo PDF mancante".
+// Riga di intestazione nel payload [MOCK] quando ci sono acquisizioni (giorni vuoti → ERRORE_RECUPERO).
 const RECEIPT_HEADER = "#MOCK-RICEVUTA";
 
 /** Serializza le identità acquisite in un "PDF" [MOCK] base64 (header + righe nominative). */
@@ -522,7 +535,7 @@ function encodeMockReceiptPdf(records: string[]): string {
   return Buffer.from(lines.join("\n"), "utf8").toString("base64");
 }
 
-/** Inverso di encodeMockReceiptPdf: usato dal reader di test per estrarre le identità acquisite. */
+/** @deprecated Usa parseMockFormatReceiptBase64 da domain/receipt-pdf. */
 export function decodeMockReceiptPdf(pdfBase64: string): RecordIdentity[] {
   const text = Buffer.from(pdfBase64, "base64").toString("utf8");
   return text
