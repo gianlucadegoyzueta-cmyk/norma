@@ -5,16 +5,17 @@ import { AlertTriangle, ArrowLeft, FileText } from "lucide-react";
 import type { SchedinaStatus } from "@prisma/client";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
-import {
-  PrismaCredentialRepository,
-  PrismaSchedinaRepository,
-  type SchedinaListItem,
-} from "@/server/modules/alloggiati";
+import { PrismaCredentialRepository, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
+import { ReopenRejectedButton } from "@/components/reopen-rejected-button";
 import { SiteHeader } from "@/components/site-header";
+import { UnverifiedNote } from "@/components/unverified-note";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { isOverdue } from "@/lib/schedina-status";
 import { cn } from "@/lib/utils";
 import { CredentialOutboxControls } from "./CredentialOutboxControls";
+import { mapAlloggiatiError } from "./error-codes";
 import { ReconcileControls } from "./ReconcileControls";
 
 export const metadata: Metadata = { title: "Schedine" };
@@ -35,12 +36,6 @@ const STATUS: Record<SchedinaStatus, { text: string; variant: BadgeProps["varian
   REJECTED: { text: "Respinta", variant: "destructive" },
   UNVERIFIED: { text: "Da verificare", variant: "warning" },
 };
-
-/** Una schedina ancora "aperta" (non acquisita) la cui deadline è passata è in ritardo. */
-function isOverdue(s: SchedinaListItem, now: number): boolean {
-  const open = s.status === "PENDING" || s.status === "SENDING" || s.status === "UNVERIFIED";
-  return open && s.deadlineAt.getTime() < now;
-}
 
 export default async function SchedinePage() {
   const ctx = await getCurrentContext();
@@ -83,11 +78,26 @@ export default async function SchedinePage() {
   }, {});
   const overdueCount = schedine.filter((s) => isOverdue(s, now)).length;
 
+  // Mappa schedina REJECTED → stayId per il link "Correggi" (query di pagina, nessun cambio al dominio).
+  const rejectedIds = schedine.filter((s) => s.status === "REJECTED").map((s) => s.id);
+  const stayIdBySchedina = new Map<string, string>();
+  if (rejectedIds.length > 0) {
+    const rows = await prisma.schedina.findMany({
+      where: { organizationId: orgId, id: { in: rejectedIds } },
+      select: { id: true, guest: { select: { stayId: true } } },
+    });
+    for (const r of rows) stayIdBySchedina.set(r.id, r.guest.stayId);
+  }
+
   return (
     <div className="min-h-dvh">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-3xl px-4 py-8 outline-none sm:px-6 sm:py-10"
+      >
         <Link
           href="/dashboard"
           className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
@@ -206,12 +216,27 @@ export default async function SchedinePage() {
                         <p className="text-muted-foreground truncate text-xs">
                           {s.propertyName} · {s.credentialLabel}
                         </p>
-                        {s.status === "REJECTED" && s.lastErrorDes && (
-                          <p className="text-destructive mt-0.5 truncate text-xs">
-                            {s.lastErrorCod ? `[${s.lastErrorCod}] ` : ""}
-                            {s.lastErrorDes}
-                          </p>
+                        {s.status === "REJECTED" && (
+                          <div className="mt-1.5 grid gap-1.5">
+                            <p className="text-destructive text-xs">
+                              {s.lastErrorCod ? (
+                                <span className="text-muted-foreground">[{s.lastErrorCod}] </span>
+                              ) : null}
+                              {mapAlloggiatiError(s.lastErrorCod, s.lastErrorDes)}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              {stayIdBySchedina.get(s.id) ? (
+                                <Link href={`/stays/${stayIdBySchedina.get(s.id)}`}>
+                                  <Button variant="outline" size="sm">
+                                    Correggi
+                                  </Button>
+                                </Link>
+                              ) : null}
+                              <ReopenRejectedButton schedinaId={s.id} />
+                            </div>
+                          </div>
                         )}
+                        {s.status === "UNVERIFIED" && <UnverifiedNote className="mt-1" />}
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1">
                         <Badge variant={STATUS[s.status].variant}>{STATUS[s.status].text}</Badge>

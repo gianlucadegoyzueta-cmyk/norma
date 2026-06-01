@@ -18,9 +18,12 @@ import {
   TokenManager,
   VaultCredentialProvider,
 } from "@/server/modules/alloggiati";
+import { buildSendSummary } from "./send-summary";
+import type { OutboxResult, SendResult } from "./types";
 
-// Tipo locale (NON esportato): un file "use server" può esportare solo funzioni async.
-type Result = { ok: boolean; message: string };
+// Alias locale per le azioni semplici (verifica). I tipi "ricchi" stanno in ./types perché un
+// file "use server" può esportare solo funzioni async.
+type Result = OutboxResult;
 
 /** Dipendenze condivise per verifica/invio di una credenziale. */
 function deps() {
@@ -114,9 +117,9 @@ export async function verifyCredentialAction(
  * cieca: l'esito reale si riconcilia con la Ricevuta a T+1.
  */
 export async function sendCredentialAction(
-  _prev: Result | null,
+  _prev: SendResult | null,
   formData: FormData,
-): Promise<Result> {
+): Promise<SendResult> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
   if (formData.get("confirm") !== "yes") {
@@ -127,6 +130,11 @@ export async function sendCredentialAction(
   const { client, credRepo, tokens, schedinaRepo, build } = deps();
   const denied = await guardCredential(credRepo, credentialId, ctx.current.organizationId);
   if (denied) return { ok: false, message: denied };
+
+  // Cattura le PENDING PRIMA del batch: sono ESATTAMENTE le righe che verranno processate.
+  // Ci servono i loro id per derivare l'esito riga-per-riga dopo, senza toccare l'outbox.
+  const pendingBefore = await schedinaRepo.listPendingByCredential(credentialId);
+  const sentIds = new Set(pendingBefore.map((r) => r.id));
 
   try {
     const sender = new SoapAlloggiatiSender(tokens, client);
@@ -142,8 +150,57 @@ export async function sendCredentialAction(
     };
   }
 
+  if (sentIds.size === 0) {
+    return { ok: true, message: "Nessuna schedina da inviare per questa credenziale." };
+  }
+
+  // Rileggi gli stati AGGIORNATI delle sole righe inviate e derivane il riepilogo. `listForOrganization`
+  // è già filtrata per org (isolamento); restringiamo agli id catturati prima del batch.
+  const updated = await schedinaRepo.listForOrganization(ctx.current.organizationId);
+  const summary = buildSendSummary(updated.filter((r) => sentIds.has(r.id)));
+
   revalidatePath("/schedine");
-  return { ok: true, message: "Invio elaborato. Controlla gli stati aggiornati qui sotto." };
+  return { ok: true, message: "Invio elaborato.", summary };
+}
+
+/**
+ * Rimette in coda una schedina REJECTED (transizione REJECTED → PENDING, già prevista dal dominio):
+ * dopo aver corretto i dati dell'ospite, l'host può ri-tentare l'invio senza vicoli ciechi.
+ * NON è un re-invio: riporta solo lo stato a "da inviare". Isolamento verificato via findById(org).
+ */
+export async function reopenRejectedAction(
+  _prev: OutboxResult | null,
+  formData: FormData,
+): Promise<OutboxResult> {
+  const ctx = await getCurrentContext();
+  if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+
+  const schedinaId = String(formData.get("schedinaId") ?? "").trim();
+  if (!schedinaId) return { ok: false, message: "Schedina non indicata." };
+
+  const schedinaRepo = new PrismaSchedinaRepository(prisma);
+  const found = await schedinaRepo.findById(schedinaId, ctx.current.organizationId);
+  if (!found) return { ok: false, message: "Schedina non trovata per questa organizzazione." };
+  if (found.status !== "REJECTED") {
+    return { ok: false, message: "Solo le schedine respinte si possono rimettere in coda." };
+  }
+
+  try {
+    // La transizione valida from=REJECTED→to=PENDING e azzera gli errori (logica di dominio esistente).
+    await schedinaRepo.applyDecision(schedinaId, {
+      status: "PENDING",
+      errorCod: null,
+      errorDes: null,
+    });
+  } catch (err) {
+    return {
+      ok: false,
+      message: `Impossibile rimettere in coda: ${err instanceof Error ? err.message : "errore inatteso"}.`,
+    };
+  }
+
+  revalidatePath("/schedine");
+  return { ok: true, message: "Rimessa in coda: ora è di nuovo da inviare." };
 }
 
 /** Data in fuso Europe/Rome come "YYYY-MM-DD". */

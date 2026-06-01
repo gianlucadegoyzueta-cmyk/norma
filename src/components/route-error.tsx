@@ -1,0 +1,50 @@
+"use client";
+
+import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+/**
+ * UI condivisa per le error boundary di rotta (error.tsx): messaggio gentile + "Riprova" (reset)
+ * + ritorno alla dashboard. Client component (richiesto da error.tsx di Next).
+ */
+export function RouteError({
+  reset,
+  title = "Qualcosa è andato storto",
+  message = "Si è verificato un imprevisto durante il caricamento. Riprova: di solito basta un secondo tentativo.",
+}: {
+  error?: Error & { digest?: string };
+  reset?: () => void;
+  title?: string;
+  message?: string;
+}) {
+  return (
+    <main className="flex min-h-dvh items-center justify-center px-4 py-12">
+      <Card className="w-full max-w-md">
+        <CardHeader className="items-center text-center">
+          <span
+            aria-hidden
+            className="bg-warning/15 text-warning-foreground dark:text-warning mb-2 flex size-12 items-center justify-center rounded-full"
+          >
+            <AlertTriangle className="size-6" />
+          </span>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{message}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
+          {reset ? (
+            <Button onClick={reset} className="w-full">
+              Riprova
+            </Button>
+          ) : null}
+          <Link href="/dashboard" className="w-full">
+            <Button variant="ghost" className="w-full">
+              Torna alla dashboard
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    </main>
+  );
+}

@@ -12,9 +12,12 @@ import {
   checkReferenceTablesHealth,
 } from "@/server/modules/alloggiati";
 import { PrismaStaysRepository, StaysService } from "@/server/modules/stays";
+import { mapAlloggiatiError } from "@/app/schedine/error-codes";
+import { ReopenRejectedButton } from "@/components/reopen-rejected-button";
 import { PrismaTouristTaxConfigRepository } from "@/server/modules/tourist-tax/adapters/PrismaTouristTaxConfigRepository";
 import { TouristTaxEstimateService } from "@/server/modules/tourist-tax/services/estimate.service";
 import { SiteHeader } from "@/components/site-header";
+import { UnverifiedNote } from "@/components/unverified-note";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GenerateSchedineButton } from "./GenerateSchedineButton";
@@ -71,6 +74,20 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
     }),
     prisma.documentType.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
+
+  // Schedine REJECTED del soggiorno → mappa per ospite (id schedina + messaggio azionabile).
+  // Query di pagina: serve l'id schedina (per il reopen) e gli errori, non esposti da StayDetail.
+  const rejectedRows = await prisma.schedina.findMany({
+    where: { organizationId: orgId, status: "REJECTED", guest: { stayId: id } },
+    select: { id: true, guestId: true, lastErrorCod: true, lastErrorDes: true },
+  });
+  const rejectedByGuest = new Map<string, { schedinaId: string; message: string }>();
+  for (const r of rejectedRows) {
+    rejectedByGuest.set(r.guestId, {
+      schedinaId: r.id,
+      message: mapAlloggiatiError(r.lastErrorCod, r.lastErrorDes),
+    });
+  }
 
   // Stima imposta di soggiorno. Query dedicata (isolata per org) per i campi che servono al
   // calcolo, senza accoppiare il modulo stays a tourist-tax. La regola è scelta in base al
@@ -138,7 +155,11 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
     <div className="min-h-dvh">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-3xl px-4 py-8 outline-none sm:px-6 sm:py-10"
+      >
         <Link
           href="/stays"
           className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
@@ -183,10 +204,10 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
                   <li key={leader.id}>
                     <Card>
                       <CardContent className="grid gap-2 px-4 py-3">
-                        <GuestRow guest={leader} />
+                        <GuestRow guest={leader} rejected={rejectedByGuest.get(leader.id)} />
                         {members.map((m) => (
                           <div key={m.id} className="border-border/60 border-l-2 pl-3">
-                            <GuestRow guest={m} nested />
+                            <GuestRow guest={m} nested rejected={rejectedByGuest.get(m.id)} />
                           </div>
                         ))}
                       </CardContent>
@@ -257,6 +278,7 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
 function GuestRow({
   guest,
   nested,
+  rejected,
 }: {
   guest: {
     firstName: string;
@@ -265,28 +287,38 @@ function GuestRow({
     schedinaStatus: string | null;
   };
   nested?: boolean;
+  rejected?: { schedinaId: string; message: string };
 }) {
   const badge = guest.schedinaStatus ? SCHEDINA_BADGE[guest.schedinaStatus] : null;
   return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-2">
-        <User className={nested ? "text-muted-foreground size-3.5" : "size-4"} />
-        <span className="truncate text-sm">
-          <span className="font-medium">
-            {guest.lastName} {guest.firstName}
+    <div className="grid gap-1">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <User aria-hidden className={nested ? "text-muted-foreground size-3.5" : "size-4"} />
+          <span className="truncate text-sm">
+            <span className="font-medium">
+              {guest.lastName} {guest.firstName}
+            </span>
+            <span className="text-muted-foreground"> · {TIPO_LABEL[guest.tipoAlloggiato]}</span>
           </span>
-          <span className="text-muted-foreground"> · {TIPO_LABEL[guest.tipoAlloggiato]}</span>
-        </span>
+        </div>
+        {badge ? (
+          <Badge variant={badge.variant} className="shrink-0">
+            {badge.text}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="shrink-0">
+            No schedina
+          </Badge>
+        )}
       </div>
-      {badge ? (
-        <Badge variant={badge.variant} className="shrink-0">
-          {badge.text}
-        </Badge>
-      ) : (
-        <Badge variant="outline" className="shrink-0">
-          No schedina
-        </Badge>
-      )}
+      {guest.schedinaStatus === "UNVERIFIED" && <UnverifiedNote />}
+      {rejected ? (
+        <div className="grid gap-1.5">
+          <p className="text-destructive text-xs">{rejected.message}</p>
+          <ReopenRejectedButton schedinaId={rejected.schedinaId} />
+        </div>
+      ) : null}
     </div>
   );
 }

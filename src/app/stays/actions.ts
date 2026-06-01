@@ -1,12 +1,13 @@
 "use server";
 
-import type { Sex } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaReferenceTablesLoader, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
 import type { GuestData, Party, PartyTipo } from "@/server/modules/stays";
 import { PrismaStaysRepository, StaysError, StaysService } from "@/server/modules/stays";
+import { type PersonInput, validatePerson } from "./guest-validation";
+import type { GuestPartyState } from "./types";
 
 // Tipo locale (NON esportato): un file "use server" può esportare solo funzioni async.
 type Result = { ok: boolean; message: string };
@@ -93,40 +94,33 @@ function field(formData: FormData, key: string): string | undefined {
   return v === "" ? undefined : v;
 }
 
-/**
- * Estrae l'anagrafica della persona di indice `idx` dal form. I campi documento si leggono solo
- * per chi lo richiede (capo/singolo). Lancia se mancano i campi sempre obbligatori.
- */
-function parsePerson(formData: FormData, idx: number, withDocument: boolean): GuestData {
+/** Costruisce l'input grezzo della persona `idx` dal form (campi documento inclusi). */
+function personInput(formData: FormData, idx: number): PersonInput {
   const p = (k: string) => field(formData, `p${idx}.${k}`);
-  const firstName = p("firstName");
-  const lastName = p("lastName");
-  const sexRaw = p("sex");
-  const birthDateRaw = p("birthDate");
-  const birthCountryId = p("birthCountryId");
-  const citizenshipId = p("citizenshipId");
-
-  if (!firstName || !lastName) throw new StaysError("Nome e cognome ospite obbligatori.");
-  if (sexRaw !== "M" && sexRaw !== "F") throw new StaysError("Sesso ospite mancante.");
-  const birthDate = birthDateRaw ? new Date(`${birthDateRaw}T12:00:00.000Z`) : null;
-  if (!birthDate || Number.isNaN(birthDate.getTime())) {
-    throw new StaysError("Data di nascita ospite non valida.");
-  }
-  if (!birthCountryId) throw new StaysError("Stato di nascita ospite obbligatorio.");
-  if (!citizenshipId) throw new StaysError("Cittadinanza ospite obbligatoria.");
-
   return {
-    firstName,
-    lastName,
-    sex: sexRaw as Sex,
-    birthDate,
-    birthCountryId,
-    citizenshipId,
-    birthComuneId: p("birthComuneId") ?? null,
-    documentTypeId: withDocument ? (p("documentTypeId") ?? null) : null,
-    documentNumber: withDocument ? (p("documentNumber") ?? null) : null,
-    documentPlaceId: withDocument ? (p("documentPlaceId") ?? null) : null,
+    firstName: p("firstName"),
+    lastName: p("lastName"),
+    sex: p("sex"),
+    birthDate: p("birthDate"),
+    birthCountryId: p("birthCountryId"),
+    citizenshipId: p("citizenshipId"),
+    birthComuneId: p("birthComuneId"),
+    documentTypeId: p("documentTypeId"),
+    documentNumber: p("documentNumber"),
+    documentPlaceId: p("documentPlaceId"),
   };
+}
+
+/** Valida la persona `idx` (logica pura) e prefissa le chiavi d'errore con l'indice ("p0.lastName"). */
+function collectPerson(
+  formData: FormData,
+  idx: number,
+  withDocument: boolean,
+): { data: GuestData | null; errors: Record<string, string> } {
+  const { data, errors } = validatePerson(personInput(formData, idx), withDocument);
+  const prefixed: Record<string, string> = {};
+  for (const [k, v] of Object.entries(errors)) prefixed[`p${idx}.${k}`] = v;
+  return { data, errors: prefixed };
 }
 
 /**
@@ -135,9 +129,9 @@ function parsePerson(formData: FormData, idx: number, withDocument: boolean): Gu
  * vive nel dominio (`tipiPerParty`), qui ci limitiamo a costruire il `Party` dal form.
  */
 export async function addGuestPartyAction(
-  _prev: Result | null,
+  _prev: GuestPartyState | null,
   formData: FormData,
-): Promise<Result> {
+): Promise<GuestPartyState> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
 
@@ -155,17 +149,28 @@ export async function addGuestPartyAction(
     return { ok: false, message: "Nessun ospite da aggiungere." };
   }
 
-  let party: Party;
-  try {
-    if (tipo === "SINGOLO") {
-      party = { tipo, ospite: parsePerson(formData, 0, true) };
-    } else {
-      // p0 = capo (con documento); p1.. = membri (campi documento in bianco).
-      const capo = parsePerson(formData, 0, true);
-      const membri: GuestData[] = [];
-      for (let i = 1; i < personCount; i++) membri.push(parsePerson(formData, i, false));
-      party = { tipo, capo, membri };
+  // Valida TUTTE le persone raccogliendo gli errori per campo (niente stop al primo): la UI può
+  // evidenziarli tutti e fare scroll al primo. p0 = capo/singolo (con documento); p1.. = membri.
+  const fieldErrors: Record<string, string> = {};
+  const capo = collectPerson(formData, 0, true);
+  Object.assign(fieldErrors, capo.errors);
+  const membri: GuestData[] = [];
+  if (tipo !== "SINGOLO") {
+    for (let i = 1; i < personCount; i++) {
+      const m = collectPerson(formData, i, false);
+      Object.assign(fieldErrors, m.errors);
+      if (m.data) membri.push(m.data);
     }
+  }
+  if (Object.keys(fieldErrors).length > 0) {
+    return { ok: false, message: "Controlla i campi evidenziati qui sotto.", fieldErrors };
+  }
+
+  const capoData = capo.data as GuestData;
+  const party: Party =
+    tipo === "SINGOLO" ? { tipo, ospite: capoData } : { tipo, capo: capoData, membri };
+
+  try {
     await service().addGuests(stayId, ctx.current.organizationId, [party]);
   } catch (err) {
     if (err instanceof StaysError) return { ok: false, message: err.message };

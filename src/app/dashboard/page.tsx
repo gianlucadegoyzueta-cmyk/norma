@@ -3,6 +3,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
+  AlertTriangle,
   ArrowRight,
   BedDouble,
   Building2,
@@ -21,6 +22,7 @@ import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { OPEN_SCHEDINA_STATUSES } from "@/lib/schedina-status";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -34,6 +36,16 @@ export default async function DashboardPage() {
     ctx.current.organizationId,
   );
 
+  // Schedine OLTRE SCADENZA (aperte con deadline passata): è il rischio legale più urgente, quindi
+  // l'alert precede tutto. Conteggio a livello DB (usa gli indici status/deadlineAt), niente cambi al dominio.
+  const overdueCount = await prisma.schedina.count({
+    where: {
+      organizationId: ctx.current.organizationId,
+      status: { in: OPEN_SCHEDINA_STATUSES },
+      deadlineAt: { lt: new Date() },
+    },
+  });
+
   const signOutAction = async () => {
     "use server";
     await signOut({ redirectTo: "/login" });
@@ -45,26 +57,66 @@ export default async function DashboardPage() {
         actions={
           <form action={signOutAction}>
             <Button type="submit" variant="ghost" size="sm">
-              <LogOut />
+              <LogOut aria-hidden />
               Esci
             </Button>
           </form>
         }
       />
 
-      <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-5xl px-4 py-8 outline-none sm:px-6 sm:py-10"
+      >
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
               Ciao, {ctx.user.name ?? ctx.user.email ?? "utente"}
             </h1>
             <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
-              <Building2 className="size-4" />
+              <Building2 className="size-4" aria-hidden />
               {ctx.current.organizationName}
               <Badge variant="secondary">{ctx.current.role}</Badge>
             </p>
           </div>
         </div>
+
+        {overdueCount > 0 && (
+          <Link
+            href="/schedine"
+            className="group focus-visible:ring-ring mb-6 block rounded-xl outline-none focus-visible:ring-2"
+          >
+            <Card className="border-destructive/40 bg-destructive/5 transition-shadow hover:shadow-md">
+              <CardHeader>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="bg-destructive/12 text-destructive flex size-10 shrink-0 items-center justify-center rounded-lg">
+                      <AlertTriangle className="size-5" aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <CardTitle className="text-destructive text-base">
+                        {overdueCount}{" "}
+                        {overdueCount === 1 ? "schedina oltre scadenza" : "schedine oltre scadenza"}
+                      </CardTitle>
+                      <CardDescription className="mt-1">
+                        Vanno gestite subito: una comunicazione tardiva ad Alloggiati è una
+                        violazione.
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <span className="text-destructive inline-flex shrink-0 items-center gap-1 text-sm font-medium">
+                    Apri
+                    <ArrowRight
+                      aria-hidden
+                      className="size-4 transition-transform group-hover:translate-x-0.5"
+                    />
+                  </span>
+                </div>
+              </CardHeader>
+            </Card>
+          </Link>
+        )}
 
         {!onboarding.ready && (
           <Link href="/onboarding" className="group mb-6 block">
@@ -80,7 +132,10 @@ export default async function DashboardPage() {
                   </div>
                   <span className="text-primary inline-flex shrink-0 items-center gap-1 text-sm font-medium">
                     Continua
-                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                    <ArrowRight
+                      aria-hidden
+                      className="size-4 transition-transform group-hover:translate-x-0.5"
+                    />
                   </span>
                 </div>
                 <div className="bg-muted mt-2 h-1.5 w-full overflow-hidden rounded-full">
@@ -130,9 +185,12 @@ export default async function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
-                    <KeyRound className="size-5" />
+                    <KeyRound className="size-5" aria-hidden />
                   </span>
-                  <ChevronRight className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5" />
+                  <ChevronRight
+                    aria-hidden
+                    className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5"
+                  />
                 </div>
                 <CardTitle className="mt-2">Credenziali Alloggiati</CardTitle>
                 <CardDescription>
@@ -151,9 +209,12 @@ export default async function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
-                    <Building2 className="size-5" />
+                    <Building2 className="size-5" aria-hidden />
                   </span>
-                  <ChevronRight className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5" />
+                  <ChevronRight
+                    aria-hidden
+                    className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5"
+                  />
                 </div>
                 <CardTitle className="mt-2">Immobili</CardTitle>
                 <CardDescription>
@@ -172,9 +233,12 @@ export default async function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
-                    <BedDouble className="size-5" />
+                    <BedDouble className="size-5" aria-hidden />
                   </span>
-                  <ChevronRight className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5" />
+                  <ChevronRight
+                    aria-hidden
+                    className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5"
+                  />
                 </div>
                 <CardTitle className="mt-2">Soggiorni</CardTitle>
                 <CardDescription>
@@ -192,9 +256,12 @@ export default async function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
-                    <FileText className="size-5" />
+                    <FileText className="size-5" aria-hidden />
                   </span>
-                  <ChevronRight className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5" />
+                  <ChevronRight
+                    aria-hidden
+                    className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5"
+                  />
                 </div>
                 <CardTitle className="mt-2">Schedine</CardTitle>
                 <CardDescription>
@@ -229,7 +296,7 @@ export default async function DashboardPage() {
                       size="sm"
                       disabled={isCurrent}
                     >
-                      <Building2 />
+                      <Building2 aria-hidden />
                       {o.organizationName}
                       <span className="text-muted-foreground">· {o.role}</span>
                     </Button>
