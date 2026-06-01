@@ -93,7 +93,7 @@ export async function connectCredentialAction(
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
 
   const label = String(formData.get("label") ?? "").trim();
-  const category = String(formData.get("category") ?? "SINGOLA") as CredentialCategory;
+  const category = String(formData.get("category") ?? "SINGOLA");
   const provincia = String(formData.get("provincia") ?? "")
     .trim()
     .toUpperCase();
@@ -103,6 +103,9 @@ export async function connectCredentialAction(
 
   const fieldErrors: Record<string, string> = {};
   if (!label) fieldErrors.label = "Dai un'etichetta alla credenziale.";
+  if (category !== "SINGOLA" && category !== "GESTIONE_APPARTAMENTI") {
+    fieldErrors.category = "Tipo credenziale non valido.";
+  }
   if (provincia.length !== 2) fieldErrors.provincia = "Provincia: sigla di 2 lettere (es. RM).";
   if (!utente) fieldErrors.utente = "Inserisci l'utente.";
   if (!password) fieldErrors.password = "Inserisci la password.";
@@ -119,7 +122,7 @@ export async function connectCredentialAction(
     const cred = await service.onboard({
       organizationId: ctx.current.organizationId,
       label,
-      category,
+      category: category as CredentialCategory,
       provincia,
       secret: { utente, password, wskey },
     });

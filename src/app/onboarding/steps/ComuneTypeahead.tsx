@@ -40,6 +40,13 @@ export function ComuneTypeahead({
   const [selected, setSelected] = React.useState<TypeaheadOption | null>(null);
   const blurTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Cleanup del timer di blur all'unmount: evita un setState su componente smontato.
+  React.useEffect(() => {
+    return () => {
+      if (blurTimer.current) clearTimeout(blurTimer.current);
+    };
+  }, []);
+
   const { filtered, total } = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return { filtered: options.slice(0, MAX_VISIBLE), total: options.length };
@@ -122,7 +129,7 @@ export function ComuneTypeahead({
           className="bg-popover text-popover-foreground border-border absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-md border p-1 shadow-md"
         >
           {filtered.length === 0 ? (
-            <li role="option" aria-disabled aria-selected={false} className="text-muted-foreground px-2 py-1.5 text-sm">
+            <li role="presentation" className="text-muted-foreground px-2 py-1.5 text-sm">
               Nessuna corrispondenza
             </li>
           ) : (
