@@ -70,6 +70,12 @@ enum SubmissionChannel {
   PEC // fallback: PEC alla Questura quando il portale è giù
 }
 
+/// Tipo di utente, raccolto nell'onboarding per personalizzare copy e passi del wizard.
+enum OnboardingUserType {
+  HOST_SINGOLO // gestisce una o poche strutture proprie
+  PROPERTY_MANAGER // gestisce strutture di terzi / molte strutture
+}
+
 // -------------------------- TENANT & UTENTI --------------------------
 
 /// Il tenant/cliente. Può essere un host con una sola struttura
@@ -87,21 +93,62 @@ model Organization {
   guests                 Guest[]
   schedine               Schedina[]
   touristTaxDeclarations TouristTaxDeclaration[]
+  onboardingProgress     OnboardingProgress?
 }
 
-/// Persona che accede all'app. Campi compatibili con Auth.js: l'autenticazione
-/// vera (provider OAuth / magic link / sessioni) si aggancia in una fase successiva.
+/// Stato "soft" del wizard di onboarding di un'Organization: i passi NON derivabili dai dati di
+/// dominio (benvenuto/identità, tipo utente, n° strutture, ultimo step visitato). I passi "duri"
+/// (credenziale ATTIVA, tabelle, immobile) restano DERIVATI da getOnboardingState — qui non si
+/// duplicano. 1:1 con Organization (organizationId UNIQUE).
+model OnboardingProgress {
+  id              String              @id @default(cuid())
+  organizationId  String              @unique
+  userType        OnboardingUserType?
+  structuresCount Int? // stima dichiarata in fase di onboarding (solo per personalizzare il copy)
+  welcomedAt      DateTime? // step 0 visto
+  identityDoneAt  DateTime? // step 1 (attività) completato
+  currentStep     Int                 @default(0) // ultimo step visitato → ripresa refresh-safe
+  completedAt     DateTime? // wizard concluso (step finale)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+/// Persona che accede all'app. Campi compatibili con Auth.js.
+/// Metodi di accesso supportati: email+password (`passwordHash`), magic link, Google.
+/// `passwordHash` è null per gli utenti che NON usano la password (solo magic link / OAuth):
+/// è il discriminante usato dal provider Credentials per rifiutare gentilmente quei login.
 model User {
   id            String       @id @default(cuid())
   email         String       @unique
   name          String?
   emailVerified DateTime?
   image         String?
+  /// Hash bcrypt della password (mai in chiaro, mai loggato). Null = utente senza password.
+  passwordHash  String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   memberships   Membership[]
   accounts      Account[]
   sessions      Session[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+/// Token monouso per il reset password ("password dimenticata"). NON riusa VerificationToken
+/// (gestito da Auth.js per i magic link): qui controlliamo noi ciclo di vita e revoca.
+/// `tokenHash` = SHA-256 del token spedito via email: a DB non c'è mai il token in chiaro.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expires   DateTime
+  usedAt    DateTime? // valorizzato al primo uso → monouso
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 /// Ponte User <-> Organization: un utente può appartenere a PIÙ organizzazioni

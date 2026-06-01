@@ -18,6 +18,7 @@ export * from "./adapters/PrismaReferenceTablesLoader";
 export * from "./adapters/PrismaReferenceTableRepository";
 export * from "./adapters/FakeAlloggiatiSender";
 export * from "./adapters/SoapAlloggiatiSender";
+export * from "./adapters/SoapAcquisitionReceiptReader";
 export * from "./adapters/SoapTabellaClient";
 export * from "./adapters/FakeTabellaClient";
 export * from "./services/outbox.service";

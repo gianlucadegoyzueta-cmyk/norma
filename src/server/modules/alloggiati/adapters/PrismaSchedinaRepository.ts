@@ -1,7 +1,11 @@
 import { Prisma } from "@prisma/client";
 import type { PrismaClient, SchedinaStatus, SubmissionChannel } from "@prisma/client";
 import { computeDedupKey } from "../domain/dedup";
-import { assertValidTransition, type StatusDecision } from "../domain/transitions";
+import {
+  assertValidTransition,
+  decideFromSendAttempt,
+  type StatusDecision,
+} from "../domain/transitions";
 import type {
   CreateIntentInput,
   CreateIntentResult,
@@ -176,6 +180,22 @@ export class PrismaSchedinaRepository implements SchedinaRepository {
 
   async applyDecision(id: string, decision: StatusDecision): Promise<void> {
     await this.transition(id, decision.status, decision.errorCod, decision.errorDes);
+  }
+
+  async recoverStaleSending(credentialId: string, staleAfterMs: number): Promise<number> {
+    const cutoff = new Date(Date.now() - staleAfterMs);
+    const stale = await this.prisma.schedina.findMany({
+      where: {
+        credentialId,
+        status: "SENDING",
+        sentAt: { lt: cutoff },
+      },
+      select: { id: true },
+    });
+    for (const row of stale) {
+      await this.applyDecision(row.id, decideFromSendAttempt({ kind: "NO_RESPONSE" }));
+    }
+    return stale.length;
   }
 
   /** Transizione validata + evento di audit, in un'unica transazione. */

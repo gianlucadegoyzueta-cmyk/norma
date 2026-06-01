@@ -20,7 +20,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { AlloggiatiSecret } from "../../../secrets";
 import { buildTracciatoRecord } from "../domain/tracciato";
 import type { CreateIntentInput } from "../ports/SchedinaRepository";
-import { AlloggiatiAuthError } from "../soap/errors";
+import { AlloggiatiAuthError, AlloggiatiReceiptError } from "../soap/errors";
 import { ALLOGGIATI_ERROR, AlloggiatiMockServer } from "./mocks/AlloggiatiMockServer";
 import { createAlloggiatiStack, type AlloggiatiStack } from "./mocks/harness";
 
@@ -478,10 +478,10 @@ describe("Mock Alloggiati — Scenario 6: riconciliazione T+1 (Ricevuta)", () =>
     await addPending(stack, recItalianoOk());
     await stack.outbox.processCredentialBatch(CRED); // acquisita oggi
 
-    // Chiedere la ricevuta di OGGI → il server rifiuta (esito false) → il client lancia AuthError.
+    // Chiedere la ricevuta di OGGI → il server rifiuta (esito false) → ReceiptError, non auth.
     const { utente, token } = await stack.tokens.getToken(CRED);
     await expect(stack.client.ricevuta(utente, token, TODAY)).rejects.toBeInstanceOf(
-      AlloggiatiAuthError,
+      AlloggiatiReceiptError,
     );
   });
 
