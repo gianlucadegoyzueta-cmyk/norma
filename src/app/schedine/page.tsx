@@ -151,7 +151,7 @@ export default async function SchedinePage() {
         )}
 
         {unverifiedByCredential.size > 0 && (
-          <Card className="mb-6 border-warning/40">
+          <Card className="border-warning/40 mb-6">
             <CardHeader>
               <CardTitle>Da verificare (esito ignoto)</CardTitle>
             </CardHeader>
@@ -164,8 +164,7 @@ export default async function SchedinePage() {
               {[...unverifiedByCredential.entries()].map(([credId, { label, count }]) => (
                 <div key={credId} className="border-border grid gap-2 rounded-md border p-3">
                   <p className="text-sm font-medium">
-                    {label}{" "}
-                    <span className="text-muted-foreground">· {count} da verificare</span>
+                    {label} <span className="text-muted-foreground">· {count} da verificare</span>
                   </p>
                   <ReconcileControls
                     credentialId={credId}

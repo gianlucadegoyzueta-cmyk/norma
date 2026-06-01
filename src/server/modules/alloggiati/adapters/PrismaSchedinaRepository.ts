@@ -1,7 +1,11 @@
 import { Prisma } from "@prisma/client";
 import type { PrismaClient, SchedinaStatus, SubmissionChannel } from "@prisma/client";
 import { computeDedupKey } from "../domain/dedup";
-import { assertValidTransition, decideFromSendAttempt, type StatusDecision } from "../domain/transitions";
+import {
+  assertValidTransition,
+  decideFromSendAttempt,
+  type StatusDecision,
+} from "../domain/transitions";
 import type {
   CreateIntentInput,
   CreateIntentResult,

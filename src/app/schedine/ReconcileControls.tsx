@@ -60,7 +60,9 @@ export function ReconcileControls({
         </Button>
       </div>
       {!active && (
-        <p className="text-muted-foreground text-xs">Credenziale non ATTIVA: riconciliazione disabilitata.</p>
+        <p className="text-muted-foreground text-xs">
+          Credenziale non ATTIVA: riconciliazione disabilitata.
+        </p>
       )}
       {state && (
         <p
