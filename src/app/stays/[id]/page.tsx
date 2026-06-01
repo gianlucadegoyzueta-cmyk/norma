@@ -14,12 +14,15 @@ import {
 import { PrismaStaysRepository, StaysService } from "@/server/modules/stays";
 import { mapAlloggiatiError } from "@/app/schedine/error-codes";
 import { ReopenRejectedButton } from "@/components/reopen-rejected-button";
+import { PrismaTouristTaxConfigRepository } from "@/server/modules/tourist-tax/adapters/PrismaTouristTaxConfigRepository";
+import { TouristTaxEstimateService } from "@/server/modules/tourist-tax/services/estimate.service";
 import { SiteHeader } from "@/components/site-header";
 import { UnverifiedNote } from "@/components/unverified-note";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GenerateSchedineButton } from "./GenerateSchedineButton";
 import { GuestPartyForm } from "./GuestPartyForm";
+import { TouristTaxCard } from "./TouristTaxCard";
 
 export const metadata: Metadata = { title: "Soggiorno" };
 export const dynamic = "force-dynamic";
@@ -85,6 +88,54 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
       message: mapAlloggiatiError(r.lastErrorCod, r.lastErrorDes),
     });
   }
+
+  // Stima imposta di soggiorno. Query dedicata (isolata per org) per i campi che servono al
+  // calcolo, senza accoppiare il modulo stays a tourist-tax. La regola è scelta in base al
+  // comune e alla DATA del soggiorno; se manca, l'esito è NO_RULE (stato esplicito in UI).
+  const taxStay = await prisma.stay.findFirst({
+    where: { id, organizationId: orgId },
+    select: {
+      arrivalDate: true,
+      departureDate: true,
+      property: {
+        select: {
+          comuneId: true,
+          accommodationCategory: true,
+          touristTaxZone: true,
+          comune: { select: { name: true } },
+        },
+      },
+      guests: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          birthDate: true,
+          taxExemptionType: true,
+        },
+      },
+    },
+  });
+  const taxEstimate = taxStay
+    ? await new TouristTaxEstimateService(
+        new PrismaTouristTaxConfigRepository(prisma),
+      ).estimateForStay({
+        comuneId: taxStay.property.comuneId,
+        arrivalDate: taxStay.arrivalDate,
+        departureDate: taxStay.departureDate,
+        accommodationCategory: taxStay.property.accommodationCategory,
+        touristTaxZone: taxStay.property.touristTaxZone,
+        guests: taxStay.guests.map((g) => ({
+          id: g.id,
+          birthDate: g.birthDate,
+          taxExemptionType: g.taxExemptionType,
+        })),
+      })
+    : null;
+  const taxGuestLabels = (taxStay?.guests ?? []).map((g) => ({
+    id: g.id,
+    name: `${g.lastName} ${g.firstName}`,
+  }));
 
   // Capi/singoli (leaderId null) e relativi membri.
   const leaders = stay.guests.filter((g) => g.leaderId === null);
@@ -167,6 +218,17 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
             </ul>
           )}
         </section>
+
+        {/* Stima imposta di soggiorno */}
+        {taxEstimate && (
+          <section className="mb-8">
+            <TouristTaxCard
+              outcome={taxEstimate}
+              guestLabels={taxGuestLabels}
+              comuneName={stay.comuneName}
+            />
+          </section>
+        )}
 
         {/* Generazione schedine */}
         <section className="mb-8">

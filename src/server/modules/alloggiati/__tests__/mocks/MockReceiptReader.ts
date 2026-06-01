@@ -6,12 +6,13 @@
 // In produzione, questa è esattamente la classe da rimpiazzare con un parser del PDF reale.
 
 import type { AlloggiatiSoapClient } from "../../soap/client";
+import { AlloggiatiReceiptUnavailableError } from "../../soap/errors";
 import type { TokenProvider } from "../../adapters/SoapAlloggiatiSender";
+import { parseReceiptPdfBase64 } from "../../domain/receipt-pdf";
 import type {
   AcquiredIdentity,
   AcquisitionReceiptReader,
 } from "../../ports/AcquisitionReceiptReader";
-import { decodeMockReceiptPdf } from "./AlloggiatiMockServer";
 
 export class MockReceiptReader implements AcquisitionReceiptReader {
   constructor(
@@ -21,7 +22,12 @@ export class MockReceiptReader implements AcquisitionReceiptReader {
 
   async acquiredOn(credentialId: string, dateIso: string): Promise<AcquiredIdentity[]> {
     const { utente, token } = await this.tokens.getToken(credentialId);
-    const { pdfBase64 } = await this.client.ricevuta(utente, token, dateIso);
-    return decodeMockReceiptPdf(pdfBase64);
+    try {
+      const { pdfBase64 } = await this.client.ricevuta(utente, token, dateIso);
+      return parseReceiptPdfBase64(pdfBase64);
+    } catch (err) {
+      if (err instanceof AlloggiatiReceiptUnavailableError) return [];
+      throw err;
+    }
   }
 }

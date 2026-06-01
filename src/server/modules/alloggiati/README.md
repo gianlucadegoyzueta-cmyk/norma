@@ -51,7 +51,9 @@ dal vero. I CSV di esempio (`FakeTabellaClient`) servono SOLO a test/sviluppo.
   `TabellaResult`+`CSV`(stringa); `Luoghi` ha intestazione e combina Comuni (Provincia=sigla) e Stati
   esteri (Provincia=="ES") → `parseLuoghiCsv` li splitta. Diagnostica read-only: `npm run alloggiati:inspect-tables`.
 - **`Ricevuta` + riconciliazione T+1**: struttura della risposta da verificare sul servizio reale
-  (non la fabbrichiamo a tavolino).
+  (non la fabbrichiamo a tavolino). **Gate #0:** `npm run alloggiati:gate0-pdf` scarica il PDF di
+  un giorno passato con acquisizioni e produce report in `tmp/gate0-ricevuta/` (opzionale:
+  `ALLOGGIATI_RICEVUTA_DATES=2026-05-28`).
 - **Fallback PEC**.
 
 ## Onboarding prima struttura reale (checklist)

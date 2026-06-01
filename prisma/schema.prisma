@@ -70,6 +70,20 @@ enum SubmissionChannel {
   PEC // fallback: PEC alla Questura quando il portale è giù
 }
 
+/// Stato di compliance del CIN (Codice Identificativo Nazionale) su un immobile.
+/// Il CIN si ottiene sul portale BDSR del Ministero del Turismo (SPID/CIE) e si inserisce a mano.
+enum CinStatus {
+  PENDING // non ancora ottenuto/inserito (default: tutti gli immobili esistenti post-migrazione)
+  OBTAINED // CIN validato e salvato
+  NOT_REQUIRED // l'host ha dichiarato che per questo immobile non serve
+}
+
+/// Tipo di utente, raccolto nell'onboarding per personalizzare copy e passi del wizard.
+enum OnboardingUserType {
+  HOST_SINGOLO // gestisce una o poche strutture proprie
+  PROPERTY_MANAGER // gestisce strutture di terzi / molte strutture
+}
+
 // -------------------------- TENANT & UTENTI --------------------------
 
 /// Il tenant/cliente. Può essere un host con una sola struttura
@@ -87,21 +101,62 @@ model Organization {
   guests                 Guest[]
   schedine               Schedina[]
   touristTaxDeclarations TouristTaxDeclaration[]
+  onboardingProgress     OnboardingProgress?
 }
 
-/// Persona che accede all'app. Campi compatibili con Auth.js: l'autenticazione
-/// vera (provider OAuth / magic link / sessioni) si aggancia in una fase successiva.
+/// Stato "soft" del wizard di onboarding di un'Organization: i passi NON derivabili dai dati di
+/// dominio (benvenuto/identità, tipo utente, n° strutture, ultimo step visitato). I passi "duri"
+/// (credenziale ATTIVA, tabelle, immobile) restano DERIVATI da getOnboardingState — qui non si
+/// duplicano. 1:1 con Organization (organizationId UNIQUE).
+model OnboardingProgress {
+  id              String              @id @default(cuid())
+  organizationId  String              @unique
+  userType        OnboardingUserType?
+  structuresCount Int? // stima dichiarata in fase di onboarding (solo per personalizzare il copy)
+  welcomedAt      DateTime? // step 0 visto
+  identityDoneAt  DateTime? // step 1 (attività) completato
+  currentStep     Int                 @default(0) // ultimo step visitato → ripresa refresh-safe
+  completedAt     DateTime? // wizard concluso (step finale)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+/// Persona che accede all'app. Campi compatibili con Auth.js.
+/// Metodi di accesso supportati: email+password (`passwordHash`), magic link, Google.
+/// `passwordHash` è null per gli utenti che NON usano la password (solo magic link / OAuth):
+/// è il discriminante usato dal provider Credentials per rifiutare gentilmente quei login.
 model User {
   id            String       @id @default(cuid())
   email         String       @unique
   name          String?
   emailVerified DateTime?
   image         String?
+  /// Hash bcrypt della password (mai in chiaro, mai loggato). Null = utente senza password.
+  passwordHash  String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   memberships   Membership[]
   accounts      Account[]
   sessions      Session[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+/// Token monouso per il reset password ("password dimenticata"). NON riusa VerificationToken
+/// (gestito da Auth.js per i magic link): qui controlliamo noi ciclo di vita e revoca.
+/// `tokenHash` = SHA-256 del token spedito via email: a DB non c'è mai il token in chiaro.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expires   DateTime
+  usedAt    DateTime? // valorizzato al primo uso → monouso
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 /// Ponte User <-> Organization: un utente può appartenere a PIÙ organizzazioni
@@ -158,7 +213,7 @@ model AlloggiatiCredential {
 /// `alloggiatiApartmentId` è valorizzato SOLO quando l'immobile è registrato sotto
 /// una credenziale GESTIONE_APPARTAMENTI; per le SINGOLA resta null.
 model Property {
-  id             String  @id @default(cuid())
+  id             String @id @default(cuid())
   organizationId String
   name           String // nome interno, es. "Bilocale Trastevere"
   address        String
@@ -167,6 +222,15 @@ model Property {
 
   credentialId          String? // credenziale con cui si inviano le schedine (nullable)
   alloggiatiApartmentId String? // IdAppartamento assegnato da Alloggiati (solo gestione appartamenti)
+
+  /// Codice Identificativo Nazionale (normalizzato: maiuscolo, senza spazi). Null finché non ottenuto.
+  cin       String?
+  cinStatus CinStatus @default(PENDING)
+
+  // Tassa di soggiorno: categoria struttura (es. "AFFITTO_BREVE", "CAV") e zona del comune
+  // (Venezia tariffa per zona). Alimentano la risoluzione della tariffa nel calcolatore.
+  accommodationCategory String? // null = si userà la tariffa jolly DEFAULT del comune
+  touristTaxZone        String? // null = zona DEFAULT del comune
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -208,7 +272,7 @@ model Stay {
 /// NB: i campi documento sono OPZIONALI a DB proprio perché per FAMILIARE/MEMBRO_GRUPPO
 ///     non vanno compilati; l'obbligatorietà per gli altri la impone la logica di dominio.
 model Guest {
-  id             String   @id @default(cuid())
+  id             String @id @default(cuid())
   organizationId String
   stayId         String
 
@@ -227,6 +291,11 @@ model Guest {
 
   tipoAlloggiato TipoAlloggiato
   leaderId       String? // punta al capo famiglia/gruppo (per familiari/membri)
+
+  // Tassa di soggiorno: tipo di esenzione dichiarato per l'ospite (deve combaciare con
+  // rule.exemptions.types del comune, es. "FORZE_ORDINE", "DAY_HOSPITAL_PATIENT").
+  // null = nessuna esenzione per categoria (resta possibile la riduzione per età).
+  taxExemptionType String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -317,7 +386,7 @@ model Comune {
 
   properties             Property[]
   guestsBirth            Guest[]                 @relation("GuestBirthComune")
-  touristTaxConfig       TouristTaxConfig?
+  touristTaxConfigs      TouristTaxConfig[] // 1:N — versioni tariffarie nel tempo
   touristTaxDeclarations TouristTaxDeclaration[]
 }
 
@@ -359,28 +428,79 @@ model Secret {
 /// Struttureremo meglio quando implementeremo il calcolo.
 model TouristTaxConfig {
   id        String    @id @default(cuid())
-  comuneId  String    @unique
+  comuneId  String
   rules     Json
   validFrom DateTime
   validTo   DateTime?
 
   comune Comune @relation(fields: [comuneId], references: [id])
+
+  // Una sola versione per (comune, data inizio validità). Sostituisce il vecchio
+  // `comuneId @unique`, che impediva il versionamento per data delle tariffe.
+  @@unique([comuneId, validFrom])
+  @@index([comuneId])
 }
 
-/// Dichiarazione/versamento periodico della tassa (scheletro).
+/// Stato della dichiarazione periodica. Macchina a stati validata nel dominio:
+/// DRAFT → READY → SUBMITTED → PAID. (Annullabile a CANCELLED da DRAFT/READY.)
+enum TaxDeclarationStatus {
+  DRAFT // in costruzione/ricalcolabile
+  READY // congelata, pronta all'export/invio
+  SUBMITTED // inviata al comune (export scaricato o canale assistito)
+  PAID // versamento confermato
+  CANCELLED // annullata prima dell'invio
+}
+
+/// Modalità di versamento scelta per una dichiarazione. MANUAL_EXPORT è il default sicuro
+/// (l'utente scarica ed invia da sé). Gli altri sono canali assistiti, attivabili per comune.
+enum TaxRemittanceMode {
+  MANUAL_EXPORT
+  GECOS
+  PAGOPA
+  COMUNE_PORTAL
+}
+
+/// Dichiarazione/versamento periodico della tassa, per organizzazione + comune + periodo.
+/// `amountCents` è il totale dovuto (somma delle righe). Le righe (TouristTaxDeclarationLine)
+/// tengono il dettaglio per soggiorno, per la trasparenza e l'export verso il comune.
 model TouristTaxDeclaration {
-  id             String   @id @default(cuid())
+  id             String               @id @default(cuid())
   organizationId String
   comuneId       String
-  period         String // es. "2026-05" (mese di riferimento)
-  amountCents    Int      @default(0) // denaro in centesimi
-  status         String   @default("DRAFT")
-  createdAt      DateTime @default(now())
+  period         String // es. "2026-05" (mese) o "2026-Q2" (trimestre)
+  amountCents    Int                  @default(0) // denaro in centesimi
+  status         TaxDeclarationStatus @default(DRAFT)
+  remittanceMode TaxRemittanceMode    @default(MANUAL_EXPORT)
+  submittedAt    DateTime?
+  paidAt         DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  comune       Comune       @relation(fields: [comuneId], references: [id])
+  organization Organization                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  comune       Comune                      @relation(fields: [comuneId], references: [id])
+  lines        TouristTaxDeclarationLine[]
 
   @@unique([organizationId, comuneId, period])
+  @@index([organizationId])
+  @@index([status])
+}
+
+/// Riga di dettaglio di una dichiarazione: l'imposta dovuta per UN soggiorno nel periodo.
+/// `breakdown` conserva il dettaglio per-ospite (esente/ridotto/motivo) prodotto dal
+/// calcolatore, per audit e trasparenza verso il comune.
+model TouristTaxDeclarationLine {
+  id            String @id @default(cuid())
+  declarationId String
+  stayId        String
+  propertyName  String // denormalizzato: l'export resta leggibile anche se la struttura cambia
+  taxedNights   Int    @default(0)
+  amountCents   Int    @default(0)
+  breakdown     Json // GuestTaxBreakdown[] serializzato (dettaglio per-ospite)
+
+  declaration TouristTaxDeclaration @relation(fields: [declarationId], references: [id], onDelete: Cascade)
+
+  @@unique([declarationId, stayId]) // un soggiorno una sola volta per dichiarazione
+  @@index([declarationId])
 }
 
 // ----------------------- AUTENTICAZIONE (Auth.js / NextAuth) -----------------------
