@@ -27,4 +27,24 @@ describe("provisionNewUser", () => {
     await provisionNewUser({ id: "user_1", email: "mario@example.com" }, repo);
     expect(await repo.countMembershipsForUser("user_1")).toBe(1);
   });
+
+  it("usa il nome organizzazione ESPLICITO quando fornito (registrazione)", async () => {
+    const repo = new InMemoryAuthRepository();
+    await provisionNewUser(
+      { id: "user_1", email: "mario@example.com", organizationName: "Rossi Affitti Brevi" },
+      repo,
+    );
+    const orgs = await repo.listOrganizationsForUser("user_1");
+    expect(orgs[0].organizationName).toBe("Rossi Affitti Brevi");
+  });
+
+  it("ripiega sul nome derivato dall'email se il nome esplicito è vuoto/spazi", async () => {
+    const repo = new InMemoryAuthRepository();
+    await provisionNewUser(
+      { id: "user_1", email: "mario@example.com", organizationName: "   " },
+      repo,
+    );
+    const orgs = await repo.listOrganizationsForUser("user_1");
+    expect(orgs[0].organizationName).toBe("Organizzazione di mario");
+  });
 });
