@@ -104,7 +104,11 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
     <div className="min-h-dvh">
       <SiteHeader />
 
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-3xl px-4 py-8 outline-none sm:px-6 sm:py-10">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-3xl px-4 py-8 outline-none sm:px-6 sm:py-10"
+      >
         <Link
           href="/stays"
           className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
@@ -228,10 +232,7 @@ function GuestRow({
     <div className="grid gap-1">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <User
-            aria-hidden
-            className={nested ? "text-muted-foreground size-3.5" : "size-4"}
-          />
+          <User aria-hidden className={nested ? "text-muted-foreground size-3.5" : "size-4"} />
           <span className="truncate text-sm">
             <span className="font-medium">
               {guest.lastName} {guest.firstName}

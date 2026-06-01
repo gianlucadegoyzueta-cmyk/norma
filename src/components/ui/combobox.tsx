@@ -134,7 +134,12 @@ export function ComboBox({
           className="bg-popover text-popover-foreground border-border absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md border p-1 shadow-md"
         >
           {filtered.length === 0 ? (
-            <li role="option" aria-disabled aria-selected={false} className="text-muted-foreground px-2 py-1.5 text-sm">
+            <li
+              role="option"
+              aria-disabled
+              aria-selected={false}
+              className="text-muted-foreground px-2 py-1.5 text-sm"
+            >
               Nessuna corrispondenza
             </li>
           ) : (

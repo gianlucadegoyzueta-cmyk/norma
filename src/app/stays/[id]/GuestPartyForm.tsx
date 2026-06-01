@@ -241,8 +241,7 @@ export function GuestPartyForm({
           role="alert"
           className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
         >
-          {state?.message ?? "Controlla i campi evidenziati."} (
-          {Object.keys(fieldErrors).length}{" "}
+          {state?.message ?? "Controlla i campi evidenziati."} ({Object.keys(fieldErrors).length}{" "}
           {Object.keys(fieldErrors).length === 1 ? "campo da correggere" : "campi da correggere"})
         </div>
       )}

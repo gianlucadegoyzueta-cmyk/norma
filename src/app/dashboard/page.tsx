@@ -59,7 +59,11 @@ export default async function DashboardPage() {
         }
       />
 
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-5xl px-4 py-8 outline-none sm:px-6 sm:py-10">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-5xl px-4 py-8 outline-none sm:px-6 sm:py-10"
+      >
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
@@ -99,9 +103,9 @@ export default async function DashboardPage() {
                   <span className="text-destructive inline-flex shrink-0 items-center gap-1 text-sm font-medium">
                     Apri
                     <ArrowRight
-                    aria-hidden
-                    className="size-4 transition-transform group-hover:translate-x-0.5"
-                  />
+                      aria-hidden
+                      className="size-4 transition-transform group-hover:translate-x-0.5"
+                    />
                   </span>
                 </div>
               </CardHeader>
@@ -124,9 +128,9 @@ export default async function DashboardPage() {
                   <span className="text-primary inline-flex shrink-0 items-center gap-1 text-sm font-medium">
                     Continua
                     <ArrowRight
-                    aria-hidden
-                    className="size-4 transition-transform group-hover:translate-x-0.5"
-                  />
+                      aria-hidden
+                      className="size-4 transition-transform group-hover:translate-x-0.5"
+                    />
                   </span>
                 </div>
                 <div className="bg-muted mt-2 h-1.5 w-full overflow-hidden rounded-full">

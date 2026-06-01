@@ -120,7 +120,11 @@ export function CredentialOutboxControls({
             disabled={verifying || sending}
             className="w-full sm:w-auto"
           >
-            {verifying ? <Loader2 className="animate-spin" aria-hidden /> : <ShieldCheck aria-hidden />}
+            {verifying ? (
+              <Loader2 className="animate-spin" aria-hidden />
+            ) : (
+              <ShieldCheck aria-hidden />
+            )}
             {verifying ? "Verifica…" : "Verifica (Test)"}
           </Button>
         </form>
