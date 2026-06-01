@@ -23,9 +23,9 @@ Branch: `feat/auth-onboarding`. Lingua UI: italiano. Stile: pulito/fiducioso (Li
   ([src/server/auth/password-reset.ts](src/server/auth/password-reset.ts)), invio via Resend
   ([src/server/auth/email.ts](src/server/auth/email.ts)), pagine `/auth/forgot` e `/auth/reset`.
 - **Pagine brandizzate** (sostituiscono ogni default NextAuth): `/login` (tab Password · Magic link
-  + Google + link a registrazione), `/signup`, `/auth/check-email`, `/auth/error`, `/auth/forgot`,
-  `/auth/reset`. Componenti UI nuovi e leggeri: `Tabs`, `Spinner`, `Field`/`FormMessage`,
-  `SubmitButton`, `AuthShell`, `GoogleButton`, `AuthDivider`.
+  - Google + link a registrazione), `/signup`, `/auth/check-email`, `/auth/error`, `/auth/forgot`,
+    `/auth/reset`. Componenti UI nuovi e leggeri: `Tabs`, `Spinner`, `Field`/`FormMessage`,
+    `SubmitButton`, `AuthShell`, `GoogleButton`, `AuthDivider`.
 - **"Ricordami"**: `session.maxAge` = 30 giorni.
 
 ### Migrazione Prisma (GENERATA, non applicata)

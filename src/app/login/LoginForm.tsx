@@ -116,7 +116,10 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
 
       <p className="text-muted-foreground mt-4 text-center text-sm">
         Non hai un account?{" "}
-        <Link href="/signup" className="text-foreground font-medium underline-offset-4 hover:underline">
+        <Link
+          href="/signup"
+          className="text-foreground font-medium underline-offset-4 hover:underline"
+        >
           Crea un account
         </Link>
       </p>

@@ -4,7 +4,13 @@ import { cn } from "@/lib/utils";
  * Spinner puramente CSS (nessuna dipendenza). `aria-label` lo annuncia agli screen reader;
  * usa `currentColor`, quindi eredita il colore del contesto (es. dentro un Button).
  */
-export function Spinner({ className, label = "Caricamento…" }: { className?: string; label?: string }) {
+export function Spinner({
+  className,
+  label = "Caricamento…",
+}: {
+  className?: string;
+  label?: string;
+}) {
   return (
     <span
       role="status"

@@ -12,7 +12,10 @@ export type LoginState = { error?: string };
  * redirect (NEXT_REDIRECT) che lasciamo propagare; un `AuthError` significa credenziali errate.
  * Messaggio volutamente generico (no enumerazione: non diciamo se è l'email o la password).
  */
-export async function signInWithPassword(_prev: LoginState, formData: FormData): Promise<LoginState> {
+export async function signInWithPassword(
+  _prev: LoginState,
+  formData: FormData,
+): Promise<LoginState> {
   const email = normalizeEmail(String(formData.get("email") ?? ""));
   const password = String(formData.get("password") ?? "");
   if (!email || !password) return { error: "Inserisci email e password." };

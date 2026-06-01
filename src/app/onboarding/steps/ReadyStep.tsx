@@ -20,8 +20,8 @@ export function ReadyStep({ onBack }: { onBack: () => void }) {
       <div className="space-y-3">
         <h2 className="text-2xl font-semibold tracking-tight">Sei pronto a inviare le schedine</h2>
         <p className="text-muted-foreground text-pretty">
-          Credenziale collegata, tabelle pronte e primo immobile registrato. Da qui crei un soggiorno
-          con i suoi ospiti e generi le schedine per Alloggiati.
+          Credenziale collegata, tabelle pronte e primo immobile registrato. Da qui crei un
+          soggiorno con i suoi ospiti e generi le schedine per Alloggiati.
         </p>
       </div>
 

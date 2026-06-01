@@ -27,6 +27,7 @@ export async function provisionNewUser(
   const existing = await repo.countMembershipsForUser(user.id);
   if (existing > 0) return;
   const explicit = user.organizationName?.trim();
-  const name = explicit && explicit.length > 0 ? explicit : defaultOrganizationName(user.email ?? "");
+  const name =
+    explicit && explicit.length > 0 ? explicit : defaultOrganizationName(user.email ?? "");
   await repo.createPersonalOrganization(user.id, name);
 }

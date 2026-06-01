@@ -16,7 +16,12 @@ export function SubmitButton({
 }: ButtonProps & { pendingLabel?: React.ReactNode }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending || disabled} aria-busy={pending || undefined} {...props}>
+    <Button
+      type="submit"
+      disabled={pending || disabled}
+      aria-busy={pending || undefined}
+      {...props}
+    >
       {pending ? <Spinner /> : null}
       {pending ? (pendingLabel ?? children) : children}
     </Button>

@@ -33,7 +33,8 @@ const MESSAGES: Record<string, { title: string; description: string }> = {
 
 const FALLBACK = {
   title: "Accesso non riuscito",
-  description: "Si è verificato un imprevisto durante l'accesso. Riprova: di solito basta un secondo tentativo.",
+  description:
+    "Si è verificato un imprevisto durante l'accesso. Riprova: di solito basta un secondo tentativo.",
 };
 
 export default async function AuthErrorPage({

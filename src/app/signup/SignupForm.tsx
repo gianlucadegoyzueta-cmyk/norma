@@ -93,7 +93,10 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
 
       <p className="text-muted-foreground mt-4 text-center text-sm">
         Hai già un account?{" "}
-        <Link href="/login" className="text-foreground font-medium underline-offset-4 hover:underline">
+        <Link
+          href="/login"
+          className="text-foreground font-medium underline-offset-4 hover:underline"
+        >
           Accedi
         </Link>
       </p>

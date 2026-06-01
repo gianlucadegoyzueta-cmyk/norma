@@ -27,7 +27,10 @@ export function AuthShell({
 
       <div className={cn("w-full", width === "sm" ? "max-w-sm" : "max-w-md")}>
         <div className="mb-6 flex justify-center">
-          <Link href="/" className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+          <Link
+            href="/"
+            className="focus-visible:ring-ring focus-visible:ring-offset-background rounded-md outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          >
             <Brand />
           </Link>
         </div>

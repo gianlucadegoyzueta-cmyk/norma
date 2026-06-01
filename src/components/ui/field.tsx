@@ -41,7 +41,10 @@ export function Field({
 }
 
 /** Costruisce il valore di `aria-describedby` per un campo, includendo solo i frammenti presenti. */
-export function describedById(id: string, opts: { hint?: boolean; error?: boolean }): string | undefined {
+export function describedById(
+  id: string,
+  opts: { hint?: boolean; error?: boolean },
+): string | undefined {
   const ids = [opts.hint && `${id}-hint`, opts.error && `${id}-error`].filter(Boolean);
   return ids.length ? ids.join(" ") : undefined;
 }

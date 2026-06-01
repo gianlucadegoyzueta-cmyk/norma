@@ -8,5 +8,7 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AuthRouteError reset={reset} message="Non siamo riusciti a caricare la pagina di accesso." />;
+  return (
+    <AuthRouteError reset={reset} message="Non siamo riusciti a caricare la pagina di accesso." />
+  );
 }

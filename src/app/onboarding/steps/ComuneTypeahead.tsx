@@ -106,7 +106,9 @@ export function ComuneTypeahead({
         aria-expanded={open}
         aria-controls={listboxId}
         aria-autocomplete="list"
-        aria-activedescendant={open && activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined}
+        aria-activedescendant={
+          open && activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined
+        }
         aria-invalid={unmatched || undefined}
         aria-describedby={describedByIds}
         autoComplete="off"

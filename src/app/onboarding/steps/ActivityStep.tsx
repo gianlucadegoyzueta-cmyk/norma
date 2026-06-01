@@ -10,7 +10,11 @@ import { saveIdentityAction } from "../actions";
 
 const USER_TYPES = [
   { value: "HOST_SINGOLO", title: "Host", desc: "Gestisco una o poche strutture mie" },
-  { value: "PROPERTY_MANAGER", title: "Property manager", desc: "Gestisco strutture di terzi o molte" },
+  {
+    value: "PROPERTY_MANAGER",
+    title: "Property manager",
+    desc: "Gestisco strutture di terzi o molte",
+  },
 ];
 
 export function ActivityStep({

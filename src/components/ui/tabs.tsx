@@ -52,16 +52,21 @@ export function Tabs({
   );
 }
 
-export function TabsList({ className, children }: { className?: string; children: React.ReactNode }) {
+export function TabsList({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-    const tabs = Array.from(
-      e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]'),
-    );
+    const tabs = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
     const idx = tabs.findIndex((t) => t === document.activeElement);
     if (idx < 0) return;
     e.preventDefault();
-    const next = e.key === "ArrowRight" ? (idx + 1) % tabs.length : (idx - 1 + tabs.length) % tabs.length;
+    const next =
+      e.key === "ArrowRight" ? (idx + 1) % tabs.length : (idx - 1 + tabs.length) % tabs.length;
     tabs[next]?.focus();
     tabs[next]?.click();
   }

@@ -180,14 +180,18 @@ export async function syncReferenceTablesAction(
     const client = new AlloggiatiSoapClient({ timeoutMs: 120_000 }); // Luoghi è grande (~11k righe)
     const tokens = new TokenManager(
       client,
-      new VaultCredentialProvider({ getById: (id) => credRepo.findSecretRef(id) }, getSecretsVault()),
+      new VaultCredentialProvider(
+        { getById: (id) => credRepo.findSecretRef(id) },
+        getSecretsVault(),
+      ),
     );
     const tabella = new SoapTabellaClient(tokens, client, credentialId);
     await new TableSyncService(tabella, refRepo).syncAll();
   } catch {
     return {
       ok: false,
-      message: "Non sono riuscito a preparare le tabelle. Puoi riprovare o proseguire e completarle dopo.",
+      message:
+        "Non sono riuscito a preparare le tabelle. Puoi riprovare o proseguire e completarle dopo.",
     };
   }
 

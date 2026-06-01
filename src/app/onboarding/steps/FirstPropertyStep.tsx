@@ -65,7 +65,12 @@ export function FirstPropertyStep({
           <Input id="ob-paddr" name="address" required placeholder="Via della Lungaretta 1" />
         </Field>
         <Field id="ob-pprop" label="Proprietario">
-          <Input id="ob-pprop" name="proprietario" required placeholder="Nominativo del proprietario" />
+          <Input
+            id="ob-pprop"
+            name="proprietario"
+            required
+            placeholder="Nominativo del proprietario"
+          />
         </Field>
 
         <Field id="ob-pcred" label="Credenziale Alloggiati">

@@ -28,8 +28,9 @@ export default async function CheckEmailPage({
           <CardDescription>
             {email ? (
               <>
-                Ti abbiamo inviato un link di accesso a <strong className="text-foreground">{email}</strong>.
-                Aprilo da questo dispositivo per entrare.
+                Ti abbiamo inviato un link di accesso a{" "}
+                <strong className="text-foreground">{email}</strong>. Aprilo da questo dispositivo
+                per entrare.
               </>
             ) : (
               <>Ti abbiamo inviato un link di accesso. Aprilo da questo dispositivo per entrare.</>

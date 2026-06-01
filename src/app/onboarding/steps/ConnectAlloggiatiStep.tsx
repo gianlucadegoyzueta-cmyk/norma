@@ -95,8 +95,8 @@ export function ConnectAlloggiatiStep({
         <h2 className="text-xl font-semibold tracking-tight">Collega Alloggiati Web</h2>
         <p className="text-muted-foreground mt-1 text-sm text-pretty">
           Servono le credenziali della tua utenza Alloggiati per comunicare le schedine alla
-          Questura. Le salviamo <strong className="text-foreground">cifrate nel vault</strong> (mai in
-          chiaro) e le verifichiamo subito con un test — senza inviare nulla.
+          Questura. Le salviamo <strong className="text-foreground">cifrate nel vault</strong> (mai
+          in chiaro) e le verifichiamo subito con un test — senza inviare nulla.
         </p>
       </header>
 
@@ -105,8 +105,9 @@ export function ConnectAlloggiatiStep({
           Dove trovo la WSKey?
         </summary>
         <p className="text-muted-foreground mt-1 leading-relaxed">
-          La WSKey è la chiave del Web Service, diversa dalla password del portale. La trovi nell&apos;area
-          “Web Service” di Alloggiati Web, dopo aver generato/scaricato il certificato.{" "}
+          La WSKey è la chiave del Web Service, diversa dalla password del portale. La trovi
+          nell&apos;area “Web Service” di Alloggiati Web, dopo aver generato/scaricato il
+          certificato.{" "}
           <a
             href="https://alloggiatiweb.poliziadistato.it"
             target="_blank"
