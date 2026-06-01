@@ -1,5 +1,6 @@
 import { SchedinaStatus } from "@prisma/client";
 import { assertValidTransition, decideFromSendAttempt } from "../domain/transitions";
+import { SENDING_STALE_MS } from "../domain/sending-stale";
 import type { SendAttempt } from "../domain/types";
 import type { AlloggiatiSender, SendRow, SendRowResult } from "../ports/AlloggiatiSender";
 import type { SchedinaRecord, SchedinaRepository } from "../ports/SchedinaRepository";
@@ -38,6 +39,8 @@ export class SchedinaOutboxService {
   ) {}
 
   async processCredentialBatch(credentialId: string): Promise<void> {
+    await this.repo.recoverStaleSending(credentialId, SENDING_STALE_MS);
+
     const pending = await this.repo.listPendingByCredential(credentialId);
     if (pending.length === 0) return;
 

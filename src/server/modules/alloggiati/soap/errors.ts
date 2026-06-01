@@ -59,5 +59,33 @@ export class AlloggiatiProtocolError extends AlloggiatiError {
   }
 }
 
+/**
+ * Ricevuta non disponibile per il giorno richiesto (es. `ERRORE_RECUPERO_RICEVUTA` sul live Gate #0).
+ * NON è un fallimento di autenticazione: in riconciliazione T+1 equivale a "zero acquisizioni quel giorno".
+ */
+export class AlloggiatiReceiptUnavailableError extends AlloggiatiError {
+  constructor(
+    message: string,
+    readonly esito?: EsitoServizio,
+  ) {
+    super(message);
+    this.name = "AlloggiatiReceiptUnavailableError";
+  }
+}
+
+/**
+ * Ricevuta rifiutata per vincolo di business (es. giorno corrente/futuro).
+ * Distinto da auth e da "giorno vuoto" (ReceiptUnavailable).
+ */
+export class AlloggiatiReceiptError extends AlloggiatiError {
+  constructor(
+    message: string,
+    readonly esito?: EsitoServizio,
+  ) {
+    super(message);
+    this.name = "AlloggiatiReceiptError";
+  }
+}
+
 // NOTA: gli errori di VALIDAZIONE delle schedine NON sono eccezioni: il metodo `Test` li
 // restituisce riga-per-riga (è il suo scopo). Vengono gestiti dal chiamante, non lanciati.

@@ -3,6 +3,8 @@ import { AlloggiatiSoapClient } from "../soap/client";
 import {
   AlloggiatiAuthError,
   AlloggiatiProtocolError,
+  AlloggiatiReceiptError,
+  AlloggiatiReceiptUnavailableError,
   AlloggiatiTransientError,
 } from "../soap/errors";
 
@@ -97,5 +99,27 @@ describe("AlloggiatiSoapClient", () => {
   it("send: errore di rete → AlloggiatiTransientError", async () => {
     const c = new AlloggiatiSoapClient({ fetchImpl: throwingFetch() });
     await expect(c.send("XX1", "TOK", ["r"])).rejects.toBeInstanceOf(AlloggiatiTransientError);
+  });
+
+  it("ricevuta: ERRORE_RECUPERO_RICEVUTA → AlloggiatiReceiptUnavailableError (non auth)", async () => {
+    const xml = `<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body>
+ <RicevutaResponse xmlns="AlloggiatiService">
+  <RicevutaResult><esito>false</esito><ErroreDes>ERRORE_RECUPERO_RICEVUTA</ErroreDes></RicevutaResult>
+ </RicevutaResponse></soap:Body></soap:Envelope>`;
+    const c = new AlloggiatiSoapClient({ fetchImpl: fakeFetch(xml) });
+    await expect(c.ricevuta("XX1", "TOK", "2026-05-28")).rejects.toBeInstanceOf(
+      AlloggiatiReceiptUnavailableError,
+    );
+  });
+
+  it("ricevuta: giorno non consentito → AlloggiatiReceiptError", async () => {
+    const xml = `<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body>
+ <RicevutaResponse xmlns="AlloggiatiService">
+  <RicevutaResult><esito>false</esito><ErroreCod>MOCK-RIC-01</ErroreCod></RicevutaResult>
+ </RicevutaResponse></soap:Body></soap:Envelope>`;
+    const c = new AlloggiatiSoapClient({ fetchImpl: fakeFetch(xml) });
+    await expect(c.ricevuta("XX1", "TOK", "2026-06-01")).rejects.toBeInstanceOf(
+      AlloggiatiReceiptError,
+    );
   });
 });
