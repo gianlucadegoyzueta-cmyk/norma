@@ -16,6 +16,14 @@ jobs:
     name: Lint · Typecheck · Test · Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Valori fittizi a livello job: il codice legge gli env in modo lazy a runtime,
+    # ma servono sia a Test (es. SECRETS_LOCAL_KEY per il vault dei segreti) sia a Build.
+    env:
+      DATABASE_URL: "postgresql://user:pass@localhost:5432/db?schema=public"
+      DIRECT_URL: "postgresql://user:pass@localhost:5432/db?schema=public"
+      AUTH_SECRET: "ci-build-secret-placeholder-not-used-at-runtime"
+      SECRETS_LOCAL_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+      EMAIL_FROM: "no-reply@example.com"
 
     steps:
       - name: Checkout
@@ -47,11 +55,3 @@ jobs:
 
       - name: Build
         run: npm run build
-        env:
-          # Valori fittizi: il codice legge gli env in modo lazy a runtime,
-          # ma li forniamo per non far fallire eventuali check in fase di build.
-          DATABASE_URL: "postgresql://user:pass@localhost:5432/db?schema=public"
-          DIRECT_URL: "postgresql://user:pass@localhost:5432/db?schema=public"
-          AUTH_SECRET: "ci-build-secret-placeholder-not-used-at-runtime"
-          SECRETS_LOCAL_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
-          EMAIL_FROM: "no-reply@example.com"
