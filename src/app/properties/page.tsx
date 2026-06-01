@@ -87,7 +87,8 @@ export default async function PropertiesPage() {
                             <p className="truncate font-medium">{p.name}</p>
                             <p className="text-muted-foreground flex items-center gap-1 truncate text-xs">
                               <MapPin className="size-3 shrink-0" />
-                              {p.address} · {p.comune.name} ({p.comune.provincia}) · {p.proprietario}
+                              {p.address} · {p.comune.name} ({p.comune.provincia}) ·{" "}
+                              {p.proprietario}
                             </p>
                           </div>
                           <div className="flex shrink-0 flex-col items-end gap-1">

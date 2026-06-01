@@ -26,9 +26,7 @@ export function normalizeCin(raw: string): string {
   return raw.replace(/\s+/g, "").toUpperCase();
 }
 
-export type CinValidation =
-  | { valid: true; normalized: string }
-  | { valid: false; reason: string };
+export type CinValidation = { valid: true; normalized: string } | { valid: false; reason: string };
 
 /**
  * Validazione STRUTTURALE e prudente del formato CIN. Normalizza, poi verifica:
@@ -41,7 +39,8 @@ export type CinValidation =
 export function validateCinFormat(raw: string): CinValidation {
   const normalized = normalizeCin(raw);
   if (normalized.length === 0) return { valid: false, reason: "Il CIN è vuoto." };
-  if (!normalized.startsWith("IT")) return { valid: false, reason: 'Il CIN deve iniziare con "IT".' };
+  if (!normalized.startsWith("IT"))
+    return { valid: false, reason: 'Il CIN deve iniziare con "IT".' };
   if (normalized.length < CIN_MIN_LENGTH || normalized.length > CIN_MAX_LENGTH) {
     return {
       valid: false,

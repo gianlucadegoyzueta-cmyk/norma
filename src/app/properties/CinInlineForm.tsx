@@ -88,7 +88,11 @@ export function CinInlineForm({
       <form action={skipAction}>
         <input type="hidden" name="propertyId" value={propertyId} />
         <Button type="submit" variant="ghost" size="sm" disabled={pending} className="text-xs">
-          {skipPending ? <Loader2 className="size-4 animate-spin" /> : "Non richiesto per questo immobile"}
+          {skipPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            "Non richiesto per questo immobile"
+          )}
         </Button>
       </form>
       {feedback && (

@@ -3,18 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
-import {
-  CinError,
-  CinService,
-  PrismaCinRepository,
-} from "@/server/modules/cin";
+import { CinError, CinService, PrismaCinRepository } from "@/server/modules/cin";
 
 type Result = { ok: boolean; message: string };
 
-export async function saveCinAction(
-  _prev: Result | null,
-  formData: FormData,
-): Promise<Result> {
+export async function saveCinAction(_prev: Result | null, formData: FormData): Promise<Result> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
 
