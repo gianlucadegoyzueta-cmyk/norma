@@ -10,10 +10,12 @@ import {
   FileText,
   KeyRound,
   LogOut,
+  ShieldAlert,
 } from "lucide-react";
 import { signOut } from "@/auth";
 import { CURRENT_ORG_COOKIE, getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { CinService, PrismaCinRepository } from "@/server/modules/cin";
 import { getOnboardingState } from "@/server/modules/onboarding/state";
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +30,9 @@ export default async function DashboardPage() {
 
   // Stato di configurazione (derivato dai dati): mostra il promemoria finché non è completo.
   const onboarding = await getOnboardingState(prisma, ctx.current.organizationId);
+  const cinCompliance = await new CinService(new PrismaCinRepository(prisma)).getComplianceSummary(
+    ctx.current.organizationId,
+  );
 
   const signOutAction = async () => {
     "use server";
@@ -83,6 +88,33 @@ export default async function DashboardPage() {
                     className="bg-primary h-full rounded-full transition-all"
                     style={{ width: `${(onboarding.completed / onboarding.total) * 100}%` }}
                   />
+                </div>
+              </CardHeader>
+            </Card>
+          </Link>
+        )}
+
+        {cinCompliance.count > 0 && (
+          <Link href="/properties" className="group mb-6 block">
+            <Card className="border-warning/50 bg-warning/5 transition-shadow hover:shadow-md">
+              <CardHeader>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <ShieldAlert className="text-warning size-4 shrink-0" />
+                      {cinCompliance.count === 1
+                        ? "1 immobile senza CIN"
+                        : `${cinCompliance.count} immobili senza CIN`}
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      Il Codice Identificativo Nazionale va ottenuto sul portale BDSR e inserito per
+                      ogni struttura. È obbligatorio esporlo negli annunci.
+                    </CardDescription>
+                  </div>
+                  <span className="text-warning inline-flex shrink-0 items-center gap-1 text-sm font-medium">
+                    Inserisci
+                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                  </span>
                 </div>
               </CardHeader>
             </Card>

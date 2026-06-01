@@ -70,6 +70,14 @@ enum SubmissionChannel {
   PEC // fallback: PEC alla Questura quando il portale è giù
 }
 
+/// Stato di compliance del CIN (Codice Identificativo Nazionale) su un immobile.
+/// Il CIN si ottiene sul portale BDSR del Ministero del Turismo (SPID/CIE) e si inserisce a mano.
+enum CinStatus {
+  PENDING // non ancora ottenuto/inserito (default: tutti gli immobili esistenti post-migrazione)
+  OBTAINED // CIN validato e salvato
+  NOT_REQUIRED // l'host ha dichiarato che per questo immobile non serve
+}
+
 /// Tipo di utente, raccolto nell'onboarding per personalizzare copy e passi del wizard.
 enum OnboardingUserType {
   HOST_SINGOLO // gestisce una o poche strutture proprie
@@ -214,6 +222,10 @@ model Property {
 
   credentialId          String? // credenziale con cui si inviano le schedine (nullable)
   alloggiatiApartmentId String? // IdAppartamento assegnato da Alloggiati (solo gestione appartamenti)
+
+  /// Codice Identificativo Nazionale (normalizzato: maiuscolo, senza spazi). Null finché non ottenuto.
+  cin       String?
+  cinStatus CinStatus @default(PENDING)
 
   // Tassa di soggiorno: categoria struttura (es. "AFFITTO_BREVE", "CAV") e zona del comune
   // (Venezia tariffa per zona). Alimentano la risoluzione della tariffa nel calcolatore.
