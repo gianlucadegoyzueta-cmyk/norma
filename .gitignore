@@ -22,3 +22,6 @@ next-env.d.ts
 *.log
 npm-debug.log*
 .vercel
+
+# config locale di Claude Code (non versionata)
+.claude/
