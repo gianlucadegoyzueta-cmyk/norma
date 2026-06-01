@@ -19,7 +19,14 @@ export const dynamic = "force-dynamic";
 // da getOnboardingState; qui sta solo la presentazione, così logica e copy restano separati.
 const STEP_META: Record<
   OnboardingStepKey,
-  { icon: LucideIcon; title: string; description: string; href: string; cta: string; doneCta: string }
+  {
+    icon: LucideIcon;
+    title: string;
+    description: string;
+    href: string;
+    cta: string;
+    doneCta: string;
+  }
 > = {
   credential: {
     icon: KeyRound,

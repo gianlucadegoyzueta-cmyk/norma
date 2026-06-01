@@ -107,7 +107,8 @@ function isoDate(d: Date): string {
  */
 function resolveRate(rates: TaxRate[], category?: string, zone?: string): TaxRate {
   const isWild = (v?: string) => v === undefined || v === "DEFAULT";
-  const catOk = (r: TaxRate) => isWild(r.accommodationCategory) || r.accommodationCategory === category;
+  const catOk = (r: TaxRate) =>
+    isWild(r.accommodationCategory) || r.accommodationCategory === category;
   const zoneOk = (r: TaxRate) => isWild(r.zone) || r.zone === zone;
 
   let best: TaxRate | undefined;
@@ -136,7 +137,10 @@ function applySeason(baseCents: number, season: Season, nightDate: Date): number
 /** Somma delle sovrattasse attive in una data notte (per-persona-per-notte). */
 function activeSurcharges(surcharges: TaxSurcharge[], nightDate: Date): number {
   const iso = isoDate(nightDate);
-  return surcharges.reduce((sum, s) => (iso >= s.from && iso <= s.to ? sum + s.amountCents : sum), 0);
+  return surcharges.reduce(
+    (sum, s) => (iso >= s.from && iso <= s.to ? sum + s.amountCents : sum),
+    0,
+  );
 }
 
 /**
@@ -213,8 +217,7 @@ export function computeTouristTax(
   const rate = resolveRate(rule.rates, stay.accommodationCategory, stay.zone);
 
   const breakdowns: GuestTaxBreakdown[] = guests.map((g) => {
-    const exemptByType =
-      !!g.exemptionType && rule.exemptions.types.includes(g.exemptionType);
+    const exemptByType = !!g.exemptionType && rule.exemptions.types.includes(g.exemptionType);
     const age = ageAtDate(g.birthDate, stay.arrivalDate);
     const { pct: agePct, band } = reductionForAge(age, rule.ageReductions);
     const reductionPct = exemptByType ? 100 : agePct;
@@ -236,7 +239,8 @@ export function computeTouristTax(
     let reason: string | null = null;
     if (exemptByType) reason = `esente: ${g.exemptionType}`;
     else if (fullyExempt) reason = `minore esente (età ${age} < ${band?.maxAge} anni)`;
-    else if (reductionPct > 0) reason = `riduzione età ${reductionPct}% (età ${age} < ${band?.maxAge} anni)`;
+    else if (reductionPct > 0)
+      reason = `riduzione età ${reductionPct}% (età ${age} < ${band?.maxAge} anni)`;
 
     return {
       guestId: g.id,
