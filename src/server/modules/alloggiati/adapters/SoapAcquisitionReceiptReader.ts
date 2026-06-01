@@ -2,10 +2,7 @@ import type { AlloggiatiSoapClient } from "../soap/client";
 import { AlloggiatiReceiptUnavailableError } from "../soap/errors";
 import type { TokenProvider } from "./SoapAlloggiatiSender";
 import { parseReceiptPdfBase64 } from "../domain/receipt-pdf";
-import type {
-  AcquiredIdentity,
-  AcquisitionReceiptReader,
-} from "../ports/AcquisitionReceiptReader";
+import type { AcquiredIdentity, AcquisitionReceiptReader } from "../ports/AcquisitionReceiptReader";
 
 /**
  * Lettore produzione della Ricevuta via SOAP: TokenManager → Ricevuta → parse PDF.

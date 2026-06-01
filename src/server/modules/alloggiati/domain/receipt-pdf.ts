@@ -33,5 +33,7 @@ export function parseReceiptPdfBase64(pdfBase64: string): RecordIdentity[] {
       "Parser PDF Ricevuta reale non ancora implementato: serve un campione da Gate #0 con acquisizioni.",
     );
   }
-  throw new AlloggiatiProtocolError("Ricevuta: payload decodificato non riconosciuto (né mock né PDF).");
+  throw new AlloggiatiProtocolError(
+    "Ricevuta: payload decodificato non riconosciuto (né mock né PDF).",
+  );
 }
