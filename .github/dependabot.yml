@@ -11,6 +11,12 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # Niente PR automatici per i MAJOR: il 2026-06-01 i major auto-mergiati
+      # (next 16, prisma 7, nodemailer 8, TS 6, vitest 4, fast-xml-parser 5) hanno
+      # rotto npm ci e i deploy. I major vanno fatti a mano su un branch e testati.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
 
