@@ -1,0 +1,41 @@
+name: DB migrate (production)
+
+# Applica le migrazioni Prisma al DB di PRODUZIONE a ogni push su main, cosi' lo schema
+# del DB resta sempre allineato al codice deployato. Chiude la causa del 2026-06-01:
+# il build Vercel (next build) NON applica le migrazioni, quindi le feature mergiate
+# giravano contro un DB privo delle loro tabelle/colonne (500 a runtime).
+#
+# Usa i secret repo DATABASE_URL e DIRECT_URL (gia' impostati). E' una pipeline separata
+# dal deploy Vercel: se fallisce NON blocca il deploy, ma segnala il disallineamento.
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: migrate-prod
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: prisma migrate deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply pending migrations to production DB
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
