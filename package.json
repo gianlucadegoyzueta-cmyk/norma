@@ -51,11 +51,11 @@
     "clsx": "^2.1.1",
     "fast-xml-parser": "^4.5.0",
     "lucide-react": "^1.17.0",
-    "next": "^15.1.0",
+    "next": "^15.5.19",
     "next-auth": "^5.0.0-beta.31",
     "nodemailer": "^7.0.13",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
@@ -63,10 +63,10 @@
     "@tailwindcss/postcss": "^4.3.0",
     "@types/node": "^22.10.0",
     "@types/nodemailer": "^8.0.0",
-    "@types/react": "^19.0.0",
+    "@types/react": "^19.2.16",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.39.4",
-    "eslint-config-next": "^15.1.0",
+    "eslint-config-next": "^15.5.19",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
@@ -76,7 +76,7 @@
     "prisma": "^6.2.0",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.7.0",
-    "typescript-eslint": "^8.60.0",
-    "vitest": "^3.0.0"
+    "typescript-eslint": "^8.60.1",
+    "vitest": "^3.2.6"
   }
 }
