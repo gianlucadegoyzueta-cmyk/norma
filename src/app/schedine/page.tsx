@@ -195,7 +195,7 @@ export default async function SchedinePage() {
                 <FileText className="size-5" />
               </span>
               <p className="text-muted-foreground text-sm">
-                Nessuna schedina ancora. Generale da un{" "}
+                Nessuna schedina ancora. Genera la prima da un{" "}
                 <Link href="/stays" className="text-foreground font-medium underline">
                   soggiorno
                 </Link>
