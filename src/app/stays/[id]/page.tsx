@@ -194,8 +194,13 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
           <h2 className="text-muted-foreground mb-3 text-sm font-medium">Ospiti</h2>
           {stay.guests.length === 0 ? (
             <Card>
-              <CardContent className="text-muted-foreground py-8 text-center text-sm">
-                Nessun ospite ancora. Aggiungili qui sotto.
+              <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
+                <span className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-lg">
+                  <Users className="size-5" />
+                </span>
+                <p className="text-muted-foreground text-sm">
+                  Nessun ospite ancora. Aggiungili qui sotto.
+                </p>
               </CardContent>
             </Card>
           ) : (

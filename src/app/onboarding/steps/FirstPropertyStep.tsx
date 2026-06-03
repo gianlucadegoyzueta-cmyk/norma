@@ -91,9 +91,14 @@ export function FirstPropertyStep({
         <div className="grid gap-2">
           <Label htmlFor="ob-pcomune">Comune {provincia ? `(prov. ${provincia})` : ""}</Label>
           {options.length === 0 ? (
-            <p className="text-muted-foreground text-xs">
-              Nessun Comune disponibile per questa provincia. Torna indietro e completa la
-              preparazione delle tabelle.
+            <p
+              id="ob-pcomune-error"
+              role="alert"
+              className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-xs"
+            >
+              Nessun Comune disponibile per questa provincia: prima torna indietro e completa la
+              preparazione delle tabelle nello step «Collega Alloggiati». Senza Comune non puoi
+              aggiungere l’immobile.
             </p>
           ) : (
             <ComuneTypeahead
