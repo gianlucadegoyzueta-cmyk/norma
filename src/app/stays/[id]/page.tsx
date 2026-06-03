@@ -169,7 +169,9 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
         </Link>
 
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight">{stay.propertyName}</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">
+            {stay.propertyName}
+          </h1>
           <p className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
             <span className="inline-flex items-center gap-1">
               <CalendarDays className="size-4" />

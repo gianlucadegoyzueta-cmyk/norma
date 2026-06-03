@@ -92,7 +92,9 @@ export function ConnectAlloggiatiStep({
   return (
     <div className="mx-auto w-full max-w-md">
       <header className="mb-4">
-        <h2 className="text-xl font-semibold tracking-tight">Collega Alloggiati Web</h2>
+        <h2 className="font-display text-xl font-semibold tracking-tight">
+          Collega Alloggiati Web
+        </h2>
         <p className="text-muted-foreground mt-1 text-sm text-pretty">
           Servono le credenziali della tua utenza Alloggiati per comunicare le schedine alla
           Questura. Le salviamo <strong className="text-foreground">cifrate nel vault</strong> (mai

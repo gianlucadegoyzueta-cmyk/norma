@@ -19,7 +19,7 @@ export function WelcomeStep({ onNext }: { onNext: () => void }) {
     <div className="mx-auto flex max-w-md flex-col items-center gap-7 text-center">
       <Brand />
       <div className="space-y-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
           Mettiamo in regola la tua attività in pochi minuti
         </h1>
         <p className="text-muted-foreground text-pretty">

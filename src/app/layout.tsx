@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,6 +13,15 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
   display: "swap",
+});
+
+// Display font di brand (come il marketing norma.casa): serif Fraunces sui titoli.
+// `opsz` ottico per rendere bene ai corpi grandi.
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  display: "swap",
+  axes: ["opsz"],
 });
 
 export const metadata: Metadata = {
@@ -49,7 +58,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} min-h-dvh antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} min-h-dvh antialiased`}
+      >
         {children}
       </body>
     </html>

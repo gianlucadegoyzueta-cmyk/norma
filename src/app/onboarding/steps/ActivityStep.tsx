@@ -45,7 +45,7 @@ export function ActivityStep({
   return (
     <div className="mx-auto w-full max-w-md">
       <header className="mb-6">
-        <h2 className="text-xl font-semibold tracking-tight">La tua attività</h2>
+        <h2 className="font-display text-xl font-semibold tracking-tight">La tua attività</h2>
         <p className="text-muted-foreground mt-1 text-sm">
           Due informazioni per personalizzare Norma su di te.
         </p>
