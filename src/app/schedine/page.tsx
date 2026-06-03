@@ -107,7 +107,7 @@ export default async function SchedinePage() {
         </Link>
 
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight">Schedine</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">Schedine</h1>
           <p className="text-muted-foreground mt-2 max-w-prose text-sm">
             L&apos;outbox degli invii ad Alloggiati di{" "}
             <strong className="text-foreground">{ctx.current.organizationName}</strong>. Ordinate

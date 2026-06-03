@@ -10,7 +10,7 @@ export default function NotFound() {
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-4 py-12 text-center">
       <Brand />
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Pagina non trovata</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">Pagina non trovata</h1>
         <p className="text-muted-foreground mx-auto max-w-prose text-sm">
           La pagina che cerchi non esiste o è stata spostata.
         </p>

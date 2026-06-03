@@ -71,7 +71,7 @@ export default async function DashboardPage() {
       >
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <h1 className="font-display text-2xl font-semibold tracking-tight">
               Ciao, {ctx.user.name ?? ctx.user.email ?? "utente"}
             </h1>
             <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">

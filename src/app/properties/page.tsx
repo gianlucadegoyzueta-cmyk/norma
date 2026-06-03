@@ -55,7 +55,7 @@ export default async function PropertiesPage() {
         </Link>
 
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight">Immobili</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">Immobili</h1>
           <p className="text-muted-foreground mt-2 max-w-prose text-sm">
             Gli immobili di{" "}
             <strong className="text-foreground">{ctx.current.organizationName}</strong>. Ogni
