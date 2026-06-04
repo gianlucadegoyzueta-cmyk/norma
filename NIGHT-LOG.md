@@ -5,16 +5,24 @@
 > sicure, reversibili e SENZA migrazioni. Le feature con schema sono parcheggiate
 > in NEEDS-HUMAN con migrazione generata ma NON applicata (niente backup garantito sul DB prod).
 
-## RIEPILOGO (aggiornato in corso)
+## RIEPILOGO ONESTO (fine sessione)
 
-- **Online in prod (mergiato + health-check verde):**
-  - PR #26 — a11y combobox (`role="presentation"`) + **CIN nelle dichiarazioni tassa** + log notturni. (main `6d2102f`)
-  - PR #27 — `/api/health` reso pubblico (endpoint di monitoraggio raggiungibile). _(in deploy)_
-- **PR aperte per REVISIONE VISIVA (non mergiate apposta — non posso vedere la UI renderizzata):** _(design/dashboard, se prodotte)_
-- **Parcheggiate (NEEDS-HUMAN):** tutte le feature con schema DB — ISTAT, check-in self-service, campi residenza Guest, stato NEEDS_REVIEW, import iCal, scheduler invio/reconcile, Gate #0 live. Vedi NEEDS-HUMAN.md.
-- **Rollback:** nessuno.
-- **Ultimo commit sano di main:** aggiornato ad ogni merge (vedi unità). Partenza `68c556c` → `6d2102f` (#26) → #27.
-- **Prima azione consigliata al risveglio:** (1) rivedere visivamente le PR di design lasciate aperte e mergiarle se piacciono; (2) per le feature parcheggiate, fare un backup del DB Supabase e applicare le migrazioni generate (il workflow `migrate.yml` gira al merge su main).
+**Cosa è ANDATO ONLINE (mergiato + health-check verde, in produzione su app.norma.casa):**
+
+- **PR #26** — fix a11y combobox (`role="presentation"`) + **CIN agganciato all'export delle dichiarazioni tassa** (nuova colonna CIN nel CSV) + log notturni. (main `6d2102f`)
+- **PR #27** — `/api/health` reso pubblico: ora risponde `{"status":"ok",...}` 200 (prima 307→login). Verificato live. (main `db43b2b`)
+
+Health-check finale OK: `/login` `/signup` `/auth/forgot` `/api/health` = 200, `/dashboard` = 307 (gated), `norma.casa` = 200.
+
+**Cosa NON ho fatto e perché (onesto):**
+
+- **Design premium / dashboard / restyle**: NON spedito. Motivo di principio: **non vedo la UI renderizzata**, quindi non posso garantire che un restyle "sembri" premium; spedire alla cieca modifiche visive in produzione è irresponsabile. → Va fatto in una sessione dove puoi vedere i risultati e approvare. Nessuna PR di design aperta in questa sessione (non volevo lasciarne mezze/non verificabili).
+- **Tutte le feature con schema DB** (ISTAT, check-in self-service, residenza Guest, NEEDS_REVIEW, iCal, scheduler) → parcheggiate (no migrazioni prod senza backup garantito). Dettaglio e cosa serve da te in `NEEDS-HUMAN.md`.
+- **Non-schema rimasti spedibili in futuro** (non fatti per limiti di tempo/sessione): cap max-attempts=5 + guard doppio-incremento (backend hardening), export PDF tassa.
+
+**Rollback:** nessuno. **main sano e deployabile** a `db43b2b`. Catena commit sani: `68c556c` → `6d2102f` (#26) → `db43b2b` (#27).
+
+**Prima azione consigliata al risveglio:** decidere insieme la direzione del **design/dashboard** (te lo costruisco e te lo mostro in PR, lo mergi se ti piace), e — per le feature parcheggiate — fare un **backup del DB Supabase** così posso procedere con le migrazioni.
 
 ---
 
@@ -35,4 +43,4 @@
 
 - **Branch:** `fix/health-public` → PR #27
 - **Cosa:** aggiunto `/api/health` a `PUBLIC_EXACT` in `paths.ts`: l'endpoint di monitoraggio (status/uptime, nessun dato) ora risponde 200 anche senza sessione, invece di essere rediretto a /login. Scoperto durante l'health-check dell'unità 1+2. Test esteso.
-- **CI locale:** _(sotto)_ · **ONLINE:** _(in corso)_
+- **CI su PR #27:** verde · **Health-check:** `/api/health` = 200 (`{"status":"ok"}`) verificato live · **ONLINE:** ✅ sì — main `db43b2b`
