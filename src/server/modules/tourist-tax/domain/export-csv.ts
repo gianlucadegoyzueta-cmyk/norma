@@ -5,6 +5,8 @@ import { formatEuroCents } from "../services/estimate.service";
 
 export interface DeclarationLineExport {
   propertyName: string;
+  /** CIN dell'immobile (Codice Identificativo Nazionale), se presente e conforme. Colonna vuota se assente. */
+  cin?: string | null;
   stayId: string;
   taxedNights: number;
   amountCents: number;
@@ -34,10 +36,12 @@ export function toDeclarationCsv(d: DeclarationExport): string {
   out.push(row(["Comune", d.comuneName]));
   out.push(row(["Periodo", d.periodLabel]));
   out.push("");
-  out.push(row(["Struttura", "ID soggiorno", "Notti tassate", "Imposta (€)"]));
+  out.push(row(["Struttura", "CIN", "ID soggiorno", "Notti tassate", "Imposta (€)"]));
   for (const l of d.lines) {
-    out.push(row([l.propertyName, l.stayId, String(l.taxedNights), euro(l.amountCents)]));
+    out.push(
+      row([l.propertyName, l.cin ?? "", l.stayId, String(l.taxedNights), euro(l.amountCents)]),
+    );
   }
-  out.push(row(["TOTALE", "", "", euro(d.totalCents)]));
+  out.push(row(["TOTALE", "", "", "", euro(d.totalCents)]));
   return out.join("\r\n");
 }

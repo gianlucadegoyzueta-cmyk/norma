@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { TaxDeclarationStatus, TaxRemittanceMode } from "@prisma/client";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { cinForDeclarationExport } from "@/server/modules/cin/domain/cin";
 import { periodLabel } from "@/server/modules/tourist-tax/domain/period";
 import { PrismaTouristTaxConfigRepository } from "@/server/modules/tourist-tax/adapters/PrismaTouristTaxConfigRepository";
 import { PrismaTouristTaxDeclarationRepository } from "@/server/modules/tourist-tax/adapters/PrismaTouristTaxDeclarationRepository";
@@ -96,6 +97,20 @@ export async function prepareRemittanceAction(
   });
   const lines = await declRepo.getDeclarationLines(declarationId, orgId);
 
+  // CIN per riga: ogni riga è un soggiorno → immobile. Risolviamo il CIN dell'immobile (solo se
+  // conforme, via cinForDeclarationExport) tramite una mappa stayId → cin. Nessun cambio di schema:
+  // Property.cin esiste già; qui lo leggiamo e basta.
+  const stays = await prisma.stay.findMany({
+    where: { id: { in: lines.map((l) => l.stayId) }, organizationId: orgId },
+    select: { id: true, property: { select: { cin: true, cinStatus: true } } },
+  });
+  const cinByStay = new Map(
+    stays.map((s) => [
+      s.id,
+      cinForDeclarationExport({ cin: s.property.cin, cinStatus: s.property.cinStatus }),
+    ]),
+  );
+
   const channel = resolveRemittanceChannel(decl.remittanceMode);
   const result = await channel.prepare({
     declarationId,
@@ -106,6 +121,7 @@ export async function prepareRemittanceAction(
       totalCents: decl.amountCents,
       lines: lines.map((l) => ({
         propertyName: l.propertyName,
+        cin: cinByStay.get(l.stayId) ?? null,
         stayId: l.stayId,
         taxedNights: l.taxedNights,
         amountCents: l.amountCents,
