@@ -77,15 +77,22 @@ describe("export CSV", () => {
       periodLabel: "Maggio 2026",
       totalCents: 1800,
       lines: [
-        { propertyName: "Bilocale Trastevere", stayId: "s1", taxedNights: 2, amountCents: 1200 },
+        {
+          propertyName: "Bilocale Trastevere",
+          cin: "IT058091A1B2C3D4E5",
+          stayId: "s1",
+          taxedNights: 2,
+          amountCents: 1200,
+        },
+        // CIN assente (immobile senza CIN conforme) → colonna vuota.
         { propertyName: "Attico; centro", stayId: "s2", taxedNights: 1, amountCents: 600 },
       ],
     });
     const rows = csv.split("\r\n");
     expect(rows[0]).toBe("Comune;Roma");
-    expect(rows[3]).toBe("Struttura;ID soggiorno;Notti tassate;Imposta (€)");
-    expect(rows[4]).toBe("Bilocale Trastevere;s1;2;12,00");
-    expect(rows[5]).toBe('"Attico; centro";s2;1;6,00'); // campo con ";" quotato
-    expect(rows[6]).toBe("TOTALE;;;18,00");
+    expect(rows[3]).toBe("Struttura;CIN;ID soggiorno;Notti tassate;Imposta (€)");
+    expect(rows[4]).toBe("Bilocale Trastevere;IT058091A1B2C3D4E5;s1;2;12,00");
+    expect(rows[5]).toBe('"Attico; centro";;s2;1;6,00'); // CIN vuoto + campo con ";" quotato
+    expect(rows[6]).toBe("TOTALE;;;;18,00");
   });
 });
