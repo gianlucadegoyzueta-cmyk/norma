@@ -8,6 +8,7 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/api/auth/callback/nodemailer")).toBe(true);
     expect(isPublicPath("/_next/static/chunk.js")).toBe(true);
     expect(isPublicPath("/favicon.ico")).toBe(true);
+    expect(isPublicPath("/icon.svg")).toBe(true);
     expect(isPublicPath("/api/health")).toBe(true);
   });
 
