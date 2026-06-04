@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import type { PrismaClient, SchedinaStatus, SubmissionChannel } from "@prisma/client";
 import { computeDedupKey } from "../domain/dedup";
+import { MAX_SEND_ATTEMPTS } from "../domain/send-policy";
 import {
   assertValidTransition,
   decideFromSendAttempt,
@@ -83,7 +84,9 @@ export class PrismaSchedinaRepository implements SchedinaRepository {
 
   async listPendingByCredential(credentialId: string): Promise<SchedinaRecord[]> {
     return this.prisma.schedina.findMany({
-      where: { credentialId, status: "PENDING" },
+      // Esclude le schedine che hanno esaurito i tentativi: oltre MAX_SEND_ATTEMPTS non si
+      // ri-rivendicano più automaticamente (niente retry runaway), restano PENDING ma inerti.
+      where: { credentialId, status: "PENDING", attempts: { lt: MAX_SEND_ATTEMPTS } },
       select: SELECT,
     });
   }
@@ -212,8 +215,10 @@ export class PrismaSchedinaRepository implements SchedinaRepository {
 
       const data: Prisma.SchedinaUpdateInput = { status: to };
       if (to === "SENDING") {
+        // NB: NON incrementiamo qui `attempts`. Il conteggio dei tentativi è di esclusiva
+        // competenza di `claimForSending` (un tentativo = un claim vinto). Incrementarlo anche
+        // qui causerebbe un doppio conteggio se una riga raggiungesse SENDING via transition.
         data.sentAt = new Date();
-        data.attempts = { increment: 1 };
       } else if (to === "ACQUIRED") {
         data.acquiredAt = new Date();
         data.lastErrorCod = null;

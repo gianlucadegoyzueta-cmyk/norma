@@ -1,5 +1,6 @@
 import { SchedinaStatus } from "@prisma/client";
 import { computeDedupKey } from "../domain/dedup";
+import { MAX_SEND_ATTEMPTS } from "../domain/send-policy";
 import {
   assertValidTransition,
   decideFromSendAttempt,
@@ -17,6 +18,7 @@ interface Row extends SchedinaRecord {
   errorDes: string | null;
   payloadSnapshot: string | null;
   sentAt: Date | null;
+  attempts: number;
 }
 
 /**
@@ -47,6 +49,7 @@ export class InMemorySchedinaRepository implements SchedinaRepository {
       errorDes: null,
       payloadSnapshot: null,
       sentAt: null,
+      attempts: 0,
     };
     this.rows.set(row.id, row);
     return { schedina: this.view(row), created: true };
@@ -60,7 +63,13 @@ export class InMemorySchedinaRepository implements SchedinaRepository {
 
   async listPendingByCredential(credentialId: string): Promise<SchedinaRecord[]> {
     return [...this.rows.values()]
-      .filter((r) => r.credentialId === credentialId && r.status === SchedinaStatus.PENDING)
+      .filter(
+        (r) =>
+          r.credentialId === credentialId &&
+          r.status === SchedinaStatus.PENDING &&
+          // esauriti i tentativi → non più auto-inviata (vedi MAX_SEND_ATTEMPTS)
+          r.attempts < MAX_SEND_ATTEMPTS,
+      )
       .map((r) => this.view(r));
   }
 
@@ -86,6 +95,9 @@ export class InMemorySchedinaRepository implements SchedinaRepository {
     if (row.status !== SchedinaStatus.PENDING) return false;
     row.status = SchedinaStatus.SENDING;
     row.sentAt = new Date();
+    // L'incremento di `attempts` è di esclusiva competenza del claim (un tentativo = un claim
+    // vinto), così non c'è doppio conteggio con le transizioni successive.
+    row.attempts += 1;
     return true;
   }
 
@@ -120,6 +132,16 @@ export class InMemorySchedinaRepository implements SchedinaRepository {
   /** Solo test: simula un invio SENDING abbandonato impostando sentAt nel passato. */
   setSentAtForTest(id: string, sentAt: Date): void {
     this.must(id).sentAt = sentAt;
+  }
+
+  /** Solo test: forza il numero di tentativi cumulati (per verificare il cap). */
+  setAttemptsForTest(id: string, attempts: number): void {
+    this.must(id).attempts = attempts;
+  }
+
+  /** Solo test: legge i tentativi cumulati. */
+  getAttemptsForTest(id: string): number {
+    return this.must(id).attempts;
   }
 
   private must(id: string): Row {
