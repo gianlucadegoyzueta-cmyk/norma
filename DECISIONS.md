@@ -13,3 +13,9 @@
 - **Decisione:** mantenere UNA identità "Carta & Inchiostro" (terracotta + avorio + Fraunces, già in prod) e **rifinirla** (scala tipografica, spaziatura, gerarchia, micro-interazioni sobrie), senza ridisegni radicali né librerie UI pesanti.
 - **Alternative:** nuova palette da zero; introdurre una component-library (Radix/shadcn completo).
 - **Motivo:** coerenza prima dell'originalità; il brief chiede "una sola identità visiva applicata via token". Reversibile e a basso rischio.
+
+## D2 — Cap max-tentativi outbox + dove "parcheggiare" le schedine esaurite
+
+- **Decisione:** `MAX_SEND_ATTEMPTS=5`; oltre il cap la schedina viene **esclusa da `listPendingByCredential`** (non più auto-inviata) ma **resta PENDING**. Incremento di `attempts` centralizzato in `claimForSending` (rimosso il doppione in `transition()`).
+- **Alternative:** (a) introdurre subito lo stato `NEEDS_REVIEW` per le esaurite — scartata: richiede migrazione enum (parcheggiata, vedi NEEDS-HUMAN #4); (b) usare REJECTED/UNVERIFIED come "parcheggio" — scartata: hanno semantiche precise, le sporcherei.
+- **Motivo:** fermare il retry runaway è la priorità ed è ottenibile **senza schema** filtrando in query. Tenerla PENDING-inerte è reversibile e conservativo (nessun dato perso, nessuna transizione inventata). Follow-up naturale: stato `NEEDS_REVIEW` per renderle esplicite in UI, quando si farà la migrazione.

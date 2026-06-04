@@ -2,6 +2,7 @@ import { SchedinaStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it } from "vitest";
 import { FakeAlloggiatiSender } from "../adapters/FakeAlloggiatiSender";
 import { InMemorySchedinaRepository } from "../adapters/InMemorySchedinaRepository";
+import { MAX_SEND_ATTEMPTS } from "../domain/send-policy";
 import type { CreateIntentInput } from "../ports/SchedinaRepository";
 import { SchedinaOutboxService } from "../services/outbox.service";
 
@@ -148,5 +149,56 @@ describe("SchedinaOutboxService — concorrenza (claim atomico anti-doppio-invio
     const { schedina } = await repo.createIntent(intent());
     expect(await repo.claimForSending(schedina.id)).toBe(true);
     expect(await repo.claimForSending(schedina.id)).toBe(false); // già SENDING
+  });
+});
+
+describe("SchedinaOutboxService — cap dei tentativi (anti retry runaway)", () => {
+  it("una schedina con attempts ≥ MAX_SEND_ATTEMPTS NON viene più auto-inviata (resta PENDING)", async () => {
+    const repo = new InMemorySchedinaRepository();
+    const sender = new FakeAlloggiatiSender();
+    sender.setBehaviour({ mode: "all-acquired" });
+    const service = new SchedinaOutboxService(repo, sender);
+    const { schedina } = await repo.createIntent(intent());
+    repo.setAttemptsForTest(schedina.id, MAX_SEND_ATTEMPTS);
+
+    await service.processCredentialBatch(CRED);
+
+    expect(sender.calls).toHaveLength(0); // esaurita → non inviata
+    expect((await repo.findById(schedina.id, ORG))?.status).toBe(SchedinaStatus.PENDING);
+  });
+
+  it("appena sotto il cap viene ancora inviata normalmente", async () => {
+    const repo = new InMemorySchedinaRepository();
+    const sender = new FakeAlloggiatiSender();
+    sender.setBehaviour({ mode: "all-acquired" });
+    const service = new SchedinaOutboxService(repo, sender);
+    const { schedina } = await repo.createIntent(intent());
+    repo.setAttemptsForTest(schedina.id, MAX_SEND_ATTEMPTS - 1);
+
+    await service.processCredentialBatch(CRED);
+
+    expect((await repo.findById(schedina.id, ORG))?.status).toBe(SchedinaStatus.ACQUIRED);
+  });
+
+  it("ogni claim incrementa attempts di UNA sola unità (niente doppio conteggio)", async () => {
+    const repo = new InMemorySchedinaRepository();
+    const { schedina } = await repo.createIntent(intent());
+
+    await repo.claimForSending(schedina.id);
+    expect(repo.getAttemptsForTest(schedina.id)).toBe(1);
+
+    // ri-accodamento dopo un rifiuto: SENDING → REJECTED → PENDING, poi nuovo claim.
+    await repo.applyDecision(schedina.id, {
+      status: SchedinaStatus.REJECTED,
+      errorCod: "12",
+      errorDes: "Data di Arrivo Errata",
+    });
+    await repo.applyDecision(schedina.id, {
+      status: SchedinaStatus.PENDING,
+      errorCod: null,
+      errorDes: null,
+    });
+    await repo.claimForSending(schedina.id);
+    expect(repo.getAttemptsForTest(schedina.id)).toBe(2); // +1 per claim; le transizioni non contano
   });
 });

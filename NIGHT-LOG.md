@@ -11,16 +11,17 @@
 
 - **PR #26** — fix a11y combobox (`role="presentation"`) + **CIN agganciato all'export delle dichiarazioni tassa** (nuova colonna CIN nel CSV) + log notturni. (main `6d2102f`)
 - **PR #27** — `/api/health` reso pubblico: ora risponde `{"status":"ok",...}` 200 (prima 307→login). Verificato live. (main `db43b2b`)
+- **PR #29** — backend hardening: **cap max-tentativi=5** sull'outbox (niente retry runaway) + **guard sul doppio-incremento** di `attempts` (ora solo `claimForSending` lo incrementa). Non-schema, 3 test nuovi. _(in deploy)_
 
-Health-check finale OK: `/login` `/signup` `/auth/forgot` `/api/health` = 200, `/dashboard` = 307 (gated), `norma.casa` = 200.
+Health-check OK: `/login` `/signup` `/auth/forgot` `/api/health` = 200, `/dashboard` = 307 (gated), `norma.casa` = 200.
 
 **Cosa NON ho fatto e perché (onesto):**
 
-- **Design premium / dashboard / restyle**: NON spedito. Motivo di principio: **non vedo la UI renderizzata**, quindi non posso garantire che un restyle "sembri" premium; spedire alla cieca modifiche visive in produzione è irresponsabile. → Va fatto in una sessione dove puoi vedere i risultati e approvare. Nessuna PR di design aperta in questa sessione (non volevo lasciarne mezze/non verificabili).
+- **Design premium / dashboard / restyle**: NON spedito. Motivo di principio: **non vedo la UI renderizzata**, quindi non posso garantire che un restyle "sembri" premium; spedire alla cieca modifiche visive in produzione è irresponsabile. → Va fatto in una sessione dove puoi vedere i risultati e approvare.
 - **Tutte le feature con schema DB** (ISTAT, check-in self-service, residenza Guest, NEEDS_REVIEW, iCal, scheduler) → parcheggiate (no migrazioni prod senza backup garantito). Dettaglio e cosa serve da te in `NEEDS-HUMAN.md`.
-- **Non-schema rimasti spedibili in futuro** (non fatti per limiti di tempo/sessione): cap max-attempts=5 + guard doppio-incremento (backend hardening), export PDF tassa.
+- **Non-schema rimasti** (non fatti per limiti di sessione): export PDF tassa.
 
-**Rollback:** nessuno. **main sano e deployabile** a `db43b2b`. Catena commit sani: `68c556c` → `6d2102f` (#26) → `db43b2b` (#27).
+**Rollback:** nessuno. **main sano e deployabile.** Catena commit sani: `68c556c` → `6d2102f` (#26) → `db43b2b` (#27) → #28 (docs) → #29.
 
 **Prima azione consigliata al risveglio:** decidere insieme la direzione del **design/dashboard** (te lo costruisco e te lo mostro in PR, lo mergi se ti piace), e — per le feature parcheggiate — fare un **backup del DB Supabase** così posso procedere con le migrazioni.
 
@@ -44,3 +45,10 @@ Health-check finale OK: `/login` `/signup` `/auth/forgot` `/api/health` = 200, `
 - **Branch:** `fix/health-public` → PR #27
 - **Cosa:** aggiunto `/api/health` a `PUBLIC_EXACT` in `paths.ts`: l'endpoint di monitoraggio (status/uptime, nessun dato) ora risponde 200 anche senza sessione, invece di essere rediretto a /login. Scoperto durante l'health-check dell'unità 1+2. Test esteso.
 - **CI su PR #27:** verde · **Health-check:** `/api/health` = 200 (`{"status":"ok"}`) verificato live · **ONLINE:** ✅ sì — main `db43b2b`
+
+### Unità 4 — backend hardening: cap max-tentativi + guard attempts
+
+- **Branch:** `feat/outbox-max-attempts` → PR #29
+- **Cosa:** (1) `MAX_SEND_ATTEMPTS=5` (`domain/send-policy.ts`): `listPendingByCredential` esclude le schedine con `attempts ≥ 5` → non si ritentano più all'infinito, restano PENDING ma inerti (candidate a NEEDS_REVIEW, follow-up con schema). (2) Rimosso il doppio-incremento di `attempts`: ora solo `claimForSending` incrementa (la `transition()`→SENDING non tocca più `attempts`). InMemory repo ora traccia `attempts` (helper di test). 3 test nuovi.
+- **CI locale:** format ✓ · lint ✓ (0 errori) · typecheck ✓ · test 319 ✓ · build ✓
+- **CI/Health/ONLINE:** _(sotto)_
