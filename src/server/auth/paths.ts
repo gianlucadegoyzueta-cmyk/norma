@@ -1,4 +1,6 @@
-const PUBLIC_EXACT = new Set<string>(["/favicon.ico"]);
+// `/api/health` è pubblico apposta: endpoint di monitoraggio (status/uptime, niente dati), deve
+// rispondere 200 anche senza sessione per load balancer / uptime-check esterni.
+const PUBLIC_EXACT = new Set<string>(["/favicon.ico", "/api/health"]);
 // Pagine raggiungibili da SLOGGATI: login, registrazione, l'intero flusso /auth/* (recupero
 // password, "controlla email", reset, pagina d'errore di Auth.js), gli endpoint di Auth.js e gli
 // asset di Next. Sotto /auth non esistono route autenticate, quindi il prefisso è sicuro.
