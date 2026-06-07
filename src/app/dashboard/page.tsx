@@ -11,8 +11,10 @@ import {
   FileText,
   KeyRound,
   LogOut,
+  Receipt,
   ShieldAlert,
 } from "lucide-react";
+import type { SchedinaStatus } from "@prisma/client";
 import { signOut } from "@/auth";
 import { CURRENT_ORG_COOKIE, getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
@@ -45,6 +47,61 @@ export default async function DashboardPage() {
       deadlineAt: { lt: new Date() },
     },
   });
+
+  // Metriche "a colpo d'occhio" (solo letture aggregate, nessun cambio di schema/dominio).
+  const orgId = ctx.current.organizationId;
+  const [propertyCount, stayCount, schedinaByStatus, taxToSubmit] = await Promise.all([
+    prisma.property.count({ where: { organizationId: orgId } }),
+    prisma.stay.count({ where: { organizationId: orgId } }),
+    prisma.schedina.groupBy({
+      by: ["status"],
+      where: { organizationId: orgId },
+      _count: { _all: true },
+    }),
+    prisma.touristTaxDeclaration.count({
+      where: { organizationId: orgId, status: { in: ["DRAFT", "READY"] } },
+    }),
+  ]);
+  const schedinaCountBy = (s: SchedinaStatus) =>
+    schedinaByStatus.find((r) => r.status === s)?._count._all ?? 0;
+  // "Da gestire" = tutte le non-acquisite che richiedono azione (in coda o da correggere).
+  const schedineToHandle =
+    schedinaCountBy("PENDING") +
+    schedinaCountBy("SENDING") +
+    schedinaCountBy("UNVERIFIED") +
+    schedinaCountBy("REJECTED");
+  const schedineAcquired = schedinaCountBy("ACQUIRED");
+
+  const overview = [
+    {
+      label: "Schedine da gestire",
+      value: schedineToHandle,
+      sub: `${schedineAcquired} inviate`,
+      href: "/schedine",
+      Icon: FileText,
+    },
+    {
+      label: "Immobili",
+      value: propertyCount,
+      sub: cinCompliance.count > 0 ? `${cinCompliance.count} senza CIN` : "registrati",
+      href: "/properties",
+      Icon: Building2,
+    },
+    {
+      label: "Soggiorni",
+      value: stayCount,
+      sub: "registrati",
+      href: "/stays",
+      Icon: BedDouble,
+    },
+    {
+      label: "Tassa di soggiorno",
+      value: taxToSubmit,
+      sub: "da inviare",
+      href: "/tourist-tax",
+      Icon: Receipt,
+    },
+  ];
 
   const signOutAction = async () => {
     "use server";
@@ -175,6 +232,30 @@ export default async function DashboardPage() {
             </Card>
           </Link>
         )}
+
+        <section aria-labelledby="overview-heading" className="mb-8">
+          <h2 id="overview-heading" className="text-muted-foreground mb-3 text-sm font-medium">
+            A colpo d&apos;occhio
+          </h2>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {overview.map(({ label, value, sub, href, Icon }) => (
+              <Link
+                key={label}
+                href={href}
+                className="group focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
+              >
+                <Card className="h-full p-4 transition-shadow group-hover:shadow-md">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground text-xs font-medium">{label}</span>
+                    <Icon className="text-muted-foreground size-4 shrink-0" aria-hidden />
+                  </div>
+                  <p className="font-display mt-2 text-2xl font-semibold tracking-tight">{value}</p>
+                  <p className="text-muted-foreground mt-0.5 text-xs">{sub}</p>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         <section className="grid gap-4 sm:grid-cols-2">
           <Link
