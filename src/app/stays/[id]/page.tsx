@@ -196,8 +196,9 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
           <Card>
             <CardContent className="flex flex-col gap-3 py-5">
               <p className="text-muted-foreground text-sm text-pretty">
-                Genera un link da inviare all&apos;ospite: compilerà da solo i suoi dati (anche in
-                inglese, tedesco, francese o spagnolo) e li ritroverai qui tra gli ospiti.
+                Genera un link da inviare agli ospiti: ognuno inserisce i propri dati (anche in
+                inglese, tedesco, francese o spagnolo) e li ritrovi qui tra gli ospiti. Lo stesso
+                link vale per tutti gli ospiti del soggiorno.
               </p>
               <CheckinLinkButton stayId={stay.id} />
             </CardContent>

@@ -43,6 +43,7 @@ export interface CheckinMessages {
   submitting: string;
   successTitle: string;
   successBody: string;
+  addAnother: string;
   invalidTitle: string;
   invalidBody: string;
   errorGeneric: string;
@@ -75,6 +76,7 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     submitting: "Invio…",
     successTitle: "Check-in completato",
     successBody: "Grazie! I tuoi dati sono stati inviati al tuo host. Buon soggiorno.",
+    addAnother: "Aggiungi un'altra persona",
     invalidTitle: "Link non valido",
     invalidBody:
       "Questo link di check-in non è valido o è scaduto. Chiedi al tuo host un nuovo link.",
@@ -106,6 +108,7 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     submitting: "Submitting…",
     successTitle: "Check-in completed",
     successBody: "Thank you! Your details have been sent to your host. Enjoy your stay.",
+    addAnother: "Add another person",
     invalidTitle: "Invalid link",
     invalidBody: "This check-in link is invalid or has expired. Ask your host for a new link.",
     errorGeneric: "Please check the fields and try again.",
@@ -136,6 +139,7 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     submitting: "Senden…",
     successTitle: "Check-in abgeschlossen",
     successBody: "Danke! Ihre Daten wurden an Ihren Gastgeber gesendet. Schönen Aufenthalt.",
+    addAnother: "Weitere Person hinzufügen",
     invalidTitle: "Ungültiger Link",
     invalidBody:
       "Dieser Check-in-Link ist ungültig oder abgelaufen. Bitten Sie Ihren Gastgeber um einen neuen Link.",
@@ -167,6 +171,7 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     submitting: "Envoi…",
     successTitle: "Enregistrement terminé",
     successBody: "Merci ! Vos informations ont été envoyées à votre hôte. Bon séjour.",
+    addAnother: "Ajouter une autre personne",
     invalidTitle: "Lien non valide",
     invalidBody:
       "Ce lien d'enregistrement n'est pas valide ou a expiré. Demandez un nouveau lien à votre hôte.",
@@ -198,6 +203,7 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     submitting: "Enviando…",
     successTitle: "Check-in completado",
     successBody: "¡Gracias! Tus datos se han enviado a tu anfitrión. Feliz estancia.",
+    addAnother: "Añadir otra persona",
     invalidTitle: "Enlace no válido",
     invalidBody:
       "Este enlace de check-in no es válido o ha caducado. Pide a tu anfitrión un nuevo enlace.",
