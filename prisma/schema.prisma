@@ -103,6 +103,24 @@ model Organization {
   touristTaxDeclarations TouristTaxDeclaration[]
   onboardingProgress     OnboardingProgress?
   checkinTokens          CheckinToken[]
+  istatSubmissions       IstatSubmission[]
+}
+
+/// Registro degli invii ISTAT (movimento turistico): traccia che un mese è stato dichiarato, con
+/// i totali e lo snapshot delle righe al momento dell'invio. Audit-trail di compliance. Il report
+/// resta calcolato on-demand; questo è la "ricevuta" dell'avvenuta dichiarazione (1 per mese).
+model IstatSubmission {
+  id             String   @id @default(cuid())
+  organizationId String
+  period         String // "YYYY-MM"
+  arriviTotal    Int
+  presenzeTotal  Int
+  rows           Json // snapshot delle righe (provenienza/arrivi/presenze) al momento dell'invio
+  submittedAt    DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, period])
 }
 
 /// Stato "soft" del wizard di onboarding di un'Organization: i passi NON derivabili dai dati di
