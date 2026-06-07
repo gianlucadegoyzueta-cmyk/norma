@@ -12,16 +12,20 @@
 - **PR #26** — fix a11y combobox (`role="presentation"`) + **CIN agganciato all'export delle dichiarazioni tassa** (nuova colonna CIN nel CSV) + log notturni. (main `6d2102f`)
 - **PR #27** — `/api/health` reso pubblico: ora risponde `{"status":"ok",...}` 200 (prima 307→login). Verificato live. (main `db43b2b`)
 - **PR #29** — backend hardening: **cap max-tentativi=5** sull'outbox (niente retry runaway) + **guard sul doppio-incremento** di `attempts` (ora solo `claimForSending` lo incrementa). Non-schema, 3 test nuovi. ✅ online (main `26cb3d7`, health-check verde).
+- **PR #31** — **logo ufficiale Norma in tutta l'app**: il marchio reale (sigillo-monogramma `SealMark` terracotta) + "Norma" in Fraunces sostituisce il generico ShieldCheck in tutti i 7 punti; aggiunto **favicon** `app/icon.svg` (reso pubblico in paths). ✅ online (main `f19b554`, `/icon.svg`=200, health-check verde).
+- **norma-marketing PR #2** (repo separato) — **palette terracotta unica su tutta la landing** (la home era indaco/blu) + logo ufficiale in header/footer. ✅ online su **norma.casa** (main marketing `661e682`).
 
-Health-check OK: `/login` `/signup` `/auth/forgot` `/api/health` = 200, `/dashboard` = 307 (gated), `norma.casa` = 200.
+Health-check OK: `/login` `/signup` `/api/health` `/icon.svg` = 200, `/dashboard` = 307 (gated), `norma.casa` = 200.
 
 **Cosa NON ho fatto e perché (onesto):**
 
-- **Design premium / dashboard / restyle**: NON spedito. Motivo di principio: **non vedo la UI renderizzata**, quindi non posso garantire che un restyle "sembri" premium; spedire alla cieca modifiche visive in produzione è irresponsabile. → Va fatto in una sessione dove puoi vedere i risultati e approvare.
+- **Brand: FATTO e online** (logo ufficiale ovunque nell'app + palette terracotta unica su tutta la landing marketing). **Dashboard "centro compliance" e restyle premium delle singole schermate**: NON ancora fatti — vanno fatti con revisione visiva (localhost/preview) prima del prod.
 - **Tutte le feature con schema DB** (ISTAT, check-in self-service, residenza Guest, NEEDS_REVIEW, iCal, scheduler) → parcheggiate (no migrazioni prod senza backup garantito). Dettaglio e cosa serve da te in `NEEDS-HUMAN.md`.
 - **Non-schema rimasti** (non fatti per limiti di sessione): export PDF tassa.
 
-**Rollback:** nessuno. **main sano e deployabile.** Catena commit sani: `68c556c` → `6d2102f` (#26) → `db43b2b` (#27) → #28 (docs) → #29.
+**Rollback:** nessuno. **main sano e deployabile.** Catena: `68c556c` → `6d2102f` (#26) → `db43b2b` (#27) → #28 → `26cb3d7` (#29) → `f19b554` (#31 logo). Marketing main `661e682`.
+
+> Nota incidente (risolto): un commit di log nel clone di lavoro `/tmp` si è corrotto (aveva inglobato `node_modules`); il **push è stato RIFIUTATO da GitHub**, quindi origin e produzione **non sono mai stati toccati**. Recuperato con un clone fresco. Nessun impatto su main/prod.
 
 **Prima azione consigliata al risveglio:** decidere insieme la direzione del **design/dashboard** (te lo costruisco e te lo mostro in PR, lo mergi se ti piace), e — per le feature parcheggiate — fare un **backup del DB Supabase** così posso procedere con le migrazioni.
 
