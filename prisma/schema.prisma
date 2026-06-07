@@ -102,6 +102,7 @@ model Organization {
   schedine               Schedina[]
   touristTaxDeclarations TouristTaxDeclaration[]
   onboardingProgress     OnboardingProgress?
+  checkinTokens          CheckinToken[]
 }
 
 /// Stato "soft" del wizard di onboarding di un'Organization: i passi NON derivabili dai dati di
@@ -258,12 +259,31 @@ model Stay {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  property     Property     @relation(fields: [propertyId], references: [id])
-  guests       Guest[]
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  property      Property       @relation(fields: [propertyId], references: [id])
+  guests        Guest[]
+  checkinTokens CheckinToken[]
 
   @@index([organizationId])
   @@index([propertyId])
+}
+
+/// Token del link PUBBLICO di check-in self-service per un soggiorno. Stessa filosofia di
+/// PasswordResetToken: a DB solo lo SHA-256 (`tokenHash`), il valore in chiaro vive solo nell'URL
+/// dato all'ospite. A scadenza; `completedAt` lo "chiude" dopo l'invio dei dati.
+model CheckinToken {
+  id             String    @id @default(cuid())
+  organizationId String
+  stayId         String
+  tokenHash      String    @unique
+  expiresAt      DateTime
+  completedAt    DateTime? // valorizzato quando l'ospite completa il check-in
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stay         Stay         @relation(fields: [stayId], references: [id], onDelete: Cascade)
+
+  @@index([stayId])
 }
 
 /// Un Ospite è legato a UN soggiorno (niente anagrafica persistente: scelta GDPR-friendly).
