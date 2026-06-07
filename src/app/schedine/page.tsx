@@ -6,6 +6,7 @@ import type { SchedinaStatus } from "@prisma/client";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaCredentialRepository, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
+import { ReopenNeedsReviewButton } from "@/components/reopen-needs-review-button";
 import { ReopenRejectedButton } from "@/components/reopen-rejected-button";
 import { SiteHeader } from "@/components/site-header";
 import { UnverifiedNote } from "@/components/unverified-note";
@@ -35,6 +36,7 @@ const STATUS: Record<SchedinaStatus, { text: string; variant: BadgeProps["varian
   ACQUIRED: { text: "Acquisita", variant: "success" },
   REJECTED: { text: "Respinta", variant: "destructive" },
   UNVERIFIED: { text: "Da verificare", variant: "warning" },
+  NEEDS_REVIEW: { text: "Da rivedere", variant: "warning" },
 };
 
 export default async function SchedinePage() {
@@ -237,6 +239,24 @@ export default async function SchedinePage() {
                           </div>
                         )}
                         {s.status === "UNVERIFIED" && <UnverifiedNote className="mt-1" />}
+                        {s.status === "NEEDS_REVIEW" && (
+                          <div className="mt-1.5 grid gap-1.5">
+                            <p className="text-muted-foreground text-xs">
+                              Tentativi di invio esauriti: controlla i dati della schedina, poi
+                              rimettila in coda.
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              {stayIdBySchedina.get(s.id) ? (
+                                <Link href={`/stays/${stayIdBySchedina.get(s.id)}`}>
+                                  <Button variant="outline" size="sm">
+                                    Apri soggiorno
+                                  </Button>
+                                </Link>
+                              ) : null}
+                              <ReopenNeedsReviewButton schedinaId={s.id} />
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1">
                         <Badge variant={STATUS[s.status].variant}>{STATUS[s.status].text}</Badge>

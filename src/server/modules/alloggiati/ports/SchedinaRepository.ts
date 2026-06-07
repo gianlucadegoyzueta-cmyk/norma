@@ -62,4 +62,17 @@ export interface SchedinaRepository {
    * Ritorna quante righe sono state recuperate.
    */
   recoverStaleSending(credentialId: string, staleAfterMs: number): Promise<number>;
+
+  /**
+   * Parcheggia in NEEDS_REVIEW le schedine PENDING che hanno esaurito i tentativi
+   * (attempts >= maxAttempts): smettono di essere ritentate in automatico e diventano VISIBILI
+   * all'host per un intervento manuale. Ritorna quante ne sono state parcheggiate.
+   */
+  parkExhausted(credentialId: string, maxAttempts: number): Promise<number>;
+
+  /**
+   * Rimette in coda una schedina NEEDS_REVIEW (→ PENDING) AZZERANDO i tentativi, così l'host può
+   * ritentare dopo aver risolto. Isolamento garantito a monte (chiamata dopo findById per org).
+   */
+  reopenForRetry(id: string): Promise<void>;
 }

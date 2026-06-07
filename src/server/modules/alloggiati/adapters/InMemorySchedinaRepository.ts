@@ -129,6 +129,27 @@ export class InMemorySchedinaRepository implements SchedinaRepository {
     return count;
   }
 
+  async parkExhausted(credentialId: string, maxAttempts: number): Promise<number> {
+    let count = 0;
+    for (const row of this.rows.values()) {
+      if (row.credentialId !== credentialId || row.status !== SchedinaStatus.PENDING) continue;
+      if (row.attempts < maxAttempts) continue;
+      assertValidTransition(row.status, SchedinaStatus.NEEDS_REVIEW);
+      row.status = SchedinaStatus.NEEDS_REVIEW;
+      count += 1;
+    }
+    return count;
+  }
+
+  async reopenForRetry(id: string): Promise<void> {
+    const row = this.must(id);
+    assertValidTransition(row.status, SchedinaStatus.PENDING);
+    row.status = SchedinaStatus.PENDING;
+    row.attempts = 0;
+    row.errorCod = null;
+    row.errorDes = null;
+  }
+
   /** Solo test: simula un invio SENDING abbandonato impostando sentAt nel passato. */
   setSentAtForTest(id: string, sentAt: Date): void {
     this.must(id).sentAt = sentAt;

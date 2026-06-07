@@ -26,6 +26,11 @@ describe("transizioni di stato dell'outbox — valide", () => {
     expect(isValidTransition(UNVERIFIED, ACQUIRED)).toBe(true);
     expect(isValidTransition(UNVERIFIED, PENDING)).toBe(true);
   });
+
+  it("parcheggio: PENDING → NEEDS_REVIEW; rimessa in coda: NEEDS_REVIEW → PENDING", () => {
+    expect(isValidTransition(PENDING, SchedinaStatus.NEEDS_REVIEW)).toBe(true);
+    expect(isValidTransition(SchedinaStatus.NEEDS_REVIEW, PENDING)).toBe(true);
+  });
 });
 
 describe("transizioni di stato dell'outbox — invalide", () => {
@@ -44,6 +49,14 @@ describe("transizioni di stato dell'outbox — invalide", () => {
 
   it("da SENDING non si torna a PENDING direttamente", () => {
     expect(isValidTransition(SENDING, PENDING)).toBe(false);
+  });
+
+  it("NEEDS_REVIEW esce SOLO verso PENDING; non vi si salta da SENDING", () => {
+    const { NEEDS_REVIEW } = SchedinaStatus;
+    expect(isValidTransition(NEEDS_REVIEW, SENDING)).toBe(false);
+    expect(isValidTransition(NEEDS_REVIEW, ACQUIRED)).toBe(false);
+    expect(isValidTransition(NEEDS_REVIEW, REJECTED)).toBe(false);
+    expect(isValidTransition(SENDING, NEEDS_REVIEW)).toBe(false);
   });
 
   it("assertValidTransition lancia InvalidTransitionError sulle transizioni illegali", () => {

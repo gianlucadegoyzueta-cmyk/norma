@@ -7,11 +7,14 @@ import type { SendAttempt } from "./types";
  * non si può "tornare indietro" da un'acquisizione (su Alloggiati è irreversibile).
  */
 const ALLOWED: Record<SchedinaStatus, readonly SchedinaStatus[]> = {
-  PENDING: [SchedinaStatus.SENDING],
+  // Da PENDING: invio normale, OPPURE parcheggio in NEEDS_REVIEW se i tentativi sono esauriti.
+  PENDING: [SchedinaStatus.SENDING, SchedinaStatus.NEEDS_REVIEW],
   SENDING: [SchedinaStatus.ACQUIRED, SchedinaStatus.REJECTED, SchedinaStatus.UNVERIFIED],
   ACQUIRED: [], // terminale: l'acquisizione è IRREVERSIBILE
   REJECTED: [SchedinaStatus.PENDING], // dopo la correzione si ri-accoda
   UNVERIFIED: [SchedinaStatus.ACQUIRED, SchedinaStatus.PENDING], // dopo la riconciliazione T+1
+  // Esauriti i tentativi automatici: l'host risolve e la rimette in coda (con reset dei tentativi).
+  NEEDS_REVIEW: [SchedinaStatus.PENDING],
 };
 
 export function isValidTransition(from: SchedinaStatus, to: SchedinaStatus): boolean {

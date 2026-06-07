@@ -1,5 +1,6 @@
 import { SchedinaStatus } from "@prisma/client";
 import { assertValidTransition, decideFromSendAttempt } from "../domain/transitions";
+import { MAX_SEND_ATTEMPTS } from "../domain/send-policy";
 import { SENDING_STALE_MS } from "../domain/sending-stale";
 import type { SendAttempt } from "../domain/types";
 import type { AlloggiatiSender, SendRow, SendRowResult } from "../ports/AlloggiatiSender";
@@ -40,6 +41,9 @@ export class SchedinaOutboxService {
 
   async processCredentialBatch(credentialId: string): Promise<void> {
     await this.repo.recoverStaleSending(credentialId, SENDING_STALE_MS);
+    // Parcheggia in NEEDS_REVIEW le PENDING che hanno esaurito i tentativi: diventano esplicite per
+    // l'host invece di restare PENDING-inerti. listPendingByCredential le esclude comunque (cap).
+    await this.repo.parkExhausted(credentialId, MAX_SEND_ATTEMPTS);
 
     const pending = await this.repo.listPendingByCredential(credentialId);
     if (pending.length === 0) return;

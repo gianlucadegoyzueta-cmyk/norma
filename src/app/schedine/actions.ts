@@ -203,6 +203,40 @@ export async function reopenRejectedAction(
   return { ok: true, message: "Rimessa in coda: ora è di nuovo da inviare." };
 }
 
+/**
+ * Rimette in coda una schedina NEEDS_REVIEW (esaurita i tentativi automatici): l'host ha risolto il
+ * problema → la riga torna PENDING con i tentativi AZZERATI, così riparte pulita.
+ */
+export async function reopenNeedsReviewAction(
+  _prev: OutboxResult | null,
+  formData: FormData,
+): Promise<OutboxResult> {
+  const ctx = await getCurrentContext();
+  if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+
+  const schedinaId = String(formData.get("schedinaId") ?? "").trim();
+  if (!schedinaId) return { ok: false, message: "Schedina non indicata." };
+
+  const schedinaRepo = new PrismaSchedinaRepository(prisma);
+  const found = await schedinaRepo.findById(schedinaId, ctx.current.organizationId);
+  if (!found) return { ok: false, message: "Schedina non trovata per questa organizzazione." };
+  if (found.status !== "NEEDS_REVIEW") {
+    return { ok: false, message: "Solo le schedine da rivedere si possono rimettere in coda." };
+  }
+
+  try {
+    await schedinaRepo.reopenForRetry(schedinaId);
+  } catch (err) {
+    return {
+      ok: false,
+      message: `Impossibile rimettere in coda: ${err instanceof Error ? err.message : "errore inatteso"}.`,
+    };
+  }
+
+  revalidatePath("/schedine");
+  return { ok: true, message: "Rimessa in coda: tentativi azzerati, di nuovo da inviare." };
+}
+
 /** Data in fuso Europe/Rome come "YYYY-MM-DD". */
 function romeDateIso(d: Date): string {
   return new Intl.DateTimeFormat("en-CA", {

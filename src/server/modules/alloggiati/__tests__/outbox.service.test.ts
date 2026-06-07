@@ -164,7 +164,27 @@ describe("SchedinaOutboxService — cap dei tentativi (anti retry runaway)", () 
     await service.processCredentialBatch(CRED);
 
     expect(sender.calls).toHaveLength(0); // esaurita → non inviata
+    // ...e resa ESPLICITA: parcheggiata in NEEDS_REVIEW (non più PENDING-inerte silenziosa).
+    expect((await repo.findById(schedina.id, ORG))?.status).toBe(SchedinaStatus.NEEDS_REVIEW);
+  });
+
+  it("NEEDS_REVIEW → reopen azzera i tentativi e la rimette in coda → torna inviabile", async () => {
+    const repo = new InMemorySchedinaRepository();
+    const sender = new FakeAlloggiatiSender();
+    sender.setBehaviour({ mode: "all-acquired" });
+    const service = new SchedinaOutboxService(repo, sender);
+    const { schedina } = await repo.createIntent(intent());
+    repo.setAttemptsForTest(schedina.id, MAX_SEND_ATTEMPTS);
+
+    await service.processCredentialBatch(CRED); // → NEEDS_REVIEW
+    expect((await repo.findById(schedina.id, ORG))?.status).toBe(SchedinaStatus.NEEDS_REVIEW);
+
+    await repo.reopenForRetry(schedina.id);
+    expect(repo.getAttemptsForTest(schedina.id)).toBe(0);
     expect((await repo.findById(schedina.id, ORG))?.status).toBe(SchedinaStatus.PENDING);
+
+    await service.processCredentialBatch(CRED); // ora viene inviata
+    expect((await repo.findById(schedina.id, ORG))?.status).toBe(SchedinaStatus.ACQUIRED);
   });
 
   it("appena sotto il cap viene ancora inviata normalmente", async () => {
