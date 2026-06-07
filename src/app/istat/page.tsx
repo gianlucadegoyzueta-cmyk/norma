@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentContext } from "@/server/auth/session";
+import { prisma } from "@/server/db";
 import { currentPeriod, loadIstatReport } from "@/server/modules/istat/report";
 import { SiteHeader } from "@/components/site-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { IstatExportButton } from "./IstatExportButton";
+import { IstatSubmitButton } from "./IstatSubmitButton";
 
 export const metadata: Metadata = { title: "ISTAT" };
 export const dynamic = "force-dynamic";
@@ -29,6 +31,13 @@ export default async function IstatPage({
     ctx.current.organizationId,
     period,
   );
+  const submission = await prisma.istatSubmission.findUnique({
+    where: { organizationId_period: { organizationId: ctx.current.organizationId, period } },
+    select: { submittedAt: true },
+  });
+  const submittedLabel = submission
+    ? new Intl.DateTimeFormat("it-IT", { dateStyle: "medium" }).format(submission.submittedAt)
+    : null;
 
   return (
     <div className="min-h-dvh">
@@ -65,7 +74,14 @@ export default async function IstatPage({
               Mostra
             </Button>
           </form>
-          <IstatExportButton period={period} disabled={report.rows.length === 0} />
+          <div className="flex flex-wrap items-center gap-2">
+            <IstatExportButton period={period} disabled={report.rows.length === 0} />
+            <IstatSubmitButton
+              period={period}
+              submittedLabel={submittedLabel}
+              disabled={report.rows.length === 0}
+            />
+          </div>
         </div>
 
         {report.rows.length === 0 ? (
