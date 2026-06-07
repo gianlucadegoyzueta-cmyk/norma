@@ -2,9 +2,9 @@
 // rispondere 200 anche senza sessione per load balancer / uptime-check esterni.
 const PUBLIC_EXACT = new Set<string>(["/favicon.ico", "/icon.svg", "/api/health"]);
 // Pagine raggiungibili da SLOGGATI: login, registrazione, l'intero flusso /auth/* (recupero
-// password, "controlla email", reset, pagina d'errore di Auth.js), gli endpoint di Auth.js e gli
-// asset di Next. Sotto /auth non esistono route autenticate, quindi il prefisso è sicuro.
-const PUBLIC_PREFIXES = ["/login", "/signup", "/auth", "/api/auth", "/_next"];
+// password, "controlla email", reset, pagina d'errore di Auth.js), il CHECK-IN ospite self-service
+// (/checkin/[token], link pubblico), gli endpoint di Auth.js e gli asset di Next.
+const PUBLIC_PREFIXES = ["/login", "/signup", "/auth", "/checkin", "/api/auth", "/_next"];
 
 /**
  * True se la route è PUBBLICA (non richiede autenticazione): login/registrazione, il flusso auth

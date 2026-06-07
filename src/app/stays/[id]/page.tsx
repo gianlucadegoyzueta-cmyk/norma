@@ -20,6 +20,7 @@ import { SiteHeader } from "@/components/site-header";
 import { UnverifiedNote } from "@/components/unverified-note";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CheckinLinkButton } from "./CheckinLinkButton";
 import { GenerateSchedineButton } from "./GenerateSchedineButton";
 import { GuestPartyForm } from "./GuestPartyForm";
 import { TouristTaxCard } from "./TouristTaxCard";
@@ -188,6 +189,20 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
             {stay.isShortStay && <span>· breve (≤24h)</span>}
           </p>
         </div>
+
+        {/* Check-in online: link pubblico da inviare all'ospite perché inserisca i propri dati. */}
+        <section className="mb-8">
+          <h2 className="text-muted-foreground mb-3 text-sm font-medium">Check-in online</h2>
+          <Card>
+            <CardContent className="flex flex-col gap-3 py-5">
+              <p className="text-muted-foreground text-sm text-pretty">
+                Genera un link da inviare all&apos;ospite: compilerà da solo i suoi dati (anche in
+                inglese, tedesco, francese o spagnolo) e li ritroverai qui tra gli ospiti.
+              </p>
+              <CheckinLinkButton stayId={stay.id} />
+            </CardContent>
+          </Card>
+        </section>
 
         {/* Ospiti già inseriti */}
         <section className="mb-8">

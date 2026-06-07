@@ -17,6 +17,7 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/auth/forgot")).toBe(true);
     expect(isPublicPath("/auth/reset")).toBe(true);
     expect(isPublicPath("/auth/error")).toBe(true);
+    expect(isPublicPath("/checkin/abc123")).toBe(true);
   });
 
   it("considera protette le altre route", () => {
