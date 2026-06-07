@@ -146,6 +146,30 @@ function PersonFields({
         {fieldError("citizenshipId")}
       </div>
 
+      {/* Residenza (provenienza) — facoltativa: usata da ISTAT e dal check-in, non da Alloggiati. */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-1.5">
+          <Label htmlFor={f("residenceCountryId")}>Stato di residenza (facoltativo)</Label>
+          <Select id={f("residenceCountryId")} name={f("residenceCountryId")} defaultValue="">
+            <option value="">Non specificato</option>
+            {countries.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor={`${f("residenceComuneId")}-cb`}>Comune di residenza (se in Italia)</Label>
+          <ComboBox
+            id={`${f("residenceComuneId")}-cb`}
+            name={f("residenceComuneId")}
+            options={comuni}
+            placeholder="Solo se residente in Italia"
+          />
+        </div>
+      </div>
+
       {withDocument && (
         <div className="border-border grid gap-3 rounded-md border border-dashed p-3">
           <p className="text-muted-foreground text-xs font-medium">

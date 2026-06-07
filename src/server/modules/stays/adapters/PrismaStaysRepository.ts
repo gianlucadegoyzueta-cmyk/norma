@@ -70,6 +70,8 @@ export class PrismaStaysRepository implements StaysRepository {
             birthCountryId: data.birthCountryId,
             birthComuneId: data.birthComuneId ?? null,
             citizenshipId: data.citizenshipId,
+            residenceCountryId: data.residenceCountryId ?? null,
+            residenceComuneId: data.residenceComuneId ?? null,
             documentTypeId: data.documentTypeId ?? null,
             documentNumber: data.documentNumber ?? null,
             documentPlaceId: data.documentPlaceId ?? null,

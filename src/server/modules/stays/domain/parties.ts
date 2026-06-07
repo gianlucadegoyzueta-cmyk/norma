@@ -12,6 +12,9 @@ export interface GuestData {
   birthCountryId: string;
   citizenshipId: string;
   birthComuneId?: string | null;
+  // Residenza (provenienza) — opzionale, per ISTAT/check-in. Non usata da Alloggiati.
+  residenceCountryId?: string | null;
+  residenceComuneId?: string | null;
   documentTypeId?: string | null;
   documentNumber?: string | null;
   documentPlaceId?: string | null;
