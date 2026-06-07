@@ -7,7 +7,9 @@ import { periodLabel } from "@/server/modules/tourist-tax/domain/period";
 import { formatEuroCents } from "@/server/modules/tourist-tax/services/estimate.service";
 import { SiteHeader } from "@/components/site-header";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { Receipt } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { BuildDeclarationForm } from "./BuildDeclarationForm";
 import { DeclarationActions } from "./DeclarationActions";
 
@@ -70,9 +72,11 @@ export default async function TouristTaxPage() {
           <h2 className="text-muted-foreground mb-3 text-sm font-medium">Dichiarazioni</h2>
           {declarations.length === 0 ? (
             <Card>
-              <CardContent className="text-muted-foreground py-8 text-center text-sm">
-                Nessuna dichiarazione. Calcola la prima scegliendo comune e periodo qui sopra.
-              </CardContent>
+              <EmptyState
+                icon={Receipt}
+                title="Nessuna dichiarazione ancora"
+                description="Calcola la prima scegliendo comune e periodo qui sopra: otterrai importo, export e modalità di versamento."
+              />
             </Card>
           ) : (
             <ul className="grid gap-3">

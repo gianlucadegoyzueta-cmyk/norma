@@ -4,7 +4,9 @@ import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { currentPeriod, loadIstatReport } from "@/server/modules/istat/report";
 import { SiteHeader } from "@/components/site-header";
+import { BarChart3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { IstatExportButton } from "./IstatExportButton";
@@ -86,9 +88,11 @@ export default async function IstatPage({
 
         {report.rows.length === 0 ? (
           <Card>
-            <CardContent className="text-muted-foreground py-10 text-center text-sm">
-              Nessun movimento turistico per questo mese.
-            </CardContent>
+            <EmptyState
+              icon={BarChart3}
+              title="Nessun movimento per questo mese"
+              description="Quando registri soggiorni con arrivo nel mese scelto, qui vedrai arrivi e presenze per provenienza, pronti da riportare."
+            />
           </Card>
         ) : (
           <Card>
