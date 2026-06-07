@@ -21,7 +21,7 @@ export function mapAlloggiatiError(cod: string | null, des: string | null): stri
   if (cod && ERROR_MESSAGES[cod]) return ERROR_MESSAGES[cod];
   const raw = des?.trim();
   if (raw) return raw;
-  return "Il portale ha respinto la schedina senza dettagli. Verifica con Test e riprova.";
+  return "Il portale ha respinto la schedina ma non ha indicato il motivo. Usa il Test qui sopra per capire cosa correggere, poi rimettila in coda.";
 }
 
 /** True se il codice ha un messaggio azionabile mappato (utile per evidenziare il suggerimento). */

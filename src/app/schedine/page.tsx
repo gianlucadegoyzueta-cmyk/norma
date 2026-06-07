@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertTriangle, ArrowLeft, FileText } from "lucide-react";
+import { AlertTriangle, FileText } from "lucide-react";
 import type { SchedinaStatus } from "@prisma/client";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
@@ -13,6 +13,7 @@ import { UnverifiedNote } from "@/components/unverified-note";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 import { isOverdue } from "@/lib/schedina-status";
 import { cn } from "@/lib/utils";
 import { CredentialOutboxControls } from "./CredentialOutboxControls";
@@ -100,23 +101,20 @@ export default async function SchedinePage() {
         tabIndex={-1}
         className="mx-auto w-full max-w-3xl px-4 py-8 outline-none sm:px-6 sm:py-10"
       >
-        <Link
-          href="/dashboard"
-          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
-        >
-          <ArrowLeft className="size-4" />
-          Dashboard
-        </Link>
-
-        <div className="mb-6">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Schedine</h1>
-          <p className="text-muted-foreground mt-2 max-w-prose text-sm">
-            L&apos;outbox degli invii ad Alloggiati di{" "}
-            <strong className="text-foreground">{ctx.current.organizationName}</strong>. Ordinate
-            per scadenza (le più urgenti in cima). L&apos;invio è <strong>irreversibile</strong>:
-            una schedina acquisita non si può cancellare.
-          </p>
-        </div>
+        <PageHeader
+          backHref="/dashboard"
+          backLabel="Dashboard"
+          title="Schedine"
+          description={
+            <>
+              Gli invii ad Alloggiati di{" "}
+              <strong className="text-foreground">{ctx.current.organizationName}</strong>, in ordine
+              di scadenza (le più urgenti in cima). L&apos;invio è{" "}
+              <strong className="text-foreground">irreversibile</strong>: una schedina acquisita non
+              si può cancellare.
+            </>
+          }
+        />
 
         {schedine.length > 0 && (
           <div className="mb-6 flex flex-wrap gap-2">
