@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import {
   AlertTriangle,
   ArrowRight,
+  BarChart3,
   BedDouble,
   Building2,
   ChevronRight,
@@ -348,6 +349,29 @@ export default async function DashboardPage() {
                 <CardDescription>
                   L&apos;outbox degli invii: stato delle schedine e scadenze, le più urgenti in
                   cima.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          <Link
+            href="/istat"
+            className="group focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
+          >
+            <Card className="h-full transition-shadow group-hover:shadow-md">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
+                    <BarChart3 className="size-5" aria-hidden />
+                  </span>
+                  <ChevronRight
+                    aria-hidden
+                    className="text-muted-foreground size-5 transition-transform group-hover:translate-x-0.5"
+                  />
+                </div>
+                <CardTitle className="mt-2">ISTAT</CardTitle>
+                <CardDescription>
+                  Movimento turistico del mese: arrivi e presenze per provenienza, con export.
                 </CardDescription>
               </CardHeader>
             </Card>
