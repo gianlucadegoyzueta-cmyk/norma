@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import {
   changeDeclarationStatusAction,
+  prepareDeclarationPdfAction,
   prepareRemittanceAction,
   setRemittanceModeAction,
 } from "./actions";
@@ -41,14 +42,22 @@ export function DeclarationActions({
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
 
-  function download(filename: string, mimeType: string, content: string) {
-    const blob = new Blob([content], { type: mimeType });
+  function triggerDownload(blob: Blob, filename: string) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  function download(filename: string, mimeType: string, content: string) {
+    triggerDownload(new Blob([content], { type: mimeType }), filename);
+  }
+
+  function downloadBase64(filename: string, base64: string, mimeType: string) {
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    triggerDownload(new Blob([bytes], { type: mimeType }), filename);
   }
 
   function onExport() {
@@ -60,6 +69,15 @@ export function DeclarationActions({
       if (r.kind === "EXPORT_READY") download(r.filename, r.mimeType, r.content);
       else if (r.kind === "REDIRECT") window.open(r.url, "_blank", "noopener");
       else setMsg(r.message); // NOT_IMPLEMENTED → spiega che si usa l'export manuale
+    });
+  }
+
+  function onExportPdf() {
+    setMsg(null);
+    start(async () => {
+      const res = await prepareDeclarationPdfAction(id);
+      if (!res.ok) return setMsg(res.error);
+      downloadBase64(res.filename, res.base64, "application/pdf");
     });
   }
 
@@ -101,6 +119,9 @@ export function DeclarationActions({
         </Select>
         <Button type="button" size="sm" variant="outline" onClick={onExport} disabled={pending}>
           Esporta CSV
+        </Button>
+        <Button type="button" size="sm" variant="outline" onClick={onExportPdf} disabled={pending}>
+          Esporta PDF
         </Button>
         {NEXT[status].map((t) => (
           <Button

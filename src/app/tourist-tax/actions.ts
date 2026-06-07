@@ -7,6 +7,7 @@ import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { cinForDeclarationExport } from "@/server/modules/cin/domain/cin";
 import { periodLabel } from "@/server/modules/tourist-tax/domain/period";
+import { toDeclarationPdf } from "@/server/modules/tourist-tax/domain/export-pdf";
 import { PrismaTouristTaxConfigRepository } from "@/server/modules/tourist-tax/adapters/PrismaTouristTaxConfigRepository";
 import { PrismaTouristTaxDeclarationRepository } from "@/server/modules/tourist-tax/adapters/PrismaTouristTaxDeclarationRepository";
 import { TouristTaxDeclarationService } from "@/server/modules/tourist-tax/services/declaration.service";
@@ -77,19 +78,15 @@ export async function setRemittanceModeAction(formData: FormData) {
 }
 
 /**
- * Prepara il versamento secondo la modalità salvata: per MANUAL_EXPORT ritorna il CSV (contenuto +
- * filename) da scaricare; per i canali stub ritorna NOT_IMPLEMENTED.
+ * Carica i dati di export di una dichiarazione (intestazione + righe con CIN per immobile).
+ * Condiviso da export CSV (canale di versamento) ed export PDF. Nessun cambio di schema:
+ * Property.cin esiste già; il CIN è risolto per riga solo se conforme (cinForDeclarationExport).
+ * Ritorna null se la dichiarazione non esiste per questa organizzazione.
  */
-export async function prepareRemittanceAction(
-  declarationId: string,
-): Promise<{ ok: true; result: RemittanceResult } | { ok: false; error: string }> {
-  const ctx = await getCurrentContext();
-  if (!ctx) redirect("/login");
-  const orgId = ctx.current.organizationId;
-
+async function loadDeclarationExport(declarationId: string, orgId: string) {
   const declRepo = new PrismaTouristTaxDeclarationRepository(prisma);
   const decl = await declRepo.getDeclaration(declarationId, orgId);
-  if (!decl) return { ok: false, error: "Dichiarazione non trovata" };
+  if (!decl) return null;
 
   const comune = await prisma.comune.findUnique({
     where: { id: decl.comuneId },
@@ -97,9 +94,6 @@ export async function prepareRemittanceAction(
   });
   const lines = await declRepo.getDeclarationLines(declarationId, orgId);
 
-  // CIN per riga: ogni riga è un soggiorno → immobile. Risolviamo il CIN dell'immobile (solo se
-  // conforme, via cinForDeclarationExport) tramite una mappa stayId → cin. Nessun cambio di schema:
-  // Property.cin esiste già; qui lo leggiamo e basta.
   const stays = await prisma.stay.findMany({
     where: { id: { in: lines.map((l) => l.stayId) }, organizationId: orgId },
     select: { id: true, property: { select: { cin: true, cinStatus: true } } },
@@ -111,22 +105,66 @@ export async function prepareRemittanceAction(
     ]),
   );
 
-  const channel = resolveRemittanceChannel(decl.remittanceMode);
+  const exportData = {
+    comuneName: comune?.name ?? decl.comuneId,
+    periodLabel: periodLabel(decl.period),
+    totalCents: decl.amountCents,
+    lines: lines.map((l) => ({
+      propertyName: l.propertyName,
+      cin: cinByStay.get(l.stayId) ?? null,
+      stayId: l.stayId,
+      taxedNights: l.taxedNights,
+      amountCents: l.amountCents,
+    })),
+  };
+  return { decl, exportData };
+}
+
+/** Nome file sicuro per gli export, es. `tassa-soggiorno_roma_maggio-2026`. */
+function exportBasename(comuneName: string, period: string): string {
+  const safe = (s: string) => s.replace(/\s+/g, "_").toLowerCase();
+  return `tassa-soggiorno_${safe(comuneName)}_${safe(period)}`;
+}
+
+/**
+ * Prepara il versamento secondo la modalità salvata: per MANUAL_EXPORT ritorna il CSV (contenuto +
+ * filename) da scaricare; per i canali stub ritorna NOT_IMPLEMENTED.
+ */
+export async function prepareRemittanceAction(
+  declarationId: string,
+): Promise<{ ok: true; result: RemittanceResult } | { ok: false; error: string }> {
+  const ctx = await getCurrentContext();
+  if (!ctx) redirect("/login");
+  const orgId = ctx.current.organizationId;
+
+  const loaded = await loadDeclarationExport(declarationId, orgId);
+  if (!loaded) return { ok: false, error: "Dichiarazione non trovata" };
+
+  const channel = resolveRemittanceChannel(loaded.decl.remittanceMode);
   const result = await channel.prepare({
     declarationId,
     organizationId: orgId,
-    exportData: {
-      comuneName: comune?.name ?? decl.comuneId,
-      periodLabel: periodLabel(decl.period),
-      totalCents: decl.amountCents,
-      lines: lines.map((l) => ({
-        propertyName: l.propertyName,
-        cin: cinByStay.get(l.stayId) ?? null,
-        stayId: l.stayId,
-        taxedNights: l.taxedNights,
-        amountCents: l.amountCents,
-      })),
-    },
+    exportData: loaded.exportData,
   });
   return { ok: true, result };
+}
+
+/**
+ * Genera il PDF della dichiarazione (sempre disponibile, indipendente dalla modalità di versamento):
+ * ritorna i byte come base64 + filename, che il client scarica come file .pdf.
+ */
+export async function prepareDeclarationPdfAction(
+  declarationId: string,
+): Promise<{ ok: true; filename: string; base64: string } | { ok: false; error: string }> {
+  const ctx = await getCurrentContext();
+  if (!ctx) redirect("/login");
+  const orgId = ctx.current.organizationId;
+
+  const loaded = await loadDeclarationExport(declarationId, orgId);
+  if (!loaded) return { ok: false, error: "Dichiarazione non trovata" };
+
+  const bytes = await toDeclarationPdf(loaded.exportData);
+  const base64 = Buffer.from(bytes).toString("base64");
+  const filename = `${exportBasename(loaded.exportData.comuneName, loaded.exportData.periodLabel)}.pdf`;
+  return { ok: true, filename, base64 };
 }
