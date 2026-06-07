@@ -128,18 +128,18 @@ model OnboardingProgress {
 /// `passwordHash` è null per gli utenti che NON usano la password (solo magic link / OAuth):
 /// è il discriminante usato dal provider Credentials per rifiutare gentilmente quei login.
 model User {
-  id            String       @id @default(cuid())
-  email         String       @unique
-  name          String?
-  emailVerified DateTime?
-  image         String?
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  name                String?
+  emailVerified       DateTime?
+  image               String?
   /// Hash bcrypt della password (mai in chiaro, mai loggato). Null = utente senza password.
-  passwordHash  String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  memberships   Membership[]
-  accounts      Account[]
-  sessions      Session[]
+  passwordHash        String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  memberships         Membership[]
+  accounts            Account[]
+  sessions            Session[]
   passwordResetTokens PasswordResetToken[]
 }
 
@@ -147,12 +147,12 @@ model User {
 /// (gestito da Auth.js per i magic link): qui controlliamo noi ciclo di vita e revoca.
 /// `tokenHash` = SHA-256 del token spedito via email: a DB non c'è mai il token in chiaro.
 model PasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  tokenHash String   @unique
+  tokenHash String    @unique
   expires   DateTime
   usedAt    DateTime? // valorizzato al primo uso → monouso
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -285,6 +285,12 @@ model Guest {
   birthComuneId  String? // Comune di nascita — solo se Stato = Italia
   citizenshipId  String // cittadinanza — sempre obbligatoria
 
+  // Residenza (PROVENIENZA) — usata da ISTAT (arrivi/presenze per provenienza) e dal check-in.
+  // Additiva e OPZIONALE: non serve ad Alloggiati (basato sulla nascita); raccolta dove disponibile,
+  // con fallback approssimato lato ISTAT finché non è valorizzata. residenceComuneId solo se Italia.
+  residenceCountryId String? // Stato di residenza
+  residenceComuneId  String? // Comune di residenza (solo se residenza in Italia)
+
   documentTypeId  String? // documento: obbligatorio solo per 16/17/18
   documentNumber  String?
   documentPlaceId String? // luogo di rilascio (Stato o Comune)
@@ -300,15 +306,17 @@ model Guest {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  stay         Stay          @relation(fields: [stayId], references: [id], onDelete: Cascade)
-  leader       Guest?        @relation("GuestGroup", fields: [leaderId], references: [id])
-  members      Guest[]       @relation("GuestGroup")
-  birthCountry Country       @relation("GuestBirthCountry", fields: [birthCountryId], references: [id])
-  birthComune  Comune?       @relation("GuestBirthComune", fields: [birthComuneId], references: [id])
-  citizenship  Country       @relation("GuestCitizenship", fields: [citizenshipId], references: [id])
-  documentType DocumentType? @relation(fields: [documentTypeId], references: [id])
-  schedina     Schedina?
+  organization     Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stay             Stay          @relation(fields: [stayId], references: [id], onDelete: Cascade)
+  leader           Guest?        @relation("GuestGroup", fields: [leaderId], references: [id])
+  members          Guest[]       @relation("GuestGroup")
+  birthCountry     Country       @relation("GuestBirthCountry", fields: [birthCountryId], references: [id])
+  birthComune      Comune?       @relation("GuestBirthComune", fields: [birthComuneId], references: [id])
+  citizenship      Country       @relation("GuestCitizenship", fields: [citizenshipId], references: [id])
+  documentType     DocumentType? @relation(fields: [documentTypeId], references: [id])
+  residenceCountry Country?      @relation("GuestResidenceCountry", fields: [residenceCountryId], references: [id])
+  residenceComune  Comune?       @relation("GuestResidenceComune", fields: [residenceComuneId], references: [id])
+  schedina         Schedina?
 
   @@index([organizationId])
   @@index([stayId])
@@ -386,6 +394,7 @@ model Comune {
 
   properties             Property[]
   guestsBirth            Guest[]                 @relation("GuestBirthComune")
+  guestsResidence        Guest[]                 @relation("GuestResidenceComune")
   touristTaxConfigs      TouristTaxConfig[] // 1:N — versioni tariffarie nel tempo
   touristTaxDeclarations TouristTaxDeclaration[]
 }
@@ -397,6 +406,7 @@ model Country {
 
   guestsBirth       Guest[] @relation("GuestBirthCountry")
   guestsCitizenship Guest[] @relation("GuestCitizenship")
+  guestsResidence   Guest[] @relation("GuestResidenceCountry")
 }
 
 model DocumentType {
