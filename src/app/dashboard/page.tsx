@@ -25,6 +25,8 @@ import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SealMark } from "@/components/ui/seal-mark";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { OPEN_SCHEDINA_STATUSES } from "@/lib/schedina-status";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -140,12 +142,32 @@ export default async function DashboardPage() {
           </div>
         </div>
 
+        {/* Stato emotivo del cruscotto: quando non c'è nulla di urgente, RASSICURA esplicitamente. */}
+        {overdueCount === 0 && onboarding.ready && cinCompliance.count === 0 && (
+          <Card variant="success" className="mb-6">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <SealMark className="text-success size-9 shrink-0" />
+                <div className="min-w-0">
+                  <CardTitle className="text-base">Tutto in regola</CardTitle>
+                  <CardDescription className="mt-1">
+                    Nessuna scadenza urgente.{" "}
+                    {schedineToHandle > 0
+                      ? `Hai ${schedineToHandle} ${schedineToHandle === 1 ? "schedina" : "schedine"} in coda, nessuna oltre i termini.`
+                      : "Sei in pari con gli adempimenti."}
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+        )}
+
         {overdueCount > 0 && (
           <Link
             href="/schedine"
             className="group focus-visible:ring-ring mb-6 block rounded-xl outline-none focus-visible:ring-2"
           >
-            <Card className="border-destructive/40 bg-destructive/5 transition-shadow hover:shadow-md">
+            <Card className="border-destructive/40 bg-destructive/5 hover:shadow-card-hover transition-shadow">
               <CardHeader>
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex min-w-0 items-center gap-3">
@@ -158,8 +180,8 @@ export default async function DashboardPage() {
                         {overdueCount === 1 ? "schedina oltre scadenza" : "schedine oltre scadenza"}
                       </CardTitle>
                       <CardDescription className="mt-1">
-                        Vanno gestite subito: una comunicazione tardiva ad Alloggiati è una
-                        violazione.
+                        Conviene gestirle ora: la comunicazione ad Alloggiati va fatta entro 24h
+                        dall&apos;arrivo. Si possono ancora inviare — apri per procedere.
                       </CardDescription>
                     </div>
                   </div>
@@ -178,7 +200,7 @@ export default async function DashboardPage() {
 
         {!onboarding.ready && (
           <Link href="/onboarding" className="group mb-6 block">
-            <Card className="border-primary/40 bg-primary/3 transition-shadow hover:shadow-md">
+            <Card className="border-primary/40 bg-primary/3 hover:shadow-card-hover transition-shadow">
               <CardHeader>
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
@@ -209,7 +231,7 @@ export default async function DashboardPage() {
 
         {cinCompliance.count > 0 && (
           <Link href="/properties" className="group mb-6 block">
-            <Card className="border-warning/50 bg-warning/5 transition-shadow hover:shadow-md">
+            <Card className="border-warning/50 bg-warning/5 hover:shadow-card-hover transition-shadow">
               <CardHeader>
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
@@ -234,10 +256,8 @@ export default async function DashboardPage() {
           </Link>
         )}
 
-        <section aria-labelledby="overview-heading" className="mb-8">
-          <h2 id="overview-heading" className="text-muted-foreground mb-3 text-sm font-medium">
-            A colpo d&apos;occhio
-          </h2>
+        <section className="mb-8">
+          <SectionHeading>A colpo d&apos;occhio</SectionHeading>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {overview.map(({ label, value, sub, href, Icon }) => (
               <Link
@@ -245,7 +265,7 @@ export default async function DashboardPage() {
                 href={href}
                 className="group focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
               >
-                <Card className="h-full p-4 transition-shadow group-hover:shadow-md">
+                <Card className="group-hover:shadow-card-hover h-full p-4 transition-shadow">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground text-xs font-medium">{label}</span>
                     <Icon className="text-muted-foreground size-4 shrink-0" aria-hidden />
@@ -263,7 +283,7 @@ export default async function DashboardPage() {
             href="/credentials"
             className="group focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
           >
-            <Card className="h-full transition-shadow group-hover:shadow-md">
+            <Card className="group-hover:shadow-card-hover h-full transition-shadow">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
@@ -287,7 +307,7 @@ export default async function DashboardPage() {
             href="/properties"
             className="group focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
           >
-            <Card className="h-full transition-shadow group-hover:shadow-md">
+            <Card className="group-hover:shadow-card-hover h-full transition-shadow">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
@@ -311,7 +331,7 @@ export default async function DashboardPage() {
             href="/stays"
             className="group focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
           >
-            <Card className="h-full transition-shadow group-hover:shadow-md">
+            <Card className="group-hover:shadow-card-hover h-full transition-shadow">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
@@ -334,7 +354,7 @@ export default async function DashboardPage() {
             href="/schedine"
             className="group focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
           >
-            <Card className="h-full transition-shadow group-hover:shadow-md">
+            <Card className="group-hover:shadow-card-hover h-full transition-shadow">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
@@ -358,7 +378,7 @@ export default async function DashboardPage() {
             href="/istat"
             className="group focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
           >
-            <Card className="h-full transition-shadow group-hover:shadow-md">
+            <Card className="group-hover:shadow-card-hover h-full transition-shadow">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
