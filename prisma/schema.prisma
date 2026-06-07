@@ -63,6 +63,7 @@ enum SchedinaStatus {
   ACQUIRED // acquisita da Alloggiati (esito riga = true)
   REJECTED // scartata con errore → correggibile e re-inviabile
   UNVERIFIED // inviata ma esito ignoto (timeout) → riconciliare a T+1
+  NEEDS_REVIEW // esauriti i tentativi automatici → richiede intervento umano (poi si rimette in coda)
 }
 
 enum SubmissionChannel {

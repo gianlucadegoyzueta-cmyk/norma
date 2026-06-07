@@ -201,6 +201,39 @@ export class PrismaSchedinaRepository implements SchedinaRepository {
     return stale.length;
   }
 
+  async parkExhausted(credentialId: string, maxAttempts: number): Promise<number> {
+    const exhausted = await this.prisma.schedina.findMany({
+      where: { credentialId, status: "PENDING", attempts: { gte: maxAttempts } },
+      select: { id: true },
+    });
+    // Una transizione per riga → valida PENDING→NEEDS_REVIEW e lascia traccia nell'audit (eventi).
+    for (const row of exhausted) {
+      await this.transition(row.id, "NEEDS_REVIEW", null, null);
+    }
+    return exhausted.length;
+  }
+
+  async reopenForRetry(id: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const current = await tx.schedina.findUnique({ where: { id }, select: { status: true } });
+      if (!current) throw new Error(`Schedina non trovata: ${id}`);
+      assertValidTransition(current.status, "PENDING");
+      // Reset dei tentativi: l'host ha risolto, la riga riparte "pulita" e non viene ri-parcheggiata.
+      await tx.schedina.update({
+        where: { id },
+        data: { status: "PENDING", attempts: 0, lastErrorCod: null, lastErrorDes: null },
+      });
+      await tx.schedinaEvent.create({
+        data: {
+          schedinaId: id,
+          fromStatus: current.status,
+          toStatus: "PENDING",
+          message: "reopen",
+        },
+      });
+    });
+  }
+
   /** Transizione validata + evento di audit, in un'unica transazione. */
   private async transition(
     id: string,
