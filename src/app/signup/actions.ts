@@ -18,7 +18,7 @@ export type SignupState = { error?: string };
  *  4. MVP: login immediato post-registrazione (scelta documentata nel CHANGELOG).
  *
  * NB: la verifica email è "predisposta" (campo emailVerified resta null e l'utente può sempre
- * validare via magic link) ma NON blocca l'accesso — coerente con la scelta MVP.
+ * validare in futuro) ma NON blocca l'accesso — coerente con la scelta MVP.
  */
 export async function registerWithPassword(
   _prev: SignupState,

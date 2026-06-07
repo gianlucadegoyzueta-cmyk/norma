@@ -10,7 +10,7 @@ export type ForgotState = { sent?: boolean; error?: string };
 /**
  * Richiesta di reset password. ANTI-ENUMERAZIONE: la risposta è identica sia che l'email esista
  * o meno (`sent: true`), così non si può scoprire chi è registrato. L'email parte solo se l'utente
- * esiste. Nota: funziona anche per utenti senza password (magic link/Google) → è un modo pulito per
+ * esiste. Nota: funziona anche per utenti senza password (Google) → è un modo pulito per
  * impostare una password la prima volta.
  */
 export async function requestPasswordReset(

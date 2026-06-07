@@ -17,7 +17,7 @@ export function defaultOrganizationName(email: string): string {
  *  2. fallback derivato dall'email, solo come ultima risorsa (es. Google senza nome azienda →
  *     il nome reale lo si chiede poi nel primo step del wizard).
  *
- * Chiamato dall'evento `createUser` di Auth.js (Google/magic link) e, in modo esplicito con nome,
+ * Chiamato dall'evento `createUser` di Auth.js (Google) e, in modo esplicito con nome,
  * dalla server action di registrazione email+password.
  */
 export async function provisionNewUser(
