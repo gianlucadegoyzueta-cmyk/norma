@@ -105,6 +105,8 @@ function personInput(formData: FormData, idx: number): PersonInput {
     birthCountryId: p("birthCountryId"),
     citizenshipId: p("citizenshipId"),
     birthComuneId: p("birthComuneId"),
+    residenceCountryId: p("residenceCountryId"),
+    residenceComuneId: p("residenceComuneId"),
     documentTypeId: p("documentTypeId"),
     documentNumber: p("documentNumber"),
     documentPlaceId: p("documentPlaceId"),

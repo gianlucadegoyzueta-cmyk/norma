@@ -15,6 +15,8 @@ export interface PersonInput {
   birthCountryId?: string;
   citizenshipId?: string;
   birthComuneId?: string;
+  residenceCountryId?: string;
+  residenceComuneId?: string;
   documentTypeId?: string;
   documentNumber?: string;
   documentPlaceId?: string;
@@ -64,6 +66,9 @@ export function validatePerson(input: PersonInput, withDocument: boolean): Perso
       birthCountryId: birthCountryId as string,
       citizenshipId: citizenshipId as string,
       birthComuneId: clean(input.birthComuneId) ?? null,
+      // Residenza: facoltativa (nessun errore se assente), serve a ISTAT/check-in.
+      residenceCountryId: clean(input.residenceCountryId) ?? null,
+      residenceComuneId: clean(input.residenceComuneId) ?? null,
       documentTypeId: withDocument ? (clean(input.documentTypeId) ?? null) : null,
       documentNumber: withDocument ? (clean(input.documentNumber) ?? null) : null,
       documentPlaceId: withDocument ? (clean(input.documentPlaceId) ?? null) : null,

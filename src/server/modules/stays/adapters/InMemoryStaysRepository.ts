@@ -29,6 +29,7 @@ function toResolverGuest(data: GuestData, tipo: TipoAlloggiato): ResolverGuest {
     birthCountryId: data.birthCountryId,
     birthComuneId: data.birthComuneId ?? null,
     citizenshipId: data.citizenshipId,
+    // (residenza non rilevante per il resolver del tracciato Alloggiati → non modellata nel double)
     documentTypeId: data.documentTypeId ?? null,
     documentNumber: data.documentNumber ?? null,
     documentPlaceId: data.documentPlaceId ?? null,
