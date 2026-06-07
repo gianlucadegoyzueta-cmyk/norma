@@ -5,7 +5,7 @@ describe("isPublicPath", () => {
   it("riconosce le route pubbliche", () => {
     expect(isPublicPath("/login")).toBe(true);
     expect(isPublicPath("/api/auth")).toBe(true);
-    expect(isPublicPath("/api/auth/callback/nodemailer")).toBe(true);
+    expect(isPublicPath("/api/auth/callback/google")).toBe(true);
     expect(isPublicPath("/_next/static/chunk.js")).toBe(true);
     expect(isPublicPath("/favicon.ico")).toBe(true);
     expect(isPublicPath("/icon.svg")).toBe(true);
@@ -15,7 +15,6 @@ describe("isPublicPath", () => {
   it("apre il flusso di registrazione e recupero a chi è sloggato", () => {
     expect(isPublicPath("/signup")).toBe(true);
     expect(isPublicPath("/auth/forgot")).toBe(true);
-    expect(isPublicPath("/auth/check-email")).toBe(true);
     expect(isPublicPath("/auth/reset")).toBe(true);
     expect(isPublicPath("/auth/error")).toBe(true);
   });

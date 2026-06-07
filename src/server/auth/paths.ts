@@ -8,7 +8,7 @@ const PUBLIC_PREFIXES = ["/login", "/signup", "/auth", "/api/auth", "/_next"];
 
 /**
  * True se la route è PUBBLICA (non richiede autenticazione): login/registrazione, il flusso auth
- * (recupero password, magic link, errori), gli endpoint di Auth.js e gli asset di Next. Tutto il
+ * (recupero password, errori), gli endpoint di Auth.js e gli asset di Next. Tutto il
  * resto è protetto dal middleware.
  */
 export function isPublicPath(pathname: string): boolean {

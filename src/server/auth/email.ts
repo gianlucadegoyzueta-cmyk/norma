@@ -1,6 +1,6 @@
 /**
  * Invio email transazionali (reset password, ecc.) tramite RESEND via HTTP — stessa strategia del
- * magic link in src/auth.ts: niente SMTP. In sviluppo, senza RESEND_API_KEY, il contenuto è
+ * reset password: niente SMTP. In sviluppo, senza RESEND_API_KEY, il contenuto è
  * stampato in console (nessuna email reale necessaria).
  */
 export async function sendTransactionalEmail(opts: {
@@ -27,7 +27,7 @@ export async function sendTransactionalEmail(opts: {
   }
 }
 
-/** URL canonico dell'app per costruire i link nelle email (coerente con AUTH_URL dei magic link). */
+/** URL canonico dell'app per costruire i link nelle email (coerente con AUTH_URL). */
 export function appBaseUrl(): string {
   return process.env.AUTH_URL?.replace(/\/$/, "") || "http://localhost:3000";
 }
