@@ -1,11 +1,30 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+/**
+ * Varianti semantiche della Card: invece di rifare a mano `border-warning/40 bg-warning/5` in
+ * ogni pagina (incoerente), si usa `<Card variant="warning">`. `default` = la card neutra di sempre.
+ */
+export type CardVariant = "default" | "info" | "success" | "warning" | "destructive";
+
+const CARD_VARIANTS: Record<CardVariant, string> = {
+  default: "border-border bg-card",
+  info: "border-primary/30 bg-primary/5",
+  success: "border-success/30 bg-success/8",
+  warning: "border-warning/40 bg-warning/8",
+  destructive: "border-destructive/35 bg-destructive/6",
+};
+
+export function Card({
+  className,
+  variant = "default",
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & { variant?: CardVariant }) {
   return (
     <div
       className={cn(
-        "border-border bg-card text-card-foreground rounded-xl border shadow-sm",
+        "text-card-foreground shadow-card rounded-xl border",
+        CARD_VARIANTS[variant],
         className,
       )}
       {...props}

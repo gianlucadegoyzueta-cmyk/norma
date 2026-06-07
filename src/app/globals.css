@@ -118,6 +118,14 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  /* Elevazione — poche ombre calde e morbide (no "drop shadow" duri da fintech). */
+  --shadow-card: 0 1px 2px oklch(0.25 0.012 75 / 0.05), 0 1px 3px oklch(0.25 0.012 75 / 0.04);
+  --shadow-card-hover: 0 4px 16px oklch(0.25 0.012 75 / 0.1);
+  --shadow-overlay: 0 16px 48px oklch(0.2 0.012 75 / 0.18);
+
+  /* Motion — sobrio: una easing morbida + durate brevi, usate con parsimonia. */
+  --ease-emphasis: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @layer base {
@@ -140,5 +148,18 @@
 
   ::selection {
     background-color: color-mix(in oklch, var(--color-primary) 25%, transparent);
+  }
+
+  /* Accessibilità: chi preferisce meno movimento NON subisce animazioni/transizioni.
+     Il prodotto serve a mettersi in regola in fretta: il motion è un di più, mai un ostacolo. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

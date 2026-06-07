@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 export function UnverifiedNote({ className }: { className?: string }) {
   return (
     <details className={cn("text-xs", className)}>
-      <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring focus-visible:ring-offset-background inline-flex cursor-pointer items-center gap-1 rounded outline-none focus-visible:ring-2 focus-visible:ring-offset-1">
+      <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring focus-visible:ring-offset-background inline-flex cursor-pointer items-center gap-1 rounded outline-none focus-visible:ring-2 focus-visible:ring-offset-2">
         <span aria-hidden>ⓘ</span>
         Perché «da verificare»?
       </summary>
