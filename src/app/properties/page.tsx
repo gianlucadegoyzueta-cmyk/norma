@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Building2, KeyRound, MapPin } from "lucide-react";
+import { Building2, KeyRound, MapPin } from "lucide-react";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaCredentialRepository } from "@/server/modules/alloggiati";
 import { CinService, PrismaCinRepository, propertyNeedsCin } from "@/server/modules/cin";
 import { PrismaPropertyRepository } from "@/server/modules/properties";
 import { SiteHeader } from "@/components/site-header";
+import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CinInlineForm } from "./CinInlineForm";
@@ -46,23 +47,19 @@ export default async function PropertiesPage() {
         tabIndex={-1}
         className="mx-auto w-full max-w-3xl px-4 py-8 outline-none sm:px-6 sm:py-10"
       >
-        <Link
-          href="/dashboard"
-          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
-        >
-          <ArrowLeft className="size-4" />
-          Dashboard
-        </Link>
-
-        <div className="mb-8">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Immobili</h1>
-          <p className="text-muted-foreground mt-2 max-w-prose text-sm">
-            Gli immobili di{" "}
-            <strong className="text-foreground">{ctx.current.organizationName}</strong>. Ogni
-            immobile si collega a una credenziale Alloggiati per l&apos;invio delle schedine; il
-            Comune dev&apos;essere nella provincia di competenza della credenziale.
-          </p>
-        </div>
+        <PageHeader
+          backHref="/dashboard"
+          backLabel="Dashboard"
+          title="Immobili"
+          description={
+            <>
+              Gli immobili di{" "}
+              <strong className="text-foreground">{ctx.current.organizationName}</strong>. Ogni
+              immobile si collega a una credenziale Alloggiati per l&apos;invio delle schedine; il
+              Comune dev&apos;essere nella provincia di competenza della credenziale.
+            </>
+          }
+        />
 
         <section className="mb-10">
           <h2 className="text-muted-foreground mb-3 text-sm font-medium">I tuoi immobili</h2>

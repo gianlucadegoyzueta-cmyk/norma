@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, BedDouble, CalendarDays, Users } from "lucide-react";
+import { BedDouble, CalendarDays, Users } from "lucide-react";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaPropertyRepository } from "@/server/modules/properties";
 import { PrismaReferenceTablesLoader, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
 import { PrismaStaysRepository, StaysService } from "@/server/modules/stays";
 import { SiteHeader } from "@/components/site-header";
+import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StayForm } from "./StayForm";
@@ -57,22 +58,18 @@ export default async function StaysPage() {
         tabIndex={-1}
         className="mx-auto w-full max-w-3xl px-4 py-8 outline-none sm:px-6 sm:py-10"
       >
-        <Link
-          href="/dashboard"
-          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
-        >
-          <ArrowLeft className="size-4" />
-          Dashboard
-        </Link>
-
-        <div className="mb-8">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Soggiorni</h1>
-          <p className="text-muted-foreground mt-2 max-w-prose text-sm">
-            Registra i soggiorni di{" "}
-            <strong className="text-foreground">{ctx.current.organizationName}</strong>. Dopo aver
-            aggiunto gli ospiti, dal soggiorno si generano le schedine da inviare ad Alloggiati.
-          </p>
-        </div>
+        <PageHeader
+          backHref="/dashboard"
+          backLabel="Dashboard"
+          title="Soggiorni"
+          description={
+            <>
+              Registra i soggiorni di{" "}
+              <strong className="text-foreground">{ctx.current.organizationName}</strong>. Dopo aver
+              aggiunto gli ospiti, dal soggiorno si generano le schedine da inviare ad Alloggiati.
+            </>
+          }
+        />
 
         <section className="mb-10">
           <h2 className="text-muted-foreground mb-3 text-sm font-medium">I tuoi soggiorni</h2>

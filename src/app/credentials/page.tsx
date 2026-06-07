@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, KeyRound, ShieldCheck } from "lucide-react";
+import { KeyRound, ShieldCheck } from "lucide-react";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaCredentialRepository } from "@/server/modules/alloggiati";
 import { SiteHeader } from "@/components/site-header";
+import { PageHeader } from "@/components/ui/page-header";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CredentialForm } from "./CredentialForm";
@@ -39,29 +39,24 @@ export default async function CredentialsPage() {
         tabIndex={-1}
         className="mx-auto w-full max-w-3xl px-4 py-8 outline-none sm:px-6 sm:py-10"
       >
-        <Link
-          href="/dashboard"
-          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
-        >
-          <ArrowLeft className="size-4" />
-          Dashboard
-        </Link>
-
-        <div className="mb-8">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">
-            Credenziali Alloggiati
-          </h1>
-          <p className="text-muted-foreground mt-2 max-w-prose text-sm">
-            Org <strong className="text-foreground">{ctx.current.organizationName}</strong>. Le
-            credenziali (utente / password / WSKey) sono salvate{" "}
-            <span className="text-foreground inline-flex items-center gap-1 font-medium">
-              <ShieldCheck className="text-success size-3.5" />
-              cifrate
-            </span>{" "}
-            nel vault, mai in chiaro. Ogni nuova credenziale viene verificata subito con Alloggiati
-            (<em>Authentication_Test</em>) — nessun invio di schedine.
-          </p>
-        </div>
+        <PageHeader
+          backHref="/dashboard"
+          backLabel="Dashboard"
+          title="Credenziali Alloggiati"
+          description={
+            <>
+              Le credenziali (utente / password / WSKey) di{" "}
+              <strong className="text-foreground">{ctx.current.organizationName}</strong> sono
+              salvate{" "}
+              <span className="text-foreground inline-flex items-center gap-1 font-medium">
+                <ShieldCheck className="text-success size-3.5" />
+                cifrate
+              </span>{" "}
+              nel vault, mai in chiaro. Ogni nuova credenziale viene verificata subito con
+              Alloggiati (<em>Authentication_Test</em>) — nessun invio di schedine.
+            </>
+          }
+        />
 
         <section className="mb-10">
           <h2 className="text-muted-foreground mb-3 text-sm font-medium">Le tue credenziali</h2>

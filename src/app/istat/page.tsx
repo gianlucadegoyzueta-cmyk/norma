@@ -4,6 +4,7 @@ import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { currentPeriod, loadIstatReport } from "@/server/modules/istat/report";
 import { SiteHeader } from "@/components/site-header";
+import { PageHeader } from "@/components/ui/page-header";
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -49,14 +50,10 @@ export default async function IstatPage({
         tabIndex={-1}
         className="mx-auto w-full max-w-4xl px-4 py-8 outline-none sm:px-6 sm:py-10"
       >
-        <div className="mb-6">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">
-            ISTAT — movimento turistico
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Arrivi e presenze del mese per provenienza, pronti da riportare sul portale regionale.
-          </p>
-        </div>
+        <PageHeader
+          title="ISTAT — movimento turistico"
+          description="Arrivi e presenze del mese per provenienza, pronti da riportare sul portale regionale."
+        />
 
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <form method="get" className="flex items-end gap-2">

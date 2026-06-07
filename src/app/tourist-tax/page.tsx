@@ -6,6 +6,7 @@ import { prisma } from "@/server/db";
 import { periodLabel } from "@/server/modules/tourist-tax/domain/period";
 import { formatEuroCents } from "@/server/modules/tourist-tax/services/estimate.service";
 import { SiteHeader } from "@/components/site-header";
+import { PageHeader } from "@/components/ui/page-header";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Receipt } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,12 +48,10 @@ export default async function TouristTaxPage() {
     <div className="min-h-dvh">
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
-        <div className="mb-8">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Tassa di soggiorno</h1>
-          <p className="text-muted-foreground mt-2 text-sm">
-            Dichiarazioni periodiche per comune: calcolo, export e versamento.
-          </p>
-        </div>
+        <PageHeader
+          title="Tassa di soggiorno"
+          description="Dichiarazioni periodiche per comune: calcolo, export e versamento."
+        />
 
         <section className="mb-8">
           <Card>
