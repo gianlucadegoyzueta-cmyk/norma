@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ComboBox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,15 @@ export function CheckinForm({
             {m.successTitle}
           </h2>
           <p className="text-muted-foreground max-w-sm text-sm text-pretty">{m.successBody}</p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => window.location.reload()}
+          >
+            {m.addAnother}
+          </Button>
         </CardContent>
       </Card>
     );

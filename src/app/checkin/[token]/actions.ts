@@ -3,7 +3,7 @@
 import { type PersonInput, validatePerson } from "@/app/stays/guest-validation";
 import { prisma } from "@/server/db";
 import { PrismaReferenceTablesLoader, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
-import { markCheckinCompleted, resolveCheckinToken } from "@/server/modules/checkin/token";
+import { resolveCheckinToken } from "@/server/modules/checkin/token";
 import { PrismaStaysRepository, StaysService } from "@/server/modules/stays";
 
 export type CheckinSubmitState = {
@@ -55,7 +55,8 @@ export async function submitCheckinAction(
       new PrismaReferenceTablesLoader(prisma),
     );
     await service.addGuests(ctx.stayId, ctx.organizationId, [{ tipo: "SINGOLO", ospite: data }]);
-    await markCheckinCompleted(ctx.tokenId);
+    // NB: il token NON viene chiuso, così lo stesso link serve per più ospiti dello stesso
+    // soggiorno (l'ospite aggiunge sé stesso e i compagni). Scade comunque dopo 30 giorni.
   } catch {
     return { error: "generic" };
   }
