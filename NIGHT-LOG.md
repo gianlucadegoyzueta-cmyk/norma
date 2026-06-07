@@ -14,6 +14,8 @@
 - **PR #29** — backend hardening: **cap max-tentativi=5** sull'outbox (niente retry runaway) + **guard sul doppio-incremento** di `attempts` (ora solo `claimForSending` lo incrementa). Non-schema, 3 test nuovi. ✅ online (main `26cb3d7`, health-check verde).
 - **PR #31** — **logo ufficiale Norma in tutta l'app**: il marchio reale (sigillo-monogramma `SealMark` terracotta) + "Norma" in Fraunces sostituisce il generico ShieldCheck in tutti i 7 punti; aggiunto **favicon** `app/icon.svg` (reso pubblico in paths). ✅ online (main `f19b554`, `/icon.svg`=200, health-check verde).
 - **norma-marketing PR #2** (repo separato) — **palette terracotta unica su tutta la landing** (la home era indaco/blu) + logo ufficiale in header/footer. ✅ online su **norma.casa** (main marketing `661e682`).
+- **PR #38** — **rimosso il magic link** (accesso solo email+password con reset + Google). Tolto provider Nodemailer, action `sendMagicLink`, tab UI e route `/auth/check-email`. Reset password invariato (canale email dedicato). Verificato live: `/login` senza "Magic link", `/auth/check-email`=404, form password ok. ✅ online (main `3872d28`).
+- **PR #37** — dashboard "a colpo d'occhio" (riga metriche): **PR aperta, NON mergiata** — è visiva, attende revisione su preview Vercel.
 - **PR #35** — **export PDF della dichiarazione tassa di soggiorno** (accanto al CSV): `toDeclarationPdf` via pdf-lib (puro JS), documento A4 brandizzato con tabella Struttura/CIN/Notti/Imposta + totale, paginazione; bottone "Esporta PDF" in `/tourist-tax`. Non-schema, additivo, 3 test. ✅ online (main `b681272`, health-check verde).
 
 Health-check OK: `/login` `/signup` `/api/health` `/icon.svg` = 200, `/dashboard` = 307 (gated), `norma.casa` = 200.
