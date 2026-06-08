@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { markIstatSubmittedAction } from "./actions";
 
@@ -24,6 +25,7 @@ export function IstatSubmitButton({
     start(async () => {
       const res = await markIstatSubmittedAction(period);
       if (!res.ok) return setError(res.error);
+      toast.success("Mese segnato come inviato.");
       router.refresh();
     });
   }

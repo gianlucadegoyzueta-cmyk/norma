@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { reopenNeedsReviewAction } from "@/app/schedine/actions";
 import { Button } from "@/components/ui/button";
 
@@ -17,6 +18,7 @@ export function ReopenNeedsReviewButton({ schedinaId }: { schedinaId: string }) 
   useEffect(() => {
     if (state?.ok && !refreshed.current) {
       refreshed.current = true;
+      toast.success(state.message ?? "Rimessa in coda.");
       router.refresh();
     }
   }, [state, router]);
