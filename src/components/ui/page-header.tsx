@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 export function PageHeader({
   title,
   description,
+  eyebrow,
   actions,
   backHref,
   backLabel = "Indietro",
@@ -17,6 +18,8 @@ export function PageHeader({
 }: {
   title: ReactNode;
   description?: ReactNode;
+  /** Sopra-titolo breve in maiuscoletto terracotta (es. la sezione). Editoriale, facoltativo. */
+  eyebrow?: ReactNode;
   actions?: ReactNode;
   backHref?: string;
   backLabel?: string;
@@ -35,11 +38,16 @@ export function PageHeader({
       ) : null}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-balance">
+          {eyebrow ? (
+            <p className="text-primary mb-2 text-xs font-semibold tracking-[0.14em] uppercase">
+              {eyebrow}
+            </p>
+          ) : null}
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-balance sm:text-[2.125rem]">
             {title}
           </h1>
           {description ? (
-            <p className="text-muted-foreground mt-1.5 max-w-prose text-sm text-pretty">
+            <p className="text-muted-foreground mt-2 max-w-prose text-sm text-pretty">
               {description}
             </p>
           ) : null}

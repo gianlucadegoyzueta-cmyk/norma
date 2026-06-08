@@ -111,6 +111,14 @@ export default async function DashboardPage() {
     await signOut({ redirectTo: "/login" });
   };
 
+  // Tocco editoriale: il cruscotto "sa" il giorno. Data in italiano, iniziale maiuscola.
+  const todayLabel = new Intl.DateTimeFormat("it-IT", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date());
+  const todayCap = todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1);
+
   return (
     <div className="min-h-dvh">
       <SiteHeader
@@ -129,18 +137,21 @@ export default async function DashboardPage() {
         tabIndex={-1}
         className="mx-auto w-full max-w-5xl px-4 py-8 outline-none sm:px-6 sm:py-10"
       >
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight">
-              Ciao, {ctx.user.name ?? ctx.user.email ?? "utente"}
-            </h1>
-            <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
+        <header className="mb-8">
+          <p className="text-primary text-xs font-semibold tracking-[0.14em] uppercase">
+            {todayCap}
+          </p>
+          <h1 className="font-display mt-1.5 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+            Ciao, {ctx.user.name ?? ctx.user.email ?? "utente"}
+          </h1>
+          <p className="text-muted-foreground mt-2 flex flex-wrap items-center gap-2 text-sm">
+            <span className="inline-flex items-center gap-1.5">
               <Building2 className="size-4" aria-hidden />
               {ctx.current.organizationName}
-              <Badge variant="secondary">{ctx.current.role}</Badge>
-            </p>
-          </div>
-        </div>
+            </span>
+            <Badge variant="secondary">{ctx.current.role}</Badge>
+          </p>
+        </header>
 
         {/* Stato emotivo del cruscotto: quando non c'è nulla di urgente, RASSICURA esplicitamente. */}
         {overdueCount === 0 && onboarding.ready && cinCompliance.count === 0 && (
@@ -268,9 +279,11 @@ export default async function DashboardPage() {
                 <Card className="group-hover:shadow-card-hover h-full p-4 transition-shadow">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground text-xs font-medium">{label}</span>
-                    <Icon className="text-muted-foreground size-4 shrink-0" aria-hidden />
+                    <span className="bg-secondary text-accent-foreground flex size-7 items-center justify-center rounded-lg">
+                      <Icon className="size-4 shrink-0" aria-hidden />
+                    </span>
                   </div>
-                  <p className="font-display mt-2 text-2xl font-semibold tracking-tight">{value}</p>
+                  <p className="font-display mt-3 text-3xl font-semibold tracking-tight">{value}</p>
                   <p className="text-muted-foreground mt-0.5 text-xs">{sub}</p>
                 </Card>
               </Link>

@@ -46,6 +46,12 @@
   --border: oklch(0.88 0.016 85); /* hairline #e0d8c8 */
   --input: oklch(0.88 0.016 85);
   --ring: oklch(0.55 0.15 40); /* terracotta */
+
+  /* Atmosfera "carta": un alone caldo appena percettibile in alto (luce sul foglio) e un soffio
+     di terracotta nell'angolo. Dà profondità editoriale senza rumore — non un fondo piatto da admin. */
+  --app-wash:
+    radial-gradient(118% 78% at 50% -18%, oklch(0.995 0.012 95 / 0.75), transparent 58%),
+    radial-gradient(72% 56% at 102% -8%, oklch(0.82 0.07 55 / 0.1), transparent 60%);
 }
 
 .dark {
@@ -83,6 +89,11 @@
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.68 0.15 42);
+
+  /* Variante scura: alone tenue, niente bagliori freddi. */
+  --app-wash:
+    radial-gradient(118% 78% at 50% -18%, oklch(0.3 0.02 70 / 0.55), transparent 60%),
+    radial-gradient(72% 56% at 102% -8%, oklch(0.5 0.08 50 / 0.08), transparent 60%);
 }
 
 @theme inline {
@@ -140,10 +151,18 @@
 
   body {
     background-color: var(--color-background);
+    background-image: var(--app-wash);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+
+  /* I titoli serif (Fraunces) usano l'asse ottico: a corpo grande il disegno si fa più editoriale. */
+  .font-display {
+    font-optical-sizing: auto;
   }
 
   ::selection {
