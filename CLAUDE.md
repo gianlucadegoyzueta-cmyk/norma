@@ -53,6 +53,15 @@ ISTAT, gestione CIN, check-in ospiti self-service multilingua.
 - 🔜 P2: ISTAT invio regionale reale (Ross1000/Lazio) · PDF tassa di soggiorno · review design system (PR #52, occhi umani).
 - Backlog umano: NEEDS-HUMAN.md. Log notturni: NIGHT-LOG.md.
 
+## Regole flotta (corse notturne parallele su worktree)
+
+- Ogni corsia lavora SOLO nel suo worktree e nei moduli della sua spec (`.claude/specs/`).
+- UNA SOLA corsia per notte è autorizzata alle migrazioni schema (lo dice la spec). Le altre:
+  migration generata ma NON applicata, PR aperta, nota in NEEDS-HUMAN.
+- Prima del push finale: `git fetch` + rebase su origin/main (package-lock si risolve
+  rigenerando: `env NODE_ENV= npm install`). Merge sequenziali, mai forzare.
+- Conflitto che non sai risolvere in 10 minuti → PR aperta senza merge + nota in NIGHT-LOG.
+
 ## Quirk ambiente (Mac di Gianluca)
 
 - Le shell spawnante da Claude Desktop hanno `NODE_ENV=production` → **anteporre sempre
