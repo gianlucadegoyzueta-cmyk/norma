@@ -491,7 +491,11 @@ describe("Mock Alloggiati — Scenario 6: riconciliazione T+1 (Ricevuta)", () =>
 
     const result = await stack.reconcile.reconcileCredential(CRED, "2026-05-29");
 
-    expect(result).toEqual({ total: 0, confirmed: 0, requeued: 0, rows: [] });
+    expect(result.total).toBe(0);
+    expect(result.confirmed).toBe(0);
+    expect(result.requeued).toBe(0);
+    expect(result.review).toBe(0);
+    expect(result.rows).toEqual([]);
     expect(mock.callCount("Ricevuta")).toBe(0);
   });
 });

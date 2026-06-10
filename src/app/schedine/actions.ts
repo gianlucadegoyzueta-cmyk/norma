@@ -13,8 +13,8 @@ import {
   SchedinaRecordBuilder,
   SchedinaReconcileService,
   SchedinaVerifyService,
-  SoapAcquisitionReceiptReader,
   SoapAlloggiatiSender,
+  SoapRicevutaSummaryReader,
   TokenManager,
   VaultCredentialProvider,
 } from "@/server/modules/alloggiati";
@@ -254,8 +254,9 @@ function romeYesterdayIso(): string {
 }
 
 /**
- * Riconciliazione T+1: confronta le schedine UNVERIFIED con la Ricevuta di un giorno passato.
- * Confermate → ACQUIRED; assenti → PENDING (re-inviabili in sicurezza).
+ * Riconciliazione T+1 PER CONTEGGIO (vedi DECISIONS D3/D4): confronta il numero di schedine
+ * UNVERIFIED del giorno con le "SCHEDINE INVIATE" della Ricevuta aggregata.
+ * Conteggi pari → ACQUIRED; ricevuta vuota → PENDING (re-inviabili); mismatch → NEEDS_REVIEW.
  */
 export async function reconcileCredentialAction(
   _prev: Result | null,
@@ -275,7 +276,7 @@ export async function reconcileCredentialAction(
   try {
     const reconcile = new SchedinaReconcileService(
       schedinaRepo,
-      new SoapAcquisitionReceiptReader(tokens, client),
+      new SoapRicevutaSummaryReader(tokens, client),
     );
     const result = await reconcile.reconcileCredential(credentialId, receiptDateIso);
 
@@ -284,11 +285,16 @@ export async function reconcileCredentialAction(
     }
 
     revalidatePath("/schedine");
+    const verdictMsg =
+      result.verdict === "MATCH"
+        ? `${result.confirmed} confermate (conteggi pari)`
+        : result.verdict === "NONE_SENT"
+          ? `${result.requeued} ri-accodate (nulla risulta inviato)`
+          : `${result.review} in revisione: attese ${result.expected}, ` +
+            `ricevuta ${result.reported} — mismatch, batch da verificare a mano`;
     return {
       ok: true,
-      message:
-        `Riconciliazione ${receiptDateIso}: ${result.confirmed} confermate, ` +
-        `${result.requeued} ri-accodate su ${result.total} da verificare.`,
+      message: `Riconciliazione ${receiptDateIso}: ${verdictMsg} su ${result.total} da verificare.`,
     };
   } catch (err) {
     return {
