@@ -9,3 +9,5 @@ prisma/migrations
 *.tsbuildinfo
 .localsecrets
 .claude
+test-results
+playwright-report

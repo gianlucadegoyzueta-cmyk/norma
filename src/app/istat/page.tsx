@@ -94,6 +94,9 @@ export default async function IstatPage({
           <Card>
             <CardContent className="p-0">
               <table className="w-full text-sm">
+                <caption className="sr-only">
+                  Movimento turistico ISTAT del mese {period}: arrivi e presenze per provenienza.
+                </caption>
                 <thead>
                   <tr className="border-border text-muted-foreground border-b text-left text-xs">
                     <th scope="col" className="px-4 py-3 font-medium">

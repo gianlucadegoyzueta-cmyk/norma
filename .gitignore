@@ -6,6 +6,11 @@
 /out
 /build
 
+# artefatti Playwright (E2E)
+/test-results
+/playwright-report
+/playwright/.cache
+
 # variabili d'ambiente (NB: .env.example resta tracciato)
 .env
 .env*.local
