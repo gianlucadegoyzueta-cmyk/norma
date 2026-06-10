@@ -99,3 +99,15 @@ Health-check OK: `/login` `/signup` `/api/health` `/icon.svg` = 200, `/dashboard
 - **Branch:** `chore/migrate-yml-actions-v6` → PR #57
 - **Cosa:** `migrate.yml` allineato a `actions/checkout@v6` + `actions/setup-node@v6` (ci.yml era già su v6 e verde). Solo file workflow, reversibile. Rende ridondanti le dependabot #32/#33.
 - **CI su PR #57:** verde · **ONLINE:** ✅ sì — main `5cc9237`
+
+### [2026-06-10] Corsia A (flotta) — Import iCal prenotazioni Airbnb/Booking/VRBO
+
+- **Branch:** `feat/ical-import` → PR #65 (**mergiata**)
+- **Cosa:** le prenotazioni entrano in Norma da sole. L'host incolla l'URL iCal del calendario della struttura e Norma crea/aggiorna i **soggiorni in bozza** (da completare con gli ospiti). Modulo nuovo `src/server/modules/reservations` (ports/adapters, domain puro).
+  - **Dominio puro testato:** parser **RFC5545 scritto a mano** (`domain/ical.ts` — unfolding, DATE/DATE-TIME, unescape, filtro blocchi "non disponibile"); **niente dipendenze native** → gira su Vercel (valutato `node-ical`, scartato: troppo peso `rrule`/`moment-timezone` per VEVENT piatti). `domain/source.ts` (detect Airbnb/Booking/VRBO dall'host + validazione URL). `domain/reconcile.ts` — **dedup per UID iCal** + regole annullamento (puro, idempotente).
+  - **Regole annullamento (da spec):** evento sparito dal feed → bozza ancora vergine = `CANCELLED`; bozza già **arricchita** con ospiti = `NEEDS_CANCEL_REVIEW` (si segnala, non si tocca). Evento ricomparso → riattivato a `DRAFT`.
+  - **Adapter:** `ICalHttpFetcher` (fetch con timeout via AbortController, errori parlanti, guard `BEGIN:VCALENDAR`); repo Prisma + InMemory; `ReservationImportService` orchestrazione. Sync **manuale** ("Sincronizza ora") — **niente cron** (congelati, CLAUDE.md ⛔).
+  - **UI:** nuova `/properties/[id]` (linkata dalla lista immobili): collega/rimuovi URL iCal, stato ultimo sync (mai/ok/errore), lista prenotazioni importate in bozza con badge stato.
+- **Schema (corsia autorizzata alle migrazioni stanotte):** additivo-only. `model ReservationImport` + campi nullable su `Stay` (`icalUid`, `importSource`, `importStatus`, `reservationImportId`; FK `onDelete:SetNull`; unique `(reservationImportId, icalUid)`). Enum `ReservationSource`, `StayImportStatus`. Nessun drop/rename/alter. **Migrazione testata in locale** su Postgres (docker/colima): applica pulita. **Backup prod fresco** prima del merge (`backup.log` OK 2026-06-10 23:22).
+- **CI locale:** format ✓ · lint ✓ (0 errori) · typecheck ✓ · test **390** ✓ (+34 nuovi: ical/reconcile/source/service) · build ✓ (route `/properties/[id]` presente).
+- **CI su PR #65:** verde (Lint·Typecheck·Test·Build + Vercel) · **migrate.yml prod:** applicata con successo · **ONLINE:** ✅ sì — main `9cbd609`
