@@ -5,6 +5,25 @@
 > sicure, reversibili e SENZA migrazioni. Le feature con schema sono parcheggiate
 > in NEEDS-HUMAN con migrazione generata ma NON applicata (niente backup garantito sul DB prod).
 
+## SESSIONE 2026-06-10 (notte) — reconcile per conteggio + scheduler disattivato
+
+**Online (mergiato + CI verde + health-check):**
+
+- **PR #55** — **riconciliazione T+1 PER CONTEGGIO** (verdetto Gate #0, DECISIONS D3→**D4**). La Ricevuta è AGGREGATA: niente match per-identità, si confronta il numero di schedine `UNVERIFIED` del giorno con `SCHEDINE INVIATE` della ricevuta. Esiti: pari→`ACQUIRED`; ricevuta vuota/assente→`PENDING` (re-inviabili, no doppione); diverse→**l'intero batch in `NEEDS_REVIEW`**. Nuovo port `RicevutaSummaryReader` + adapter `SoapRicevutaSummaryReader`; nuova transizione `UNVERIFIED→NEEDS_REVIEW`. **Nessuna migrazione** (enum/colonne già in schema da PR #51). Test: 358 verdi (reconcile per conteggio riscritto, adapter su PDF VERO via pdf-lib, transizione). ✅ main `a9f4736`.
+- **PR #57** — **chore CI**: `migrate.yml` allineato a `actions/checkout@v6` + `setup-node@v6` (ci.yml era già su v6). Rende ridondanti le dependabot #32/#33. ✅ main `5cc9237`.
+
+**Pronto in PR, NON mergiato (decisione tua):**
+
+- **PR #56** — **scheduler invio+reconcile DISATTIVATO di default**. `GET /api/cron/alloggiati` con due barriere (`domain/cron-gate.ts`): flag `ALLOGGIATI_CRON_ENABLED` OFF di default → 200 `{disabled:true}`; anche da attivo solo cron Vercel autenticato (`Bearer $CRON_SECRET`, fail-closed). Orchestrazione testabile `runSendAndReconcile` (resiliente per-credenziale). `vercel.cron.example.json` per accenderlo. CI verde. **NON mergiata apposta** (guardrail #1: l'invio reale non si accende in autonomia). Dettaglio per accenderlo in NEEDS-HUMAN #5.
+
+**Health-check (prod):** `/login` `/signup` `/api/health` = 200, `/dashboard` = 307 (gated), `norma.casa` = 200. `/api/cron/alloggiati` = 307 (atteso: la route è solo in PR #56, non ancora in prod). App sana.
+
+**Guardrail rispettati:** nessun Send reale, nessuna migrazione (zero file di migrazione aggiunti → migrate.yml resta no-op), nessuna cancellazione, niente push su main (tutto via PR+CI verde). Rollback: nessuno.
+
+**Prima azione consigliata al risveglio:** decidere su PR #56 (scheduler) — prima un primo invio reale manuale su ospite vero, poi eventualmente accendere il cron via env.
+
+---
+
 ## RIEPILOGO ONESTO (fine sessione)
 
 **Cosa è ANDATO ONLINE (mergiato + health-check verde, in produzione su app.norma.casa):**
@@ -59,3 +78,24 @@ Health-check OK: `/login` `/signup` `/api/health` `/icon.svg` = 200, `/dashboard
 - **Cosa:** (1) `MAX_SEND_ATTEMPTS=5` (`domain/send-policy.ts`): `listPendingByCredential` esclude le schedine con `attempts ≥ 5` → non si ritentano più all'infinito, restano PENDING ma inerti (candidate a NEEDS_REVIEW, follow-up con schema). (2) Rimosso il doppio-incremento di `attempts`: ora solo `claimForSending` incrementa (la `transition()`→SENDING non tocca più `attempts`). InMemory repo ora traccia `attempts` (helper di test). 3 test nuovi.
 - **CI locale:** format ✓ · lint ✓ (0 errori) · typecheck ✓ · test 319 ✓ · build ✓
 - **CI su PR #29:** verde · **Health-check:** `/api/health`=200, `/login` `/signup`=200, `/dashboard`=307 · **ONLINE:** ✅ sì — main `26cb3d7`
+
+### [2026-06-10] Unità 5 — riconciliazione T+1 per CONTEGGIO (D3 → D4)
+
+- **Branch:** `feat/reconcile-by-count` → PR #55
+- **Cosa:** redesign del reconcile dal match per-identità al confronto di CONTEGGIO (la Ricevuta è AGGREGATA, Gate #0). Nuovo port `RicevutaSummaryReader` + adapter `SoapRicevutaSummaryReader` (su `parseRicevutaSummaryPdfBase64`; `ERRORE_RECUPERO_RICEVUTA`→null). `SchedinaReconcileService` confronta `UNVERIFIED` del giorno vs `SCHEDINE INVIATE`: pari→`ACQUIRED` (MATCH); ricevuta vuota/assente→`PENDING` (NONE_SENT, re-inviabili); diverse→`NEEDS_REVIEW` per l'intero batch (MISMATCH). Nuova transizione `UNVERIFIED→NEEDS_REVIEW`. Wiring `reconcileCredentialAction` con messaggio per verdetto. **Nessuna migrazione** (enum/colonne già presenti). DECISIONS D4.
+- **Conservativo:** auto-conferma SOLO a conteggi pari, auto-riaccoda SOLO a ricevuta vuota; ogni ambiguità → revisione umana (mai falso ACQUIRED né doppione).
+- **CI locale:** format ✓ · lint ✓ (0 errori) · typecheck ✓ · test 358 ✓ · build ✓
+- **CI su PR #55:** verde (Lint·Typecheck·Test·Build + Vercel) · **ONLINE:** ✅ sì — main `a9f4736`
+
+### [2026-06-10] Unità 6 — scheduler invio+reconcile DISATTIVATO (NON mergiato)
+
+- **Branch:** `feat/cron-send-reconcile` → PR #56 (**aperta, non mergiata apposta**)
+- **Cosa:** `GET /api/cron/alloggiati` disattivato di default. Gating puro `domain/cron-gate.ts` (flag `ALLOGGIATI_CRON_ENABLED` + auth `Bearer $CRON_SECRET`, fail-closed). Orchestrazione testabile `runSendAndReconcile` (`services/cron-runner.ts`): per ogni credenziale attiva send poi reconcile, resiliente per-credenziale. `PrismaCredentialRepository.listActiveCredentialIds()`. Route resa pubblica in `paths.ts` (auth nella route, non sessione). `vercel.cron.example.json` con le istruzioni per accenderlo.
+- **CI locale:** format ✓ · lint ✓ (0 errori) · typecheck ✓ · test 368 ✓ · build ✓ (route presente)
+- **CI su PR #56:** verde · **ONLINE:** ❌ no, di proposito (decisione umana — vedi NEEDS-HUMAN #5)
+
+### [2026-06-10] Unità 7 — chore CI: migrate.yml su actions v6
+
+- **Branch:** `chore/migrate-yml-actions-v6` → PR #57
+- **Cosa:** `migrate.yml` allineato a `actions/checkout@v6` + `actions/setup-node@v6` (ci.yml era già su v6 e verde). Solo file workflow, reversibile. Rende ridondanti le dependabot #32/#33.
+- **CI su PR #57:** verde · **ONLINE:** ✅ sì — main `5cc9237`

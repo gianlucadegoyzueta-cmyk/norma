@@ -39,15 +39,16 @@ migrate.yml già presente, che gira al merge su main).
 - **Cosa serve da te:** backup DB + migrazione enum.
 - **NB non-schema già fattibile (lo farò se resta tempo / oppure tu):** il **cap max-attempts=5** e il guard sul doppio-incremento di `attempts` NON richiedono schema (logica in `outbox.service.ts`/repo) → spedibile a parte.
 
-### 5. Scheduler invio + reconcile T+1
+### 5. Scheduler invio + reconcile T+1 — ⏸️ CODICE PRONTO IN PR (disattivato), attende la TUA decisione
 
-- **Perché è qui (parzialmente):** un Vercel Cron + route API NON richiede schema, ma **abilitare l'invio automatico reale verso la Questura in autonomia notturna è rischioso** (il primo invio reale "solo su ospite vero, mai come prova" — vincolo del brief). Va acceso da te, consapevolmente.
-- **Cosa serve da te:** decidere quando attivarlo; io posso lasciare la route+cron **disattivati** su un branch.
+- **Stato:** route + cron **implementati e DISATTIVATI di default** in **PR #56** (`feat/cron-send-reconcile`), **NON mergiata** apposta. CI verde. Nessuno schema, nessun Send reale finché il flag è OFF.
+- **Com'è fatto:** `GET /api/cron/alloggiati` con due barriere (`domain/cron-gate.ts`): (1) gira solo se env `ALLOGGIATI_CRON_ENABLED="true"`, altrimenti 200 `{disabled:true}`; (2) anche da attivo accetta solo il cron Vercel autenticato (`Authorization: Bearer $CRON_SECRET`, fail-closed). Orchestrazione testabile `runSendAndReconcile` (send poi reconcile per conteggio su ogni credenziale attiva, resiliente per-credenziale).
+- **Cosa serve da te per accenderlo (consapevolmente):** (a) mergiare PR #56; (b) copiare il blocco `crons` da `vercel.cron.example.json` in un vero `vercel.json`; (c) su Vercel impostare `CRON_SECRET` e `ALLOGGIATI_CRON_ENABLED=true`. Prima conviene un primo invio reale manuale su ospite vero (guardrail #1).
 
 ### 6. Gate #0 — diagnostico PDF Ricevuta (live) + parser PDF reale — ✅ RISOLTO (2026-06-10)
 
 - **Esito:** Gate #0 eseguito con credenziali reali. Autenticazione e canale SOAP verificati. Ricevuta reale del 2026-03-25 scaricata: è un documento AGGREGATO senza nominativi ospiti (vedi DECISIONS D3). Parser reale implementato (`ricevuta-summary.ts` + `ricevuta-pdf-text.ts`), 11 test verdi.
-- **Follow-up aperto:** redesign della riconciliazione T+1 per CONTEGGIO (al posto del match per-identità) — non richiede schema.
+- **Follow-up:** ✅ RISOLTO — redesign della riconciliazione T+1 per CONTEGGIO mergiato (PR #55, main `a9f4736`, vedi DECISIONS D4). Niente più match per-identità.
 
 #### (storico) 6. Gate #0 — diagnostico PDF Ricevuta (live) + parser PDF reale
 
