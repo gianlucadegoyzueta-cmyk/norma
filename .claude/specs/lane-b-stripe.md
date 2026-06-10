@@ -2,10 +2,16 @@
 
 **Obiettivo:** Norma sa incassare. Tutto in TEST MODE (account "Norma sandbox" già esistente).
 
-## Decisioni di prodotto (GIÀ PRESE)
+## Decisioni di prodotto (GIÀ PRESE — fonte: Piano Marketing su Drive, maggio 2026)
 
-- Piano unico: "Norma" — €12/mese per struttura, IVA inclusa, trial 30 giorni senza carta.
-  (Coerente con la promessa pubblica su norma.casa.)
+- **Annuale-first:** piano "Norma" — €120/anno per struttura in evidenza (≈€10/mese);
+  €14/mese come rampa di fiducia (volutamente meno conveniente, spinge l'annuale).
+- **Trial legato al primo utilizzo, NON a tempo:** gratis fino al primo ospite gestito,
+  senza carta. Implementazione: il gating NON usa i trial Stripe a giorni — è logica
+  applicativa (accesso pieno finché count ospiti gestiti == 0; al primo ospite completato
+  scatta la richiesta di abbonamento, con grazia ragionevole per non interrompere il flusso).
+- NB: il sito marketing dice "€12/mese" — disallineamento noto, lo risolve Gianluca
+  (il prezzo pubblico va aggiornato al modello annuale-first). Non bloccare su questo.
 - Flusso: Stripe Checkout (hosted) per subscribe; Customer Portal per gestione/disdetta.
   NIENTE form carte custom (PCI a carico di Stripe).
 - Webhook `/api/webhooks/stripe`: checkout.session.completed, customer.subscription.updated/
@@ -27,7 +33,10 @@
 - Verifica firma webhook obbligatoria, idempotenza per event.id (tabella o cache in-memory
   con nota), errori → 500 con retry Stripe naturale.
 - Prezzi/prodotti: crea uno script `scripts/stripe-bootstrap.ts` che crea Product/Price
-  in test mode (idempotente, cerca prima di creare) — Gianluca lo lancerà con le sue chiavi.
+  in test mode (idempotente, cerca prima di creare): price annuale €120 + price mensile €14
+  — Gianluca lo lancerà con le sue chiavi.
+- Struttura a fasce per numero di immobili: PREDISPONI il modello (quantity per struttura)
+  ma fascia unica per ora.
 
 ## Definition of done
 
