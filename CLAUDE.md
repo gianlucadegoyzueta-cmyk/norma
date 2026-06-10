@@ -20,7 +20,7 @@ ISTAT, gestione CIN, check-in ospiti self-service multilingua.
 - `npm run dev` · `npm test` (vitest) · `npm run typecheck` · `npm run lint` · `npm run format`
 - CI completa locale: format && lint && typecheck && test && build — TUTTO verde prima di ogni PR.
 - Live test Alloggiati (richiedono credenziali in .env, MAI in CI):
-  `npm run alloggiati:gate0-pdf` · `alloggiati:live-check` · ecc. (gated da env RUN_*)
+  `npm run alloggiati:gate0-pdf` · `alloggiati:live-check` · ecc. (gated da env RUN\_\*)
 - DB: `npm run db:migrate` (dev) · `db:deploy` (prod, vedi guardrail) · `db:studio`
 
 ## Guardrail (non negoziabili)
@@ -42,7 +42,7 @@ ISTAT, gestione CIN, check-in ospiti self-service multilingua.
 - **D2:** outbox `MAX_SEND_ATTEMPTS=5`, incremento attempts solo in `claimForSending`.
 - **D3 (verdetto Gate #0, 2026-06-10):** la Ricevuta Alloggiati è AGGREGATA (niente nominativi):
   riconciliazione T+1 per CONTEGGIO via `RicevutaSummary`. Parser: `domain/ricevuta-summary.ts`
-  + `adapters/ricevuta-pdf-text.ts` (unpdf).
+  - `adapters/ricevuta-pdf-text.ts` (unpdf).
 
 ## Stato e roadmap (aggiorna quando cambia)
 
