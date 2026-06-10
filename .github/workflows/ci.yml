@@ -55,3 +55,60 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  e2e:
+    name: E2E smoke (Playwright)
+    runs-on: ubuntu-latest
+    # Deve restare snello: build + un solo browser (chromium) + suite smoke.
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: norma
+          POSTGRES_PASSWORD: norma
+          POSTGRES_DB: norma_e2e
+        ports:
+          - 5432:5432
+        # Aspetta che Postgres sia pronto prima di partire con le migrazioni.
+        options: >-
+          --health-cmd "pg_isready -U norma"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: "postgresql://norma:norma@localhost:5432/norma_e2e?schema=public"
+      DIRECT_URL: "postgresql://norma:norma@localhost:5432/norma_e2e?schema=public"
+      AUTH_SECRET: "ci-e2e-secret-placeholder-not-used-in-prod"
+      SECRETS_LOCAL_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+      EMAIL_FROM: "no-reply@example.com"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      # Schema reale su Postgres effimero: la pagina /checkin interroga il DB, quindi lo
+      # smoke ha bisogno dello schema applicato (nessuna migrazione NUOVA: solo deploy).
+      - name: Prisma migrate deploy
+        run: npx prisma migrate deploy
+
+      - name: Install Playwright browser (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      - name: E2E smoke
+        run: npm run test:e2e
