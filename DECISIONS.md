@@ -27,3 +27,14 @@
 - **Alternative:** (a) ricavare i nominativi da altri metodi WS — non esiste un metodo documentato che li restituisca; (b) OCR/parsing posizionale sperando in layout per-ospite — il documento semplicemente non li contiene.
 - **Implicazione per gli omonimi (NEEDS-HUMAN #4):** il problema di collisione omonimi nella riconciliazione per-identità DECADE; con il conteggio, un mismatch (attese≠inviate) non è attribuibile alla singola schedina → l'intero batch del giorno va in NEEDS_REVIEW.
 - **Implementazione:** `domain/ricevuta-summary.ts` (parser puro, tollera estrazione unpdf e pdftotext) + `adapters/ricevuta-pdf-text.ts` (estrazione testo via `unpdf`, serverless-ok). Test: 9 unit (fixture anonimizzata) + 2 locali sul PDF reale (skip automatico in CI: il PDF con PII resta fuori dal repo).
+
+## D4 — Riconciliazione T+1 per CONTEGGIO (redesign del reconcile)
+
+- **Decisione:** `SchedinaReconcileService` non matcha più per identità: confronta il CONTEGGIO delle schedine `UNVERIFIED` del giorno (`attese`) con le `SCHEDINE INVIATE` della Ricevuta aggregata (`reported`), lette tramite il nuovo port `RicevutaSummaryReader` (adapter `SoapRicevutaSummaryReader`, basato su `parseRicevutaSummaryPdfBase64`). Verdetto del batch:
+  - `reported === attese` → **MATCH** → `UNVERIFIED → ACQUIRED` (l'invio del batch era andato a buon fine);
+  - `reported === 0` o ricevuta assente (`null`/`ERRORE_RECUPERO_RICEVUTA`) → **NONE_SENT** → `UNVERIFIED → PENDING` (nulla è arrivato → re-inviabili senza rischio doppione);
+  - `reported !== attese` (e `> 0`) → **MISMATCH** → `UNVERIFIED → NEEDS_REVIEW`: un mismatch di conteggio NON è attribuibile alla singola schedina, quindi l'INTERO batch del giorno passa a revisione umana.
+- **Nuova transizione ammessa:** `UNVERIFIED → NEEDS_REVIEW` (prima assente). `NEEDS_REVIEW` e tutte le colonne usate esistono già in schema (PR #51) → **nessuna migrazione**.
+- **Conservativo per costruzione:** si auto-conferma SOLO a conteggi identici; si auto-riaccoda SOLO a ricevuta vuota; ogni ambiguità diventa lavoro umano esplicito. Mai un falso ACQUIRED automatico su mismatch (sarebbe irreversibile), mai un re-invio quando qualcosa potrebbe essere arrivato (doppione irreversibile).
+- **Limite noto (residuo, conservativo):** `attese` = numero di `UNVERIFIED` del giorno; se nello stesso giorno alcune schedine erano state ACQUISITE in modo sincrono, `reported` (totale di giornata) può superare `attese` → falso MISMATCH → revisione umana superflua ma SICURA. Raffinamento futuro (sottrarre le ACQUIRED del giorno dal conteggio atteso) richiederebbe query per-giorno con `sentAt`/`acquiredAt`: rimandato, non blocca.
+- **Compatibilità:** il vecchio port per-identità `AcquisitionReceiptReader` (+ `SoapAcquisitionReceiptReader`, `parseReceiptPdfBase64`) resta esportato per i test/mock storici, ma non è più usato dal servizio reale.

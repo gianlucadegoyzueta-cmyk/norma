@@ -21,10 +21,12 @@ describe("transizioni di stato dell'outbox — valide", () => {
     expect(isValidTransition(SENDING, UNVERIFIED)).toBe(true);
   });
 
-  it("recupero: REJECTED → PENDING; UNVERIFIED → {ACQUIRED, PENDING}", () => {
+  it("recupero: REJECTED → PENDING; UNVERIFIED → {ACQUIRED, PENDING, NEEDS_REVIEW}", () => {
     expect(isValidTransition(REJECTED, PENDING)).toBe(true);
     expect(isValidTransition(UNVERIFIED, ACQUIRED)).toBe(true);
     expect(isValidTransition(UNVERIFIED, PENDING)).toBe(true);
+    // Riconciliazione per conteggio: un mismatch porta l'intero batch in NEEDS_REVIEW (D4).
+    expect(isValidTransition(UNVERIFIED, SchedinaStatus.NEEDS_REVIEW)).toBe(true);
   });
 
   it("parcheggio: PENDING → NEEDS_REVIEW; rimessa in coda: NEEDS_REVIEW → PENDING", () => {

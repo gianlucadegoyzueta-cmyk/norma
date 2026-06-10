@@ -12,7 +12,10 @@ const ALLOWED: Record<SchedinaStatus, readonly SchedinaStatus[]> = {
   SENDING: [SchedinaStatus.ACQUIRED, SchedinaStatus.REJECTED, SchedinaStatus.UNVERIFIED],
   ACQUIRED: [], // terminale: l'acquisizione è IRREVERSIBILE
   REJECTED: [SchedinaStatus.PENDING], // dopo la correzione si ri-accoda
-  UNVERIFIED: [SchedinaStatus.ACQUIRED, SchedinaStatus.PENDING], // dopo la riconciliazione T+1
+  // Dopo la riconciliazione T+1 per conteggio: conteggi pari → ACQUIRED; ricevuta vuota → PENDING
+  // (ri-accodabile in sicurezza); conteggi diversi → NEEDS_REVIEW (mismatch non attribuibile alla
+  // singola schedina, l'intero batch del giorno passa a revisione umana — vedi DECISIONS D4).
+  UNVERIFIED: [SchedinaStatus.ACQUIRED, SchedinaStatus.PENDING, SchedinaStatus.NEEDS_REVIEW],
   // Esauriti i tentativi automatici: l'host risolve e la rimette in coda (con reset dei tentativi).
   NEEDS_REVIEW: [SchedinaStatus.PENDING],
 };

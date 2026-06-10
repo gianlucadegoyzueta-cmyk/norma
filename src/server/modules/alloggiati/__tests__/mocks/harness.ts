@@ -15,6 +15,7 @@ import { SchedinaVerifyService } from "../../services/verify.service";
 import { SchedinaReconcileService } from "../../services/reconcile.service";
 import type { AlloggiatiMockServer } from "./AlloggiatiMockServer";
 import { MockReceiptReader } from "./MockReceiptReader";
+import { MockRicevutaSummaryReader } from "./MockRicevutaSummaryReader";
 
 export interface AlloggiatiStack {
   repo: InMemorySchedinaRepository;
@@ -25,8 +26,10 @@ export interface AlloggiatiStack {
   sender: SoapAlloggiatiSender;
   outbox: SchedinaOutboxService;
   verify: SchedinaVerifyService;
-  /** Lettore della Ricevuta (mock-backed, ma via client SOAP reale) per la riconciliazione T+1. */
+  /** Lettore per-identità (storico, mock-backed) — mantenuto per i test che lo usano direttamente. */
   receiptReader: MockReceiptReader;
+  /** Lettore aggregato (conteggio) della Ricevuta — quello usato dalla riconciliazione T+1. */
+  summaryReader: MockRicevutaSummaryReader;
   reconcile: SchedinaReconcileService;
 }
 
@@ -59,7 +62,19 @@ export function createAlloggiatiStack(opts: {
   const outbox = new SchedinaOutboxService(repo, sender, buildRecord);
   const verify = new SchedinaVerifyService(repo, tokens, client, buildRecord);
   const receiptReader = new MockReceiptReader(tokens, client);
-  const reconcile = new SchedinaReconcileService(repo, receiptReader);
+  const summaryReader = new MockRicevutaSummaryReader(tokens, client);
+  const reconcile = new SchedinaReconcileService(repo, summaryReader);
 
-  return { repo, records, client, tokens, sender, outbox, verify, receiptReader, reconcile };
+  return {
+    repo,
+    records,
+    client,
+    tokens,
+    sender,
+    outbox,
+    verify,
+    receiptReader,
+    summaryReader,
+    reconcile,
+  };
 }
