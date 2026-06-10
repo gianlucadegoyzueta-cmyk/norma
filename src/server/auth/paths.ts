@@ -4,7 +4,17 @@ const PUBLIC_EXACT = new Set<string>(["/favicon.ico", "/icon.svg", "/api/health"
 // Pagine raggiungibili da SLOGGATI: login, registrazione, l'intero flusso /auth/* (recupero
 // password, "controlla email", reset, pagina d'errore di Auth.js), il CHECK-IN ospite self-service
 // (/checkin/[token], link pubblico), gli endpoint di Auth.js e gli asset di Next.
-const PUBLIC_PREFIXES = ["/login", "/signup", "/auth", "/checkin", "/api/auth", "/_next"];
+// `/api/webhooks/*` è pubblico: i webhook esterni (es. Stripe) arrivano senza sessione e si
+// autenticano da soli verificando la FIRMA del payload, non un cookie.
+const PUBLIC_PREFIXES = [
+  "/login",
+  "/signup",
+  "/auth",
+  "/checkin",
+  "/api/auth",
+  "/api/webhooks",
+  "/_next",
+];
 
 /**
  * True se la route è PUBBLICA (non richiede autenticazione): login/registrazione, il flusso auth

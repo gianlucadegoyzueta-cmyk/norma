@@ -1,0 +1,211 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { CheckCircle2, CreditCard, Info, TriangleAlert } from "lucide-react";
+import { getCurrentContext } from "@/server/auth/session";
+import {
+  ANNUAL_PLAN,
+  MONTHLY_PLAN,
+  formatEuroCents,
+  type AccessDecision,
+  type AccessState,
+  type PlanDefinition,
+} from "@/server/modules/billing";
+import { SiteHeader } from "@/components/site-header";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { loadBillingView } from "./_lib/billing";
+import { openPortalAction, startCheckoutAction } from "./actions";
+
+export const metadata: Metadata = { title: "Abbonamento" };
+export const dynamic = "force-dynamic";
+
+const STATE_BADGE: Record<AccessState, { text: string; variant: BadgeProps["variant"] }> = {
+  TRIAL: { text: "Prova gratuita", variant: "secondary" },
+  SUBSCRIBED: { text: "Attivo", variant: "success" },
+  GRACE: { text: "Da regolarizzare", variant: "warning" },
+  EXPIRED: { text: "Scaduto", variant: "destructive" },
+};
+
+function stateHeadline(access: AccessDecision): { title: string; description: string } {
+  switch (access.state) {
+    case "TRIAL":
+      return {
+        title: "Sei in prova gratuita",
+        description:
+          "Norma è gratis fino al tuo primo ospite gestito. Nessuna carta richiesta: " +
+          "abbónati quando vuoi per non interromperti al primo check-in.",
+      };
+    case "SUBSCRIBED":
+      return {
+        title: "Abbonamento attivo",
+        description:
+          "Grazie! Hai accesso completo a Norma. Puoi gestire o disdire quando vuoi dal portale.",
+      };
+    case "GRACE":
+      return access.graceReason === "PAYMENT_PAST_DUE"
+        ? {
+            title: "Pagamento in sospeso",
+            description:
+              "Non siamo riusciti ad incassare l'ultimo rinnovo. Aggiorna il metodo di pagamento " +
+              "per non perdere l'accesso: nel frattempo continui a lavorare normalmente.",
+          }
+        : {
+            title: "È ora di abbonarti",
+            description:
+              "Hai gestito il tuo primo ospite: per continuare a scrivere servirà l'abbonamento. " +
+              "Hai ancora qualche giorno di grazia per non interromperti.",
+          };
+    case "EXPIRED":
+      return {
+        title: "Abbonamento necessario",
+        description:
+          "La prova è terminata. Puoi sempre CONSULTARE i tuoi dati, ma per inviare schedine, " +
+          "calcolare la tassa e gestire gli ospiti serve un abbonamento attivo.",
+      };
+  }
+}
+
+function PlanCard({ plan, configured }: { plan: PlanDefinition; configured: boolean }) {
+  return (
+    <Card className={plan.recommended ? "border-primary" : undefined}>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>{plan.interval === "year" ? "Annuale" : "Mensile"}</CardTitle>
+          {plan.recommended && <Badge variant="success">Consigliato</Badge>}
+        </div>
+        <CardDescription>
+          <span className="text-foreground text-2xl font-semibold">
+            {formatEuroCents(plan.amountCents)}
+          </span>{" "}
+          / {plan.interval === "year" ? "anno" : "mese"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form action={startCheckoutAction}>
+          <input type="hidden" name="plan" value={plan.plan} />
+          <Button
+            type="submit"
+            className="w-full"
+            variant={plan.recommended ? "default" : "outline"}
+            disabled={!configured}
+          >
+            <CreditCard /> Abbónati
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default async function BillingPage() {
+  const ctx = await getCurrentContext();
+  if (!ctx) redirect("/login");
+
+  const { access, subscription, ready, configured } = await loadBillingView(
+    ctx.current.organizationId,
+  );
+  const headline = access ? stateHeadline(access) : null;
+  const hasCustomer = Boolean(subscription?.stripeCustomerId);
+
+  return (
+    <div className="bg-background min-h-screen">
+      <SiteHeader />
+      <main className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+        <div>
+          <h1 className="text-2xl font-semibold">Abbonamento</h1>
+          <p className="text-muted-foreground">Il piano di Norma e lo stato del tuo abbonamento.</p>
+        </div>
+
+        {!configured && (
+          <Card className="border-warning/40 bg-warning/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Info className="text-warning-foreground dark:text-warning" />
+                Pagamenti non ancora configurati
+              </CardTitle>
+              <CardDescription>
+                Le chiavi Stripe non sono impostate su questo ambiente: i pulsanti di pagamento sono
+                disattivati. Vedi NEEDS-HUMAN.md per i passi di configurazione.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+
+        {!ready && (
+          <Card className="border-warning/40 bg-warning/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <TriangleAlert className="text-warning-foreground dark:text-warning" />
+                Billing in attesa di attivazione
+              </CardTitle>
+              <CardDescription>
+                La tabella degli abbonamenti non è ancora stata creata (migrazione parcheggiata).
+                Una volta applicata, questa pagina mostrerà lo stato reale.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+
+        {access && headline && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  {access.state === "SUBSCRIBED" && <CheckCircle2 className="text-success" />}
+                  {headline.title}
+                </CardTitle>
+                <Badge variant={STATE_BADGE[access.state].variant}>
+                  {STATE_BADGE[access.state].text}
+                </Badge>
+              </div>
+              <CardDescription>{headline.description}</CardDescription>
+            </CardHeader>
+            {access.graceEndsAt && (
+              <CardContent>
+                <p className="text-muted-foreground text-sm">
+                  Periodo di grazia fino al{" "}
+                  {access.graceEndsAt.toLocaleDateString("it-IT", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                  .
+                </p>
+              </CardContent>
+            )}
+          </Card>
+        )}
+
+        <section className="space-y-3">
+          <h2 className="text-lg font-medium">Scegli il piano</h2>
+          <p className="text-muted-foreground text-sm">
+            L&apos;annuale conviene: due mesi in regalo rispetto al mensile.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <PlanCard plan={ANNUAL_PLAN} configured={configured} />
+            <PlanCard plan={MONTHLY_PLAN} configured={configured} />
+          </div>
+        </section>
+
+        {hasCustomer && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Gestisci l&apos;abbonamento</CardTitle>
+              <CardDescription>
+                Metodo di pagamento, fatture e disdetta dal portale sicuro di Stripe.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form action={openPortalAction}>
+                <Button type="submit" variant="outline" disabled={!configured}>
+                  Apri il portale clienti
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+      </main>
+    </div>
+  );
+}
