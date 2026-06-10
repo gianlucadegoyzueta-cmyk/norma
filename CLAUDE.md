@@ -68,3 +68,6 @@ ISTAT, gestione CIN, check-in ospiti self-service multilingua.
   `env NODE_ENV=`** a npm/npx/vitest, altrimenti npm salta i devDependencies.
 - Toolchain in `~/bin` (gh, supabase, jq) e `~/.npm-global/bin` (vercel, claude). Homebrew in `/opt/homebrew`.
 - gh/vercel/supabase CLI: già autenticati. Supabase: progetto linkato (`supabase/.temp`).
+- Docker: via **colima** (niente Docker Desktop). Se `docker ps` fallisce: `colima start`.
+  Postgres locale per test migrazioni: `docker compose up -d db` (vedi docker-compose.yml).
+- Playwright: chromium già in cache condivisa (~/Library/Caches/ms-playwright).

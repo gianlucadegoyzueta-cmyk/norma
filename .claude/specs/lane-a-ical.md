@@ -21,6 +21,11 @@ calendario (Airbnb/Booking lo espongono per struttura) e Norma crea/aggiorna i s
 
 - Additiva-only: nuova tabella ReservationImport + campi nullable su Stay (es. icalUid,
   importSource). VIETATO: drop, rename, alter di colonne esistenti.
+- **PROVA LA MIGRAZIONE IN LOCALE PRIMA** (docker è disponibile via colima):
+  `docker compose up -d db` nel worktree (porta già configurata in docker-compose.yml),
+  punta un `.env.test-db` locale a quel Postgres, esegui `env NODE_ENV= npx prisma migrate dev`
+  contro il DB locale, verifica che la migrazione applichi pulita e i test integrazione passino.
+  Se la porta è occupata da un'altra corsia: cambia porta nel compose override locale (non committarlo).
 - Prima del merge: esegui `~/bin/norma-backup.sh` e verifica l'ultima riga di
   `~/backups/norma/backup.log` (OK di oggi). La migrazione va in prod via migrate.yml al merge.
 - `npx prisma validate` + typecheck + test completi prima della PR.
