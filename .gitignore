@@ -26,5 +26,6 @@ npm-debug.log*
 # Gate #0 — artefatti diagnostici Ricevuta PDF (live, non versionati)
 /tmp/gate0-ricevuta/
 # config locale di Claude Code (non versionata)
-.claude/
+# Claude: comandi condivisi versionati, config locale no
+.claude/settings.local.json
 supabase/.temp/
