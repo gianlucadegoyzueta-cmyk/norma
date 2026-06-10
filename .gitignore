@@ -27,3 +27,4 @@ npm-debug.log*
 /tmp/gate0-ricevuta/
 # config locale di Claude Code (non versionata)
 .claude/
+supabase/.temp/

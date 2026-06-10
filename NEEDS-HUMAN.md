@@ -44,7 +44,12 @@ migrate.yml già presente, che gira al merge su main).
 - **Perché è qui (parzialmente):** un Vercel Cron + route API NON richiede schema, ma **abilitare l'invio automatico reale verso la Questura in autonomia notturna è rischioso** (il primo invio reale "solo su ospite vero, mai come prova" — vincolo del brief). Va acceso da te, consapevolmente.
 - **Cosa serve da te:** decidere quando attivarlo; io posso lasciare la route+cron **disattivati** su un branch.
 
-### 6. Gate #0 — diagnostico PDF Ricevuta (live) + parser PDF reale
+### 6. Gate #0 — diagnostico PDF Ricevuta (live) + parser PDF reale — ✅ RISOLTO (2026-06-10)
+
+- **Esito:** Gate #0 eseguito con credenziali reali. Autenticazione e canale SOAP verificati. Ricevuta reale del 2026-03-25 scaricata: è un documento AGGREGATO senza nominativi ospiti (vedi DECISIONS D3). Parser reale implementato (`ricevuta-summary.ts` + `ricevuta-pdf-text.ts`), 11 test verdi.
+- **Follow-up aperto:** redesign della riconciliazione T+1 per CONTEGGIO (al posto del match per-identità) — non richiede schema.
+
+#### (storico) 6. Gate #0 — diagnostico PDF Ricevuta (live) + parser PDF reale
 
 - **Perché è qui:** richiede **credenziali Alloggiati di test reali** nel `.env` e una **chiamata SOAP live** alla Questura → segreto/accesso che non ho e azione verso un sistema esterno reale. Il parser del PDF reale dipende dall'output del Gate #0.
 - **Cosa serve da te:** eseguire `npm run alloggiati:gate0-pdf` con le credenziali test, incollarmi il verdetto/diagnostica → poi implemento il parser reale e applico il verdetto al finding #1.
