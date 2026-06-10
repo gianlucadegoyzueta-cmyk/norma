@@ -56,6 +56,25 @@ enum TipoAlloggiato {
   MEMBRO_GRUPPO // cod. 20 — campi documento in BIANCO
 }
 
+/// Origine di una prenotazione importata via iCal. Dedotta dall'URL del feed
+/// (host Airbnb/Booking/VRBO); OTHER per qualsiasi altro calendario RFC5545.
+enum ReservationSource {
+  AIRBNB
+  BOOKING
+  VRBO
+  OTHER
+}
+
+/// Stato di import di un Soggiorno nato da un feed iCal (null = soggiorno creato a mano).
+///  - DRAFT: importato, da completare con gli ospiti.
+///  - CANCELLED: l'evento è sparito dal feed mentre il soggiorno era ANCORA bozza → annullato in automatico.
+///  - NEEDS_CANCEL_REVIEW: l'evento è sparito ma l'host aveva già inserito ospiti → si segnala, non si tocca.
+enum StayImportStatus {
+  DRAFT
+  CANCELLED
+  NEEDS_CANCEL_REVIEW
+}
+
 // Stati dell'outbox (decisione architetturale presa):
 enum SchedinaStatus {
   PENDING // creata, non ancora inviata
@@ -105,6 +124,7 @@ model Organization {
   onboardingProgress     OnboardingProgress?
   checkinTokens          CheckinToken[]
   istatSubmissions       IstatSubmission[]
+  reservationImports     ReservationImport[]
 }
 
 /// Registro degli invii ISTAT (movimento turistico): traccia che un mese è stato dichiarato, con
@@ -255,10 +275,11 @@ model Property {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  comune       Comune                @relation(fields: [comuneId], references: [id])
-  credential   AlloggiatiCredential? @relation(fields: [credentialId], references: [id])
-  stays        Stay[]
+  organization       Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  comune             Comune                @relation(fields: [comuneId], references: [id])
+  credential         AlloggiatiCredential? @relation(fields: [credentialId], references: [id])
+  stays              Stay[]
+  reservationImports ReservationImport[]
 
   @@index([organizationId])
   @@index([credentialId])
@@ -275,14 +296,51 @@ model Stay {
   guestsCount    Int
   isShortStay    Boolean   @default(false) // soggiorno <=24h → deadline a +6h
 
+  // --- Import iCal (additivo, tutto nullable: i soggiorni creati a mano restano invariati) ---
+  /// UID dell'evento iCal: chiave di dedup per il re-sync (upsert per import).
+  icalUid             String?
+  importSource        ReservationSource?
+  importStatus        StayImportStatus? // null = soggiorno NON importato (creato a mano)
+  reservationImportId String? // feed di provenienza
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  property      Property       @relation(fields: [propertyId], references: [id])
-  guests        Guest[]
-  checkinTokens CheckinToken[]
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  property          Property           @relation(fields: [propertyId], references: [id])
+  guests            Guest[]
+  checkinTokens     CheckinToken[]
+  reservationImport ReservationImport? @relation(fields: [reservationImportId], references: [id], onDelete: SetNull)
 
+  @@unique([reservationImportId, icalUid]) // dedup UID per feed (NULL multipli ammessi → soggiorni a mano ok)
+  @@index([organizationId])
+  @@index([propertyId])
+  @@index([reservationImportId])
+}
+
+/// Sorgente di prenotazioni per un immobile: un URL iCal (Airbnb/Booking/VRBO) che l'host
+/// incolla. Norma lo legge e crea/aggiorna i Soggiorni in bozza. Un immobile può avere più
+/// feed (es. Airbnb + Booking). NIENTE segreti qui: l'URL iCal è un link "a sola lettura"
+/// pubblico ma non indicizzato — lo trattiamo come dato normale (non passa dal SecretsVault).
+model ReservationImport {
+  id             String            @id @default(cuid())
+  organizationId String
+  propertyId     String
+  url            String
+  source         ReservationSource @default(OTHER)
+
+  lastSyncAt   DateTime? // ultimo sync tentato
+  lastError    String? // messaggio dell'ultimo sync fallito (null = ultimo sync ok)
+  lastImported Int       @default(0) // n° prenotazioni viste nell'ultimo sync riuscito
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  property     Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  stays        Stay[]
+
+  @@unique([propertyId, url]) // stesso feed una sola volta per immobile
   @@index([organizationId])
   @@index([propertyId])
 }
