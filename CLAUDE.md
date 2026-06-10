@@ -46,10 +46,11 @@ ISTAT, gestione CIN, check-in ospiti self-service multilingua.
 
 ## Stato e roadmap (aggiorna quando cambia)
 
-- ✅ Canale SOAP Questura verificato live (Gate #0, 2026-06-10). Parser ricevuta reale: PR #53.
-- 🔜 P0: reconcile per conteggio → poi accendere scheduler invio+reconcile (decisione umana).
-- 🔜 P1: Stripe billing (€12/mese promesso sul sito) · import iCal Airbnb/Booking · Sentry.
-- 🔜 P2: ISTAT invio regionale reale (Ross1000/Lazio) · PDF tassa di soggiorno (PR aperta).
+- ✅ Canale SOAP Questura verificato live (Gate #0, 2026-06-10). Parser ricevuta: #53. Reconcile per conteggio: #55.
+- ⛔ **Invii reali CONGELATI per decisione di Gianluca (2026-06-10):** prima si completa il resto
+  del prodotto. PR #56 (cron) resta aperta e NON va mergiata/attivata. Non riproporre.
+- 🔜 P1 (focus attuale): Stripe billing (€12/mese promesso sul sito) · import iCal Airbnb/Booking · Sentry.
+- 🔜 P2: ISTAT invio regionale reale (Ross1000/Lazio) · PDF tassa di soggiorno · review design system (PR #52, occhi umani).
 - Backlog umano: NEEDS-HUMAN.md. Log notturni: NIGHT-LOG.md.
 
 ## Quirk ambiente (Mac di Gianluca)
