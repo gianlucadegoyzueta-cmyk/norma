@@ -58,13 +58,17 @@ export function CheckinForm({
   }
 
   const err = (k: string) => state.fieldErrors?.[k];
+  const errorId = (k: string) => `${k}-error`;
   const fieldError = (k: string) =>
     err(k) ? (
-      <p className="text-destructive text-xs" role="alert">
+      <p id={errorId(k)} className="text-destructive text-xs" role="alert">
         {err(k)}
       </p>
     ) : null;
-  const invalidProps = (k: string) => (err(k) ? { "aria-invalid": true as const } : {});
+  // Collega l'errore al campo (aria-invalid + aria-describedby) così lo screen reader
+  // annuncia il motivo quando l'ospite torna sul campo, non solo al submit.
+  const invalidProps = (k: string) =>
+    err(k) ? { "aria-invalid": true as const, "aria-describedby": errorId(k) } : {};
 
   return (
     <form action={action} className="flex flex-col gap-4">
