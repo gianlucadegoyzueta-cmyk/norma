@@ -11,3 +11,4 @@ prisma/migrations
 .claude
 test-results
 playwright-report
+docs/design/
