@@ -20,6 +20,10 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/checkin/abc123")).toBe(true);
   });
 
+  it("apre i webhook esterni (firma del payload, non cookie)", () => {
+    expect(isPublicPath("/api/webhooks/stripe")).toBe(true);
+  });
+
   it("considera protette le altre route", () => {
     expect(isPublicPath("/")).toBe(false);
     expect(isPublicPath("/dashboard")).toBe(false);

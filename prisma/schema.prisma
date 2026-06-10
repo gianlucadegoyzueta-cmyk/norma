@@ -125,6 +125,7 @@ model Organization {
   checkinTokens          CheckinToken[]
   istatSubmissions       IstatSubmission[]
   reservationImports     ReservationImport[]
+  subscription           Subscription?
 }
 
 /// Registro degli invii ISTAT (movimento turistico): traccia che un mese è stato dichiarato, con
@@ -550,6 +551,27 @@ model TouristTaxConfig {
 
 /// Stato della dichiarazione periodica. Macchina a stati validata nel dominio:
 /// DRAFT → READY → SUBMITTED → PAID. (Annullabile a CANCELLED da DRAFT/READY.)
+/// Stato dell'abbonamento Stripe, specchiato in locale dai webhook. I valori ricalcano
+/// gli `status` di Stripe (https://stripe.com/docs/api/subscriptions/object#subscription_object-status).
+/// NB: il TRIAL di Norma (gratis fino al primo ospite) NON è un trial Stripe: è logica
+/// applicativa (billing/domain/access.ts), quindi non si rispecchia qui.
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  UNPAID
+  PAUSED
+}
+
+/// Piano commerciale scelto (annuale-first: €120/anno consigliato, €14/mese rampa).
+enum BillingPlan {
+  ANNUAL
+  MONTHLY
+}
+
 enum TaxDeclarationStatus {
   DRAFT // in costruzione/ricalcolabile
   READY // congelata, pronta all'export/invio
@@ -649,4 +671,39 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// ------------------------------- BILLING / STRIPE -------------------------------
+
+/// Stato locale dell'abbonamento per Organization (il tenant = il cliente che paga).
+/// La FONTE DI VERITÀ è Stripe: questo record è uno specchio aggiornato dai webhook
+/// (checkout.session.completed, customer.subscription.updated/deleted, invoice.payment_failed).
+/// 1:1 con Organization (organizationId UNIQUE). Il TRIAL "fino al primo ospite" NON sta qui:
+/// è derivato dai dati (billing/domain/access.ts), per non legarci ai trial a giorni di Stripe.
+model Subscription {
+  id                   String              @id @default(cuid())
+  organizationId       String              @unique
+  status               SubscriptionStatus?
+  plan                 BillingPlan?
+  stripeCustomerId     String?             @unique
+  stripeSubscriptionId String?             @unique
+  stripePriceId        String?
+  /// Predisposizione fasce per numero di immobili (per ora sempre 1: fascia unica).
+  quantity             Int                 @default(1)
+  currentPeriodEnd     DateTime? // fine periodo pagato → tolleranza/grazia lato gating
+  cancelAtPeriodEnd    Boolean             @default(false)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([stripeCustomerId])
+}
+
+/// Idempotenza dei webhook Stripe: un `event.id` già processato non viene riapplicato
+/// (Stripe ritenta in caso di errore/timeout). `id` = l'event.id di Stripe.
+model ProcessedStripeEvent {
+  id          String   @id
+  type        String
+  processedAt DateTime @default(now())
 }
