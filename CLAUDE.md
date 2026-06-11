@@ -53,6 +53,13 @@ ISTAT, gestione CIN, check-in ospiti self-service multilingua.
 - 🔜 P2: ISTAT invio regionale reale (Ross1000/Lazio) · PDF tassa di soggiorno · review design system (PR #52, occhi umani).
 - Backlog umano: NEEDS-HUMAN.md. Log notturni: NIGHT-LOG.md.
 
+## Governance (docs/ops/GOVERNANCE.md — vincolante)
+
+Ogni unità dichiara la sua **classe di rischio** (LOW/MEDIUM/HIGH/CRITICAL) nel PR body e
+ne rispetta le regole di merge. Richieste al founder nel formato standard (decisione/
+opzioni/raccomandazione/rischio/scadenza). Report con chiusura: Deciso·Rischio·Evidenza·
+Prossima azione.
+
 ## Regole flotta (corse notturne parallele su worktree)
 
 - Ogni corsia lavora SOLO nel suo worktree e nei moduli della sua spec (`.claude/specs/`).
