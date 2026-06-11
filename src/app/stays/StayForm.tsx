@@ -85,7 +85,7 @@ export function StayForm({ properties }: { properties: Property[] }) {
       </p>
 
       <Button type="submit" disabled={pending} className="mt-1 w-fit">
-        {pending ? <Loader2 className="animate-spin" /> : null}
+        {pending ? <Loader2 className="animate-spin" aria-hidden /> : null}
         {pending ? "Creazione…" : "Crea soggiorno"}
       </Button>
 
@@ -98,9 +98,9 @@ export function StayForm({ properties }: { properties: Property[] }) {
           )}
         >
           {state.ok ? (
-            <CheckCircle2 className="size-4 shrink-0" />
+            <CheckCircle2 className="size-4 shrink-0" aria-hidden />
           ) : (
-            <XCircle className="size-4 shrink-0" />
+            <XCircle className="size-4 shrink-0" aria-hidden />
           )}
           {state.message}
         </p>

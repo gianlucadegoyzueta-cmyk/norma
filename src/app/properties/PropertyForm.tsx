@@ -100,7 +100,7 @@ export function PropertyForm({
       )}
 
       <Button type="submit" disabled={pending || visibleComuni.length === 0} className="mt-1 w-fit">
-        {pending ? <Loader2 className="animate-spin" /> : null}
+        {pending ? <Loader2 className="animate-spin" aria-hidden /> : null}
         {pending ? "Salvataggio…" : "Aggiungi immobile"}
       </Button>
 
@@ -113,9 +113,9 @@ export function PropertyForm({
           )}
         >
           {state.ok ? (
-            <CheckCircle2 className="size-4 shrink-0" />
+            <CheckCircle2 className="size-4 shrink-0" aria-hidden />
           ) : (
-            <XCircle className="size-4 shrink-0" />
+            <XCircle className="size-4 shrink-0" aria-hidden />
           )}
           {state.message}
         </p>

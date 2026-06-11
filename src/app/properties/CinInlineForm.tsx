@@ -82,14 +82,14 @@ export function CinInlineForm({
           />
         </div>
         <Button type="submit" size="sm" disabled={pending}>
-          {savePending ? <Loader2 className="size-4 animate-spin" /> : "Salva CIN"}
+          {savePending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : "Salva CIN"}
         </Button>
       </form>
       <form action={skipAction}>
         <input type="hidden" name="propertyId" value={propertyId} />
         <Button type="submit" variant="ghost" size="sm" disabled={pending} className="text-xs">
           {skipPending ? (
-            <Loader2 className="size-4 animate-spin" />
+            <Loader2 className="size-4 animate-spin" aria-hidden />
           ) : (
             "Non richiesto per questo immobile"
           )}

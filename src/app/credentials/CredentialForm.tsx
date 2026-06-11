@@ -46,7 +46,7 @@ export function CredentialForm() {
       </div>
 
       <div className="bg-muted text-muted-foreground my-1 flex items-center gap-2 rounded-md px-3 py-2 text-xs">
-        <Lock className="size-3.5 shrink-0" />
+        <Lock className="size-3.5 shrink-0" aria-hidden />
         Credenziali Alloggiati Web — salvate cifrate nel vault, mai in chiaro.
       </div>
 
@@ -72,7 +72,7 @@ export function CredentialForm() {
       </div>
 
       <Button type="submit" disabled={pending} className="mt-1 w-fit">
-        {pending ? <Loader2 className="animate-spin" /> : null}
+        {pending ? <Loader2 className="animate-spin" aria-hidden /> : null}
         {pending ? "Verifica in corso…" : "Aggiungi e verifica"}
       </Button>
 
@@ -85,9 +85,9 @@ export function CredentialForm() {
           )}
         >
           {state.ok ? (
-            <CheckCircle2 className="size-4 shrink-0" />
+            <CheckCircle2 className="size-4 shrink-0" aria-hidden />
           ) : (
-            <XCircle className="size-4 shrink-0" />
+            <XCircle className="size-4 shrink-0" aria-hidden />
           )}
           {state.message}
         </p>

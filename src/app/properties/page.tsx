@@ -50,7 +50,7 @@ export default async function PropertiesPage() {
           href="/dashboard"
           className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-4" aria-hidden />
           Dashboard
         </Link>
 
@@ -58,19 +58,21 @@ export default async function PropertiesPage() {
           <h1 className="font-display text-2xl font-semibold tracking-tight">Immobili</h1>
           <p className="text-muted-foreground mt-2 max-w-prose text-sm">
             Gli immobili di{" "}
-            <strong className="text-foreground">{ctx.current.organizationName}</strong>. Ogni
-            immobile si collega a una credenziale Alloggiati per l&apos;invio delle schedine; il
-            Comune dev&apos;essere nella provincia di competenza della credenziale.
+            <strong className="text-foreground">{ctx.current.organizationName}</strong>. Collego
+            ogni immobile a una credenziale Alloggiati per inviare le schedine; il Comune
+            dev&apos;essere nella provincia di competenza della credenziale.
           </p>
         </div>
 
-        <section className="mb-10">
-          <h2 className="text-muted-foreground mb-3 text-sm font-medium">I tuoi immobili</h2>
+        <section aria-labelledby="properties-heading" className="mb-10">
+          <h2 id="properties-heading" className="text-muted-foreground mb-3 text-sm font-medium">
+            I tuoi immobili
+          </h2>
           {properties.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
                 <span className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-lg">
-                  <Building2 className="size-5" />
+                  <Building2 className="size-5" aria-hidden />
                 </span>
                 <p className="text-muted-foreground text-sm">
                   Nessun immobile ancora. Aggiungine uno qui sotto.
@@ -87,10 +89,13 @@ export default async function PropertiesPage() {
                     <Card>
                       <CardContent className="px-4 py-3">
                         <div className="flex items-start justify-between gap-4">
-                          <Link href={`/properties/${p.id}`} className="min-w-0 flex-1">
+                          <Link
+                            href={`/properties/${p.id}`}
+                            className="focus-visible:ring-ring -m-1 min-w-0 flex-1 rounded-md p-1 outline-none focus-visible:ring-2"
+                          >
                             <p className="truncate font-medium hover:underline">{p.name}</p>
                             <p className="text-muted-foreground flex items-center gap-1 truncate text-xs">
-                              <MapPin className="size-3 shrink-0" />
+                              <MapPin className="size-3 shrink-0" aria-hidden />
                               {p.address} · {p.comune.name} ({p.comune.provincia}) ·{" "}
                               {p.proprietario}
                             </p>
@@ -98,7 +103,7 @@ export default async function PropertiesPage() {
                           <div className="flex shrink-0 flex-col items-end gap-1">
                             {p.credential ? (
                               <Badge variant="secondary">
-                                <KeyRound className="size-3" />
+                                <KeyRound className="size-3" aria-hidden />
                                 {p.credential.label}
                               </Badge>
                             ) : (
