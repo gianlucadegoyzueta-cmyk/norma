@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/site-header";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CredentialForm } from "./CredentialForm";
+import { ExportDataButton } from "./ExportDataButton";
 
 export const metadata: Metadata = { title: "Credenziali Alloggiati" };
 
@@ -106,13 +107,29 @@ export default async function CredentialsPage() {
           )}
         </section>
 
-        <section>
+        <section className="mb-10">
           <Card>
             <CardHeader>
               <CardTitle>Aggiungi credenziale</CardTitle>
             </CardHeader>
             <CardContent>
               <CredentialForm />
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Esporta tutto: i dati dell'host sono suoi, scaricabili in qualsiasi momento. */}
+        <section>
+          <Card>
+            <CardHeader>
+              <CardTitle>I tuoi dati</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <p className="text-muted-foreground text-sm text-pretty">
+                I dati sono tuoi, sempre. Scarica un archivio con soggiorni, ospiti, tasse di
+                soggiorno e invii ISTAT in formato CSV (apribili con Excel o Fogli Google).
+              </p>
+              <ExportDataButton />
             </CardContent>
           </Card>
         </section>
