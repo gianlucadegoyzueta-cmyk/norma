@@ -53,6 +53,12 @@ ISTAT, gestione CIN, check-in ospiti self-service multilingua.
 - 🔜 P2: ISTAT invio regionale reale (Ross1000/Lazio) · PDF tassa di soggiorno · review design system (PR #52, occhi umani).
 - Backlog umano: NEEDS-HUMAN.md. Log notturni: NIGHT-LOG.md.
 
+## Costituzione operativa (/ops — vincolante)
+
+Il sistema opera sotto il Sovereign System Package adattato: leggi `/ops/INDEX.md` (mappa
+sul sistema vivo), `AGENT_LAWS.md` (leggi e **frozen areas concrete**), `GOVERNOR_RULES.md`.
+Precedenza in conflitto: CLAUDE.md → /ops → spec di corsia.
+
 ## Governance (docs/ops/GOVERNANCE.md — vincolante)
 
 Ogni unità dichiara la sua **classe di rischio** (LOW/MEDIUM/HIGH/CRITICAL) nel PR body e
