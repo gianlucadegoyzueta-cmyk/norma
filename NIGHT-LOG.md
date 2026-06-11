@@ -5,6 +5,16 @@
 > sicure, reversibili e SENZA migrazioni. Le feature con schema sono parcheggiate
 > in NEEDS-HUMAN con migrazione generata ma NON applicata (niente backup garantito sul DB prod).
 
+## SESSIONE 2026-06-11 (giorno) — flotta diurna, corsia Q3 (a11y + copy, 2º giro)
+
+**Online (mergiato + CI verde + health-check):**
+
+- **PR #75** — **pass a11y + copy concierge** su `/properties`, `/stays`, `/credentials`, `/tourist-tax` (le quattro non coperte dal 1º giro). a11y: `/tourist-tax` ora ha `<main id="main-content" tabIndex={-1} outline-none>` + link "Dashboard" (era l'unica senza, mancava il target dello skip-link); `aria-hidden` su tutte le icone decorative lucide in pagine e form; focus-visible ring sul link scheda immobile; `aria-labelledby` sulle `<section>`→`<h2>`; `BuildDeclarationForm` usa il token `text-success` invece di `text-emerald-600` hard-coded. Copy in prima persona sobria ("Collego ogni immobile…", "genero le schedine…", "le custodisco cifrate…", "Preparo le dichiarazioni…"). **Nessun cambio** di schema/dominio/invii — solo markup/classi/copy. CI: format, lint, typecheck, **432 test**, build + E2E smoke Playwright + Vercel tutti verdi. ✅ main `18c4145`, health-check `{"status":"ok"}`.
+
+**Guardrail rispettati:** nessun Send reale, nessuna migrazione, nessuna cancellazione, niente push su main (PR #75 + CI verde, poi squash-merge). Branch `chore/a11y-copy-pass-2` eliminato.
+
+---
+
 ## SESSIONE 2026-06-10 (notte) — reconcile per conteggio + scheduler disattivato
 
 **Online (mergiato + CI verde + health-check):**
