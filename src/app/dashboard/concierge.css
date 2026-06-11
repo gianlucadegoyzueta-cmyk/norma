@@ -213,6 +213,37 @@
     transform: none;
   }
 }
+/* Parola che si auto-sostituisce (cose vere che Norma gestisce), stile homepage marketing */
+.cmx-hero h1 .cmx-rot {
+  position: relative;
+  display: inline-grid;
+  vertical-align: bottom;
+  text-align: left;
+}
+.cmx-rot-spacer {
+  grid-area: 1 / 1;
+  visibility: hidden;
+  white-space: nowrap;
+}
+.cmx-rot-w {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+  color: var(--terracotta);
+  font-style: italic;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(0.32em);
+  filter: blur(5px);
+  transition:
+    opacity 0.5s var(--ease),
+    transform 0.5s var(--ease),
+    filter 0.5s var(--ease);
+}
+.cmx-rot-w.is-active {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+}
 .cmx-sub {
   margin: 20px auto 0;
   font-size: 16.5px;
@@ -237,52 +268,76 @@
   }
 }
 
-/* ===== KPI: tilt+spotlight+odometro ===== */
+/* ===== KPI: tilt+spotlight+odometro, cliccabili (drill-down) ===== */
 .cmx-kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin: 48px 0 38px;
-  perspective: 900px;
+  gap: 18px;
+  margin: 36px 0 40px;
+  perspective: 1100px;
   position: relative;
   z-index: 2;
 }
 .cmx-kpi {
   --mx: 50%;
   --my: 50%;
+  /* reset del <button>: la card resta identica ma diventa cliccabile/accessibile */
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+  display: block;
+  cursor: pointer;
+
   background: var(--carta);
   border: 1px solid var(--hairline);
-  border-radius: 16px;
-  padding: 20px 24px;
+  border-radius: 18px;
+  padding: 26px 26px 22px;
   position: relative;
   overflow: hidden;
   transform-style: preserve-3d;
+  box-shadow: 0 6px 22px rgba(33, 28, 21, 0.07);
   transition:
     transform 0.18s ease-out,
-    box-shadow 0.3s;
+    box-shadow 0.3s,
+    border-color 0.3s;
   opacity: 0;
   animation: cmx-fadeup 0.8s var(--ease) calc(1.2s + var(--i) * 0.12s) forwards;
+}
+.cmx-kpi:hover {
+  border-color: rgba(188, 75, 43, 0.35);
+  box-shadow: 0 16px 40px rgba(33, 28, 21, 0.13);
+}
+.cmx-kpi:focus-visible {
+  outline: 2px solid var(--terracotta);
+  outline-offset: 3px;
+}
+.cmx-kpi[disabled] {
+  cursor: default;
+  box-shadow: 0 6px 22px rgba(33, 28, 21, 0.07);
 }
 .cmx-kpi::after {
   content: "";
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    220px circle at var(--mx) var(--my),
-    rgba(188, 75, 43, 0.07),
+    240px circle at var(--mx) var(--my),
+    rgba(188, 75, 43, 0.08),
     transparent 65%
   );
   opacity: 0;
   transition: opacity 0.3s;
+  pointer-events: none;
 }
 .cmx-kpi:hover::after {
   opacity: 1;
 }
 .cmx-kpi .cmx-l {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--soft);
-  margin-top: 2px;
+  margin-top: 4px;
 }
 .cmx-kpi .cmx-trend {
   margin-top: 8px;
@@ -294,22 +349,45 @@
 .cmx-kpi .cmx-trend.cmx-due {
   color: var(--terracotta);
 }
+/* Affordance di click: discreta, si accende e scorre all'hover */
+.cmx-kpi-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  opacity: 0.55;
+  transition: opacity 0.25s;
+}
+.cmx-kpi:hover .cmx-kpi-cta {
+  opacity: 1;
+}
+.cmx-kpi-arrow {
+  transition: transform 0.25s var(--ease);
+}
+.cmx-kpi:hover .cmx-kpi-arrow {
+  transform: translateX(4px);
+}
 .cmx-odo {
   display: flex;
   align-items: baseline;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 38px;
-  letter-spacing: -0.02em;
-  height: 44px;
+  font-size: 48px;
+  letter-spacing: -0.025em;
+  height: 52px;
   overflow: hidden;
 }
 .cmx-odo small {
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 500;
   color: var(--soft);
-  margin-left: 2px;
+  margin-left: 3px;
 }
 .cmx-odo .cmx-pre {
   margin-right: 1px;
@@ -317,7 +395,7 @@
 .cmx-digit {
   position: relative;
   width: 0.62em;
-  height: 44px;
+  height: 52px;
   overflow: hidden;
 }
 .cmx-digit .cmx-col {
@@ -329,9 +407,113 @@
   transition: transform 1.6s var(--ease);
 }
 .cmx-digit .cmx-col span {
-  height: 44px;
-  line-height: 44px;
+  height: 52px;
+  line-height: 52px;
   text-align: center;
+}
+
+/* ===== FOGLIO DI DETTAGLIO KPI (<dialog>) ===== */
+.cmx-sheet {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: auto;
+  max-width: 440px;
+  width: calc(100% - 36px);
+  color: var(--inchiostro);
+}
+.cmx-sheet::backdrop {
+  background: rgba(33, 28, 21, 0.42);
+  backdrop-filter: blur(2px);
+}
+.cmx-sheet-inner {
+  background: var(--carta);
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  padding: 26px 28px 28px;
+  box-shadow: 0 24px 70px rgba(33, 28, 21, 0.28);
+  position: relative;
+  overflow: hidden;
+}
+.cmx-sheet-inner::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--terracotta);
+}
+.cmx-sheet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cmx-sheet-head h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.cmx-sheet-x {
+  appearance: none;
+  border: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--soft);
+  border-radius: 99px;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  cursor: pointer;
+  font-size: 13px;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+}
+.cmx-sheet-x:hover {
+  border-color: var(--inchiostro);
+  color: var(--inchiostro);
+}
+.cmx-sheet-intro {
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #4d443a;
+}
+.cmx-sheet-rows {
+  margin-top: 18px;
+  border-top: 1px solid var(--hairline);
+}
+.cmx-sheet-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.cmx-sheet-row dt {
+  font-size: 14px;
+  color: var(--soft);
+}
+.cmx-sheet-row dd {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--inchiostro);
+}
+.cmx-sheet-note {
+  margin-top: 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--soft);
+}
+.cmx-sheet-link {
+  margin-top: 20px;
+  width: 100%;
+  justify-content: center;
 }
 
 /* ===== LAYOUT ===== */
@@ -691,27 +873,40 @@
   padding: 8px 0;
 }
 
-/* ===== SCORCIATOIE (navigazione discreta) ===== */
-.cmx-shortcuts {
+/* ===== ACCESSO RAPIDO (barra in evidenza, centrata, sopra i KPI) ===== */
+.cmx-quicknav {
   position: relative;
   z-index: 2;
-  margin-top: 40px;
-  padding-top: 24px;
-  border-top: 1px solid var(--hairline);
+  margin: 30px auto 0;
+  width: max-content;
+  max-width: 100%;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px 12px;
   align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  background: var(--carta);
+  border: 1px solid var(--hairline);
+  border-radius: 99px;
+  box-shadow: 0 8px 28px rgba(33, 28, 21, 0.07);
   opacity: 0;
-  animation: cmx-fadeup 0.8s var(--ease) 2.2s forwards;
+  animation: cmx-fadeup 0.8s var(--ease) 1s forwards;
 }
-.cmx-shortcuts .cmx-sc-label {
+.cmx-quicknav-pills {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+.cmx-sc-label {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--salvia);
-  margin-right: 4px;
+  margin-right: 2px;
 }
 .cmx-sc {
   text-decoration: none;
@@ -750,6 +945,31 @@
   .cmx-top {
     flex-wrap: wrap;
   }
+  /* Barra accesso rapido: piena larghezza, raggio morbido, scroll orizzontale dei pill */
+  .cmx-quicknav {
+    width: auto;
+    border-radius: 16px;
+    justify-content: flex-start;
+    padding: 12px 14px;
+  }
+  .cmx-quicknav-pills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .cmx-quicknav-pills::-webkit-scrollbar {
+    display: none;
+  }
+  .cmx-sc {
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  .cmx-odo {
+    font-size: 42px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -770,8 +990,14 @@
   .cmx-agenda,
   .cmx-diary,
   .cmx-sub,
-  .cmx-empty {
+  .cmx-empty,
+  .cmx-quicknav {
     opacity: 1;
+  }
+  .cmx-rot-w.is-active {
+    opacity: 1;
+    filter: none;
+    transform: none;
   }
   .cmx-rule {
     width: 120px;

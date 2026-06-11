@@ -126,30 +126,34 @@ export function ConciergeScene({
 
         <main id="main-content" tabIndex={-1} className="outline-none">
           <ConciergeHero kicker={kicker} lines={lines} sub={sub} />
+
+          {/* Barra di accesso rapido: in evidenza, centrata, sopra i KPI (non più persa in fondo). */}
+          <nav className="cmx-quicknav" aria-label="Vai a una sezione">
+            <span className="cmx-sc-label">Vai a</span>
+            <span className="cmx-quicknav-pills">
+              <Link className="cmx-sc" href="/schedine">
+                Schedine
+              </Link>
+              <Link className="cmx-sc" href="/stays">
+                Soggiorni
+              </Link>
+              <Link className="cmx-sc" href="/properties">
+                Immobili
+              </Link>
+              <Link className="cmx-sc" href="/tourist-tax">
+                Tassa di soggiorno
+              </Link>
+              <Link className="cmx-sc" href="/istat">
+                ISTAT
+              </Link>
+              <Link className="cmx-sc" href="/credentials">
+                Credenziali
+              </Link>
+            </span>
+          </nav>
+
           <ConciergeKpis kpis={kpis} />
           <ConciergeBoard proposals={proposals} agenda={agenda} diary={diary} />
-
-          <nav className="cmx-shortcuts" aria-label="Scorciatoie">
-            <span className="cmx-sc-label">Vai a</span>
-            <Link className="cmx-sc" href="/schedine">
-              Schedine
-            </Link>
-            <Link className="cmx-sc" href="/stays">
-              Soggiorni
-            </Link>
-            <Link className="cmx-sc" href="/properties">
-              Immobili
-            </Link>
-            <Link className="cmx-sc" href="/tourist-tax">
-              Tassa di soggiorno
-            </Link>
-            <Link className="cmx-sc" href="/istat">
-              ISTAT
-            </Link>
-            <Link className="cmx-sc" href="/credentials">
-              Credenziali
-            </Link>
-          </nav>
         </main>
       </div>
     </div>

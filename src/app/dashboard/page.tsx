@@ -22,7 +22,9 @@ export default async function DashboardPage() {
     getOnboardingState(prisma, orgId),
   ]);
 
-  const firstName = (ctx.user.name ?? ctx.user.email ?? "host").split(/[\s@]/)[0];
+  // Primo nome REALE dell'utente: se manca (solo email), saluto elegante senza nome.
+  const rawName = ctx.user.name?.trim();
+  const firstName = rawName ? rawName.split(/\s+/)[0] : null;
 
   // Onboarding incompleto = prima proposta (azione reale: vai al wizard), poi le proposte sui dati.
   const proposals: DashboardProposal[] = [];

@@ -4,9 +4,12 @@ import { OPEN_SCHEDINA_STATUSES } from "@/lib/schedina-status";
 import { periodOf } from "@/server/modules/tourist-tax/domain/period";
 import {
   buildConciergeDigest,
-  occupancyPercent,
+  occupancyBreakdown,
   type ConciergeEvent,
 } from "@/server/modules/dashboard/concierge-digest";
+
+/** Minuti di pratiche per ospite che Norma automatizza (base della stima "ore risparmiate"). */
+export const MINUTES_SAVED_PER_GUEST = 15;
 
 const DAY_MS = 86_400_000;
 /** Finestra "stanotte": le ultime 30h coprono la notte e la prima mattina. */
@@ -52,6 +55,10 @@ export interface DashboardData {
   kpis: {
     occupancyPct: number;
     occupancyTrend: string;
+    /** Notti occupate nel mese e capienza totale (per il drill-down dell'occupazione). */
+    occupiedNights: number;
+    capacityNights: number;
+    propertyCount: number;
     guestsThisMonth: number;
     taxAccruedEuros: number;
     taxTrend: string;
@@ -217,9 +224,10 @@ export async function getDashboardData(
   ]);
 
   // ---- KPI ----
-  const occupancyPct = occupancyPercent(monthStays, { monthStart, monthEnd, propertyCount });
+  const occupancy = occupancyBreakdown(monthStays, { monthStart, monthEnd, propertyCount });
+  const occupancyPct = Math.min(100, occupancy.pct);
   const taxAccruedCents = taxAgg._sum.amountCents ?? 0;
-  const hoursSaved = Math.round((guestsThisMonth * 15) / 60);
+  const hoursSaved = Math.round((guestsThisMonth * MINUTES_SAVED_PER_GUEST) / 60);
 
   // ---- Diario "Fatto da Norma" (eventi reali) ----
   const events: ConciergeEvent[] = [];
@@ -385,6 +393,9 @@ export async function getDashboardData(
     kpis: {
       occupancyPct,
       occupancyTrend: occupancyPct > 0 ? "sui soggiorni del mese" : "nessun soggiorno questo mese",
+      occupiedNights: occupancy.occupiedNights,
+      capacityNights: occupancy.capacityNights,
+      propertyCount,
       guestsThisMonth,
       taxAccruedEuros: Math.round(taxAccruedCents / 100),
       taxTrend: taxAccruedCents > 0 ? "registro aggiornato" : "nessun importo maturato",

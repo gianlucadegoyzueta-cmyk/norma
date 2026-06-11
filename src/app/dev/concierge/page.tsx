@@ -16,6 +16,9 @@ const FULL: DashboardData = {
   kpis: {
     occupancyPct: 74,
     occupancyTrend: "sui soggiorni del mese",
+    occupiedNights: 67,
+    capacityNights: 90,
+    propertyCount: 3,
     guestsThisMonth: 38,
     taxAccruedEuros: 312,
     taxTrend: "registro aggiornato",
@@ -90,6 +93,9 @@ const EMPTY: DashboardData = {
   kpis: {
     occupancyPct: 0,
     occupancyTrend: "nessun soggiorno questo mese",
+    occupiedNights: 0,
+    capacityNights: 90,
+    propertyCount: 3,
     guestsThisMonth: 0,
     taxAccruedEuros: 0,
     taxTrend: "nessun importo maturato",
@@ -109,13 +115,15 @@ const EMPTY: DashboardData = {
 export default async function ConciergePreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ state?: string }>;
+  searchParams: Promise<{ state?: string; name?: string }>;
 }) {
   if (process.env.NODE_ENV === "production") notFound();
-  const { state } = await searchParams;
+  const { state, name } = await searchParams;
   const data = state === "empty" ? EMPTY : FULL;
   const now = new Date("2026-06-11T09:00:00Z");
-  const copy = buildSceneCopy(data, { firstName: "Gianluca", now, proposals: data.proposals });
+  // `?name=none` simula l'utente senza nome (fallback saluto elegante senza nome).
+  const firstName = name === "none" ? null : "Gianluca";
+  const copy = buildSceneCopy(data, { firstName, now, proposals: data.proposals });
 
   return (
     <ConciergeScene

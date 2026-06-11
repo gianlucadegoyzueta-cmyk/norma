@@ -51,22 +51,29 @@ export interface OccupancyStay {
   departureDate: Date | null;
 }
 
+/** Scomposizione dell'occupazione: notti occupate, capienza e percentuale [0..100]. */
+export interface OccupancyBreakdown {
+  occupiedNights: number;
+  capacityNights: number;
+  pct: number;
+}
+
 /**
- * Occupazione del mese in percentuale [0..100], arrotondata all'intero.
- * = notti occupate nel mese / (n° immobili × giorni del mese).
+ * Scompone l'occupazione del mese nei numeri che la generano (per il drill-down del KPI):
+ * notti occupate, capienza (n° immobili × giorni del mese) e percentuale arrotondata.
  * Le notti contano i giorni in [arrivo, partenza) che cadono nella finestra del mese.
- * Un soggiorno senza partenza conta una sola notte (l'arrivo). Senza immobili → 0.
+ * Un soggiorno senza partenza conta una sola notte (l'arrivo). Senza immobili → tutto 0.
  */
-export function occupancyPercent(
+export function occupancyBreakdown(
   stays: readonly OccupancyStay[],
   opts: { monthStart: Date; monthEnd: Date; propertyCount: number },
-): number {
-  if (opts.propertyCount <= 0) return 0;
+): OccupancyBreakdown {
+  if (opts.propertyCount <= 0) return { occupiedNights: 0, capacityNights: 0, pct: 0 };
   const startMs = opts.monthStart.getTime();
   const endMs = opts.monthEnd.getTime();
   const DAY = 86_400_000;
   const monthNights = Math.round((endMs - startMs) / DAY);
-  if (monthNights <= 0) return 0;
+  if (monthNights <= 0) return { occupiedNights: 0, capacityNights: 0, pct: 0 };
 
   let occupied = 0;
   for (const s of stays) {
@@ -80,5 +87,21 @@ export function occupancyPercent(
   }
 
   const capacity = monthNights * opts.propertyCount;
-  return Math.min(100, Math.round((occupied / capacity) * 100));
+  const occupiedNights = Math.min(occupied, capacity);
+  return {
+    occupiedNights,
+    capacityNights: capacity,
+    pct: Math.round((occupiedNights / capacity) * 100),
+  };
+}
+
+/**
+ * Occupazione del mese in percentuale [0..100], arrotondata all'intero.
+ * = notti occupate nel mese / (n° immobili × giorni del mese). Senza immobili → 0.
+ */
+export function occupancyPercent(
+  stays: readonly OccupancyStay[],
+  opts: { monthStart: Date; monthEnd: Date; propertyCount: number },
+): number {
+  return Math.min(100, occupancyBreakdown(stays, opts).pct);
 }
