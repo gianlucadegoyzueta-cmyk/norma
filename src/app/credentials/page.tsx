@@ -43,7 +43,7 @@ export default async function CredentialsPage() {
           href="/dashboard"
           className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-4" aria-hidden />
           Dashboard
         </Link>
 
@@ -52,24 +52,27 @@ export default async function CredentialsPage() {
             Credenziali Alloggiati
           </h1>
           <p className="text-muted-foreground mt-2 max-w-prose text-sm">
-            Org <strong className="text-foreground">{ctx.current.organizationName}</strong>. Le
-            credenziali (utente / password / WSKey) sono salvate{" "}
+            Le credenziali di{" "}
+            <strong className="text-foreground">{ctx.current.organizationName}</strong> (utente /
+            password / WSKey): le custodisco{" "}
             <span className="text-foreground inline-flex items-center gap-1 font-medium">
-              <ShieldCheck className="text-success size-3.5" />
+              <ShieldCheck className="text-success size-3.5" aria-hidden />
               cifrate
             </span>{" "}
-            nel vault, mai in chiaro. Ogni nuova credenziale viene verificata subito con Alloggiati
-            (<em>Authentication_Test</em>) — nessun invio di schedine.
+            nel vault, mai in chiaro. Verifico subito ogni nuova credenziale con Alloggiati (
+            <em>Authentication_Test</em>) — nessun invio di schedine.
           </p>
         </div>
 
-        <section className="mb-10">
-          <h2 className="text-muted-foreground mb-3 text-sm font-medium">Le tue credenziali</h2>
+        <section aria-labelledby="credentials-heading" className="mb-10">
+          <h2 id="credentials-heading" className="text-muted-foreground mb-3 text-sm font-medium">
+            Le tue credenziali
+          </h2>
           {credentials.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
                 <span className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-lg">
-                  <KeyRound className="size-5" />
+                  <KeyRound className="size-5" aria-hidden />
                 </span>
                 <p className="text-muted-foreground text-sm">
                   Nessuna credenziale ancora. Aggiungine una qui sotto.

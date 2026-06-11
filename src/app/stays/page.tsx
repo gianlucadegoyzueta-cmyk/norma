@@ -61,26 +61,28 @@ export default async function StaysPage() {
           href="/dashboard"
           className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-4" aria-hidden />
           Dashboard
         </Link>
 
         <div className="mb-8">
           <h1 className="font-display text-2xl font-semibold tracking-tight">Soggiorni</h1>
           <p className="text-muted-foreground mt-2 max-w-prose text-sm">
-            Registra i soggiorni di{" "}
-            <strong className="text-foreground">{ctx.current.organizationName}</strong>. Dopo aver
-            aggiunto gli ospiti, dal soggiorno si generano le schedine da inviare ad Alloggiati.
+            I soggiorni di{" "}
+            <strong className="text-foreground">{ctx.current.organizationName}</strong>. Quando hai
+            aggiunto gli ospiti, genero le schedine da inviare ad Alloggiati.
           </p>
         </div>
 
-        <section className="mb-10">
-          <h2 className="text-muted-foreground mb-3 text-sm font-medium">I tuoi soggiorni</h2>
+        <section aria-labelledby="stays-heading" className="mb-10">
+          <h2 id="stays-heading" className="text-muted-foreground mb-3 text-sm font-medium">
+            I tuoi soggiorni
+          </h2>
           {stays.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
                 <span className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-lg">
-                  <BedDouble className="size-5" />
+                  <BedDouble className="size-5" aria-hidden />
                 </span>
                 <p className="text-muted-foreground text-sm">
                   Nessun soggiorno ancora. Creane uno qui sotto.
@@ -101,12 +103,12 @@ export default async function StaysPage() {
                           <p className="truncate font-medium">{s.propertyName}</p>
                           <p className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                             <span className="inline-flex items-center gap-1">
-                              <CalendarDays className="size-3 shrink-0" />
+                              <CalendarDays className="size-3 shrink-0" aria-hidden />
                               {dateFmt.format(s.arrivalDate)}
                               {s.departureDate ? ` → ${dateFmt.format(s.departureDate)}` : ""}
                             </span>
                             <span className="inline-flex items-center gap-1">
-                              <Users className="size-3 shrink-0" />
+                              <Users className="size-3 shrink-0" aria-hidden />
                               {s.guestsAdded}/{s.guestsCount} ospiti
                             </span>
                             {s.isShortStay && <span>· breve (≤24h)</span>}

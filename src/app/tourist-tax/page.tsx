@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import type { TaxDeclarationStatus, TaxRemittanceMode } from "@prisma/client";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
@@ -44,11 +46,24 @@ export default async function TouristTaxPage() {
   return (
     <div className="min-h-dvh">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-3xl px-4 py-8 outline-none sm:px-6 sm:py-10"
+      >
+        <Link
+          href="/dashboard"
+          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
+        >
+          <ArrowLeft className="size-4" aria-hidden />
+          Dashboard
+        </Link>
+
         <div className="mb-8">
           <h1 className="font-display text-2xl font-semibold tracking-tight">Tassa di soggiorno</h1>
-          <p className="text-muted-foreground mt-2 text-sm">
-            Dichiarazioni periodiche per comune: calcolo, export e versamento.
+          <p className="text-muted-foreground mt-2 max-w-prose text-sm">
+            Preparo le dichiarazioni periodiche per comune: calcolo l&apos;imposta, esporto e tengo
+            traccia del versamento.
           </p>
         </div>
 
@@ -59,15 +74,17 @@ export default async function TouristTaxPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4 text-sm">
-                Aggrega i soggiorni del periodo per un comune e calcola l&apos;imposta dovuta.
+                Aggrego i soggiorni del periodo per un comune e calcolo l&apos;imposta dovuta.
               </p>
               <BuildDeclarationForm comuni={comuni} />
             </CardContent>
           </Card>
         </section>
 
-        <section>
-          <h2 className="text-muted-foreground mb-3 text-sm font-medium">Dichiarazioni</h2>
+        <section aria-labelledby="declarations-heading">
+          <h2 id="declarations-heading" className="text-muted-foreground mb-3 text-sm font-medium">
+            Dichiarazioni
+          </h2>
           {declarations.length === 0 ? (
             <Card>
               <CardContent className="text-muted-foreground py-8 text-center text-sm">

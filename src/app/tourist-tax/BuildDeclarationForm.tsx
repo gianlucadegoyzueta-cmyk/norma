@@ -66,10 +66,7 @@ export function BuildDeclarationForm({ comuni }: { comuni: Array<{ id: string; n
         </p>
       )}
       {msg && (
-        <p
-          className={msg.ok ? "text-sm text-emerald-600" : "text-destructive text-sm"}
-          role="status"
-        >
+        <p className={msg.ok ? "text-success text-sm" : "text-destructive text-sm"} role="status">
           {msg.text}
         </p>
       )}
