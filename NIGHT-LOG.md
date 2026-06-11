@@ -119,6 +119,37 @@ link; feedback "INVIATA ✓" sobrio (stile Concierge). NESSUN invio automatico (
 log email-free (mai indirizzi in chiaro). Test: 17 nuovi (snapshot template IT/EN invito+promemoria,
 adapter con transport finto, scelta kind, validazione email). CI completa locale verde
 (format/lint/typecheck/build + 449 test). Feature additiva, azione solo manuale → merge consentito.
+---
+
+## SESSIONE 2026-06-11 (notte) — Corsia D: dashboard "Concierge MAX" (design)
+
+**In PR (CI verde locale, attesa merge):**
+
+- **Dashboard `/dashboard` ridisegnata "Concierge MAX"** secondo il reference approvato
+  (`docs/design/concierge-max-reference.html`): hero "ink reveal" per-parola in prima persona con
+  DATI VERI ("Stanotte ho fatto N cose…" = conteggio eventi reali), 4 KPI a odometro a rulli
+  (occupazione mese da `stays`, ospiti registrati, tassa maturata trimestre, ore risparmiate),
+  proposte con loop **proposta → press → timbro FATTO ✓ → riga nel diario**, agenda settimana con
+  timeline che si disegna, diario "Fatto da Norma" da eventi di sistema reali (import iCal,
+  ricevute Questura, riconciliazioni, ISTAT). Motion system del reference (easing
+  `cubic-bezier(.22,1,.36,1)`, stagger, grana carta, sigillo guilloche, tilt 3D, `prefers-reduced-motion`).
+- **Solo azioni REALI** nelle proposte (niente finzioni): check-in mancante → "Copia link check-in"
+  (riusa `generateCheckinLinkAction`, timbro solo a copia avvenuta — "pronto da mandare", non "ho mandato");
+  schedine in attesa → `/schedine`; bozze iCal senza ospiti → "Completa ospiti"; export tassa trimestre → `/tourist-tax`.
+- **Dominio puro + test**: `src/server/modules/dashboard/concierge-digest.ts` (digest diario +
+  occupazione), 7 test. Reader dati reali in `src/app/dashboard/_lib/data.ts` (solo letture aggregate, **nessuna migrazione**).
+- **Token uniformati** ai valori UFFICIALI del marketing (hex esatti) in `globals.css` + token motion.
+  **Fraunces** servita via `next/font/local` (woff2 + OFL già in `src/app/fonts/`), come il marketing.
+  Identità carta chiara SEMPRE sulla pagina ridisegnata (scope `.cmx`, niente dark).
+- **`/onboarding`**: testata e copy in voce concierge prima persona ("Ciao, sono Norma. Mi occupo io
+  della burocrazia. Tre domande e partiamo."), nessun redesign dei form.
+- **Verifica visiva**: route dev `/dev/concierge` (404 in prod, gated anche nel middleware) per
+  screenshottare gli stati (pieno/vuoto/timbro) desktop 1280×800 + mobile 390×844 senza DB/login.
+  Screenshot before/after nei commenti PR.
+- **CI locale**: format ✓ · lint ✓ (0 errori) · typecheck ✓ · 439 test ✓ · build ✓ · E2E smoke 5/5 ✓.
+
+**Guardrail rispettati:** nessuna migrazione, nessun Send reale, niente push su main (PR+CI), niente
+nuove dipendenze (motion tutto CSS/rAF), marketing non toccato.
 
 ---
 
