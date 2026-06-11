@@ -1,0 +1,14 @@
+{
+  "//": "ESEMPIO — NON è attivo. Per accendere lo scheduler invio+reconcile (decisione umana):",
+  "//1": "1) copiare il blocco `crons` in un vero vercel.json alla radice del repo;",
+  "//2": "2) su Vercel impostare le env: CRON_SECRET (segreto del cron) e ALLOGGIATI_CRON_ENABLED=true;",
+  "//3": "3) Vercel invoca GET /api/cron/alloggiati con `Authorization: Bearer $CRON_SECRET`.",
+  "//note": "Finché ALLOGGIATI_CRON_ENABLED ≠ 'true', la route risponde 200 {disabled:true} e non invia nulla.",
+  "//orario": "08:10 UTC ≈ 09:10/10:10 Europe/Rome: dopo il backup giornaliero (09:30 locale? regolare di conseguenza) e a giorno passato per la Ricevuta T+1.",
+  "crons": [
+    {
+      "path": "/api/cron/alloggiati",
+      "schedule": "10 8 * * *"
+    }
+  ]
+}

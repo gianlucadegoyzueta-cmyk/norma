@@ -1,6 +1,13 @@
 // `/api/health` è pubblico apposta: endpoint di monitoraggio (status/uptime, niente dati), deve
 // rispondere 200 anche senza sessione per load balancer / uptime-check esterni.
-const PUBLIC_EXACT = new Set<string>(["/favicon.ico", "/icon.svg", "/api/health"]);
+// `/api/cron/alloggiati`: invocato dal cron di Vercel (nessuna sessione utente); NON è "aperto" —
+// la route stessa esige `Authorization: Bearer $CRON_SECRET` ed è DISATTIVATA di default (env flag).
+const PUBLIC_EXACT = new Set<string>([
+  "/favicon.ico",
+  "/icon.svg",
+  "/api/health",
+  "/api/cron/alloggiati",
+]);
 // Pagine raggiungibili da SLOGGATI: login, registrazione, l'intero flusso /auth/* (recupero
 // password, "controlla email", reset, pagina d'errore di Auth.js), il CHECK-IN ospite self-service
 // (/checkin/[token], link pubblico), gli endpoint di Auth.js e gli asset di Next.
