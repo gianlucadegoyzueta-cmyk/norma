@@ -44,10 +44,10 @@ export function ActivityStep({
 
   return (
     <div className="mx-auto w-full max-w-md">
-      <header className="mb-6">
-        <h2 className="font-display text-xl font-semibold tracking-tight">La tua attività</h2>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Due informazioni per personalizzare Norma su di te.
+      <header className="ob-reveal mb-6">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">Parlami di te</h2>
+        <p className="text-muted-foreground mt-1 text-sm text-pretty">
+          Due cose e mi cucio addosso al tuo modo di lavorare. Niente di più.
         </p>
       </header>
 

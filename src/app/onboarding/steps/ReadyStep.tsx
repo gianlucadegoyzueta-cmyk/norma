@@ -13,17 +13,16 @@ export function ReadyStep({ onBack }: { onBack: () => void }) {
     <div className="mx-auto flex max-w-md flex-col items-center gap-7 text-center">
       <span
         aria-hidden
-        className="bg-success/12 text-success flex size-14 items-center justify-center rounded-full text-2xl"
+        className="ob-stamp bg-success/12 text-success flex size-14 items-center justify-center rounded-full text-2xl"
       >
         ✓
       </span>
       <div className="space-y-3">
-        <h2 className="font-display text-2xl font-semibold tracking-tight">
-          Sei pronto a inviare le schedine
-        </h2>
+        <h2 className="font-display text-2xl font-semibold tracking-tight">Ci penso io, da qui</h2>
         <p className="text-muted-foreground text-pretty">
-          Credenziale collegata, tabelle pronte e primo immobile registrato. Da qui crei un
-          soggiorno con i suoi ospiti e generi le schedine per Alloggiati.
+          Canale aperto, tabelle pronte, primo immobile registrato. Tu aggiungi un soggiorno con i
+          suoi ospiti: alle schedine per Alloggiati{" "}
+          <strong className="text-foreground">penso io</strong>.
         </p>
       </div>
 

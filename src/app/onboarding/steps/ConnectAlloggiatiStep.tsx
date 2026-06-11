@@ -91,14 +91,14 @@ export function ConnectAlloggiatiStep({
 
   return (
     <div className="mx-auto w-full max-w-md">
-      <header className="mb-4">
-        <h2 className="font-display text-xl font-semibold tracking-tight">
-          Collega Alloggiati Web
+      <header className="ob-reveal mb-4">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">
+          Apriamo il canale con la Questura
         </h2>
         <p className="text-muted-foreground mt-1 text-sm text-pretty">
-          Servono le credenziali della tua utenza Alloggiati per comunicare le schedine alla
-          Questura. Le salviamo <strong className="text-foreground">cifrate nel vault</strong> (mai
-          in chiaro) e le verifichiamo subito con un test — senza inviare nulla.
+          Mi servono le credenziali della tua utenza Alloggiati Web: è il filo con cui comunico le
+          schedine. Le custodisco <strong className="text-foreground">cifrate nel vault</strong>{" "}
+          (mai in chiaro) e le provo subito con un test — senza inviare nulla.
         </p>
       </header>
 

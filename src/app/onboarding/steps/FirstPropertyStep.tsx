@@ -47,11 +47,13 @@ export function FirstPropertyStep({
 
   return (
     <div className="mx-auto w-full max-w-md">
-      <header className="mb-6">
-        <h2 className="font-display text-xl font-semibold tracking-tight">Il primo immobile</h2>
+      <header className="ob-reveal mb-6">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">
+          Il tuo primo immobile
+        </h2>
         <p className="text-muted-foreground mt-1 text-sm text-pretty">
-          Lo colleghi alla credenziale: il Comune è già ristretto alla sua provincia, così non
-          sbagli.
+          Lo aggancio alla credenziale giusta e restringo io i Comuni alla sua provincia: tu scegli,
+          al resto penso io.
         </p>
       </header>
 

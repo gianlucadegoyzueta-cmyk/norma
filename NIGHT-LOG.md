@@ -121,3 +121,18 @@ Health-check OK: `/login` `/signup` `/api/health` `/icon.svg` = 200, `/dashboard
 - **NON fatto apposta (regole flotta):** cablaggio del guard/banner nelle server action di scrittura di altri moduli → lasciato come follow-up in NEEDS-HUMAN #8 per non collidere con le altre corsie.
 - **CI locale:** format ✓ · lint ✓ (0 errori) · typecheck ✓ · test 398 ✓ (40 nuovi, incl. webhook con **eventi finti FIRMATI**) · build ✓ (rotte `/billing` e `/api/webhooks/stripe` presenti)
 - **Da te per andare ONLINE:** vedi NEEDS-HUMAN #8 (backup+migrazione, `stripe-bootstrap`, chiavi env, registrazione webhook).
+
+### [2026-06-11] Corsia Q2 (coda staffetta) — Onboarding "concierge" (testata, copy, progress, motion)
+
+- **Branch:** `design/onboarding-concierge` → PR (CI verde, additivo, zero schema)
+- **Controllo preventivo:** la corsia D (`design/dashboard-concierge-max`) NON aveva toccato l'onboarding (verificato `git diff --name-only origin/main...design/dashboard-concierge-max` → nessun file `onboarding`). Q2 quindi mia.
+- **Cosa:** `/onboarding` parla ora in **prima persona** ("mano sulla spalla"), allineato alla direzione Concierge MAX (spec lane-d §2). **Niente redesign dei form interni** (solo testata, copy, progress, transizioni):
+  - **WelcomeStep** → prima impressione concierge: kicker mono "Ciao, sono Norma" + titolo "Mi occupo io della burocrazia" + sub in prima persona, con **rivelo a scaglioni** (stagger 120ms, solo transform/opacity).
+  - **Testate** di ActivityStep/ConnectAlloggiati/FirstProperty/Ready riscritte in prima persona ("Parlami di te", "Apriamo il canale con la Questura", "Il tuo primo immobile", "Ci penso io, da qui").
+  - **ReadyStep**: il segno di spunta finale entra col **timbro "FATTO"** (`ob-stamp`, rimbalzo+rotazione, dal reference).
+  - **Stepper (progress)**: il connettore tra i passi completati si colora di terracotta (feedback d'avanzamento), `sr-only aria-live` invariato.
+  - **Transizioni**: la scena dello step si rigioca a ogni passo (`key={step}` + `.ob-scene`), in aggiunta alla View Transition esistente.
+- **Motion system** (in `globals.css`, `@layer utilities` + keyframes): easing unico `cubic-bezier(.22,1,.36,1)`, durata entrata 700ms, **tutto degrada a statico con `prefers-reduced-motion`**. Nessuna libreria di animazione (CSS puro, come da regole).
+- **Token/font:** già allineati (terracotta/avorio + Fraunces `font-display`): nessuna modifica ai token.
+- **CI locale:** format ✓ · lint ✓ · typecheck ✓ · test **432** ✓ (invariati: solo UI) · build ✓ (`/onboarding` 9.46 kB).
+- **Verifica visiva:** la pagina è **dietro auth** (redirect a /login senza sessione): screenshot live richiederebbero sessione+DB seedati. Modifica copy/motion additiva e a basso rischio; confronto col reference fatto a livello di codice (tono prima persona, Fraunces, timbro, reduced-motion). Giudizio onesto: regge la direzione; in caso di dubbio visivo, Gianluca può rivederla sulla preview Vercel della PR.

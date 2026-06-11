@@ -69,29 +69,32 @@ export function OnboardingWizard({
       </header>
 
       <div className="flex flex-1 items-center justify-center px-4 py-10 sm:py-14">
-        {step === 0 && <WelcomeStep onNext={() => go(1)} />}
-        {step === 1 && (
-          <ActivityStep
-            onNext={() => go(2)}
-            onBack={() => go(0)}
-            defaults={{
-              name: user.name,
-              organizationName,
-              userType: progress.userType,
-              structuresCount: progress.structuresCount,
-            }}
-          />
-        )}
-        {step === 2 && <ConnectAlloggiatiStep onNext={() => go(3)} onBack={() => go(1)} />}
-        {step === 3 && (
-          <FirstPropertyStep
-            onNext={() => go(4)}
-            onBack={() => go(2)}
-            credentials={credentials}
-            comuni={comuni}
-          />
-        )}
-        {step === 4 && <ReadyStep onBack={() => go(3)} />}
+        {/* key={step}: rimonta la scena a ogni passo → l'animazione d'ingresso si rigioca. */}
+        <div key={step} className="ob-scene flex w-full justify-center">
+          {step === 0 && <WelcomeStep onNext={() => go(1)} />}
+          {step === 1 && (
+            <ActivityStep
+              onNext={() => go(2)}
+              onBack={() => go(0)}
+              defaults={{
+                name: user.name,
+                organizationName,
+                userType: progress.userType,
+                structuresCount: progress.structuresCount,
+              }}
+            />
+          )}
+          {step === 2 && <ConnectAlloggiatiStep onNext={() => go(3)} onBack={() => go(1)} />}
+          {step === 3 && (
+            <FirstPropertyStep
+              onNext={() => go(4)}
+              onBack={() => go(2)}
+              credentials={credentials}
+              comuni={comuni}
+            />
+          )}
+          {step === 4 && <ReadyStep onBack={() => go(3)} />}
+        </div>
       </div>
     </main>
   );

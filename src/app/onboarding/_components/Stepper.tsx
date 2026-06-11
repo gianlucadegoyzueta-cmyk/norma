@@ -35,7 +35,12 @@ export function Stepper({ current }: { current: number }) {
                 {label}
               </span>
               {i < WIZARD_LABELS.length - 1 && (
-                <span className="bg-border mx-0.5 h-px w-3 sm:w-5" />
+                <span
+                  className={cn(
+                    "mx-0.5 h-px w-3 transition-colors duration-500 sm:w-5",
+                    done ? "bg-primary" : "bg-border",
+                  )}
+                />
               )}
             </li>
           );
