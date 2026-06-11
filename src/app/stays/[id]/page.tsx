@@ -21,6 +21,7 @@ import { UnverifiedNote } from "@/components/unverified-note";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckinLinkButton } from "./CheckinLinkButton";
+import { SendCheckinEmailButton } from "./SendCheckinEmailButton";
 import { GenerateSchedineButton } from "./GenerateSchedineButton";
 import { GuestPartyForm } from "./GuestPartyForm";
 import { TouristTaxCard } from "./TouristTaxCard";
@@ -201,6 +202,13 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
                 link vale per tutti gli ospiti del soggiorno.
               </p>
               <CheckinLinkButton stayId={stay.id} />
+              <div className="border-border/60 mt-1 border-t pt-3">
+                <p className="text-muted-foreground mb-2 text-xs text-pretty">
+                  Oppure invialo direttamente via email all&apos;ospite (solo su tua richiesta:
+                  nessun invio automatico).
+                </p>
+                <SendCheckinEmailButton stayId={stay.id} />
+              </div>
             </CardContent>
           </Card>
         </section>

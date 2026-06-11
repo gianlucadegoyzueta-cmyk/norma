@@ -38,3 +38,21 @@
 - **Conservativo per costruzione:** si auto-conferma SOLO a conteggi identici; si auto-riaccoda SOLO a ricevuta vuota; ogni ambiguità diventa lavoro umano esplicito. Mai un falso ACQUIRED automatico su mismatch (sarebbe irreversibile), mai un re-invio quando qualcosa potrebbe essere arrivato (doppione irreversibile).
 - **Limite noto (residuo, conservativo):** `attese` = numero di `UNVERIFIED` del giorno; se nello stesso giorno alcune schedine erano state ACQUISITE in modo sincrono, `reported` (totale di giornata) può superare `attese` → falso MISMATCH → revisione umana superflua ma SICURA. Raffinamento futuro (sottrarre le ACQUIRED del giorno dal conteggio atteso) richiederebbe query per-giorno con `sentAt`/`acquiredAt`: rimandato, non blocca.
 - **Compatibilità:** il vecchio port per-identità `AcquisitionReceiptReader` (+ `SoapAcquisitionReceiptReader`, `parseReceiptPdfBase64`) resta esportato per i test/mock storici, ma non è più usato dal servizio reale.
+
+## D5 — Email check-in: niente schema, email manuale al momento dell'invio
+
+- **Decisione:** le email transazionali di check-in (invito + promemoria) NON introducono campi
+  schema. L'host inserisce l'email di contatto al momento dell'invio (azione manuale sul
+  soggiorno), il modulo `notifications` compone il messaggio (IT/EN, invito vs promemoria scelto
+  dalla vicinanza dell'arrivo: ≤72h → promemoria) e lo invia riusando il canale Resend esistente
+  (`src/server/auth/email.ts`). Tracciamento minimo via log applicativo email-free
+  (`[notifications] check-in <kind> inviato (stay=…, locale=…)`).
+- **Alternative scartate:** (a) campo email su `Stay`/nuova migrazione additiva — più semplice
+  rimandare ogni tocco schema, specie in flotta parallela (guardrail 2 + UNA sola corsia/notte
+  per le migrazioni); (b) campo `invitedAt`/`reminderSentAt` per il "una volta sola" — superfluo
+  finché gli invii sono SOLO manuali (i cron sono congelati): è l'host a decidere quando e quante
+  volte premere. Il timbro "INVIATA ✓" è feedback immediato post-click, non stato persistito.
+- **PII:** mai loggato l'indirizzo email in chiaro (guardrail spec). Il fallback dev del canale
+  (console senza RESEND_API_KEY) resta com'è: comportamento pre-esistente, solo locale.
+- **Quando servirà persistenza** (es. promemoria automatici, audit invii): migrazione additiva
+  dedicata su `CheckinToken` (`invitedAt`/`reminderSentAt`), con backup verificato. Non ora.
