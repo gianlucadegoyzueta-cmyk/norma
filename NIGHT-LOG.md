@@ -15,6 +15,19 @@
 
 ---
 
+## SESSIONE 2026-06-11 (giorno) — corsia F: email transazionali check-in
+
+**Unità f** — modulo `notifications` (domain puro + port `EmailSender` + adapter sul canale
+Resend ESISTENTE). Template IT/EN: invito + promemoria (scelto dalla vicinanza dell'arrivo, ≤72h).
+Azione MANUALE sul soggiorno (`/stays/[id]`): l'host inserisce l'email di contatto e invia il
+link; feedback "INVIATA ✓" sobrio (stile Concierge). NESSUN invio automatico (cron congelati).
+**Nessuna migrazione** (DECISIONS **D5**): email manuale al momento dell'invio + tracciamento via
+log email-free (mai indirizzi in chiaro). Test: 17 nuovi (snapshot template IT/EN invito+promemoria,
+adapter con transport finto, scelta kind, validazione email). CI completa locale verde
+(format/lint/typecheck/build + 449 test). Feature additiva, azione solo manuale → merge consentito.
+
+---
+
 ## SESSIONE 2026-06-10 (notte) — reconcile per conteggio + scheduler disattivato
 
 **Online (mergiato + CI verde + health-check):**
