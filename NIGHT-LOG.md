@@ -5,6 +5,38 @@
 > sicure, reversibili e SENZA migrazioni. Le feature con schema sono parcheggiate
 > in NEEDS-HUMAN con migrazione generata ma NON applicata (niente backup garantito sul DB prod).
 
+## SESSIONE 2026-06-12 (notte) — coda 2, corsia G4: wizard iCal con anteprima
+
+**Unità G4** (`feat/ical-wizard`) — **PR #87 mergiata** (squash `052d5af`), CI GitHub verde
+(Lint·Typecheck·Test·Build + E2E Playwright + Vercel), health-check `{"status":"ok"}`.
+
+- **Cosa**: l'import iCal ora ha un'**anteprima**. Incolli l'URL → Norma legge il feed e mostra
+  le prenotazioni trovate (date, notti, sorgente) **prima** di importare → confermi → import con
+  riepilogo. Sostituisce il flusso a due passi (`AddICalForm` "collega" + bottone "Sincronizza")
+  unendolo in **un solo gesto con anteprima**, senza duplicarlo. Il re-sync dei feed già
+  collegati (`ICalImportRow` → "Sincronizza ora") resta invariato.
+- **Stati di errore gentili**: URL non valido · rete giù/timeout · calendario vuoto · calendario
+  con **sole date bloccate** (distinto dal vuoto, con conteggio "date bloccate ignorate").
+- **Come**: `domain/preview.ts` puro (`buildPreview` — dedup per UID coerente con la
+  riconciliazione, ordine per arrivo, calcolo notti). Service: `previewImport(url)` **senza
+  scritture a DB** + `importNow()` (collega+sincronizza). Actions `previewImportAction` /
+  `confirmImportAction` (date formattate lato server, Europe/Rome); tipi in `ical-types.ts`
+  (un file `"use server"` esporta solo funzioni async). UI `ICalWizard` (token Carta & Inchiostro).
+- **Zero schema, zero invii reali**: tutto calcolato dal feed col parser esistente; l'anteprima
+  riusa la stessa superficie fetch di `syncImport` (`ICalHttpFetcher`: http/https, 10s, 5MB,
+  guard `VCALENDAR`), gated da auth + own-property. Rischio **MEDIUM**, merge da spec (CI verde).
+- **Test**: dominio `preview` (5) + service `previewImport`/`importNow` (+6). 46/46 nel modulo
+  reservations. CI locale: format ✓ · lint ✓ · typecheck ✓ · build ✓.
+- **NB** (come G1): in locale fallisce **1** test pre-esistente non correlato
+  (`billing/stripe-gateway-signature` "non configurato") — il mio `.env` ha `STRIPE_SECRET_KEY`,
+  così `isConfigured()` è true; in CI (senza `.env`) **passa** — confermato dalla job verde.
+  Verificato fallire identico su `origin/main` con le mie modifiche in stash.
+- **Screenshot**: non catturati in questa corsa headless (richiedono sessione autenticata +
+  immobile + feed iCal reale da fetchare). Comportamento coperto da build + tipi + test;
+  visibile sulla preview Vercel della PR.
+
+---
+
 ## SESSIONE 2026-06-12 (notte) — coda 2, corsia G1: fiducia nei dati
 
 **Unità G1** (`feat/stay-timeline-export`) — **PR #84 mergiata** (squash `8667ef9`), CI GitHub
