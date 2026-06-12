@@ -5,6 +5,39 @@
 > sicure, reversibili e SENZA migrazioni. Le feature con schema sono parcheggiate
 > in NEEDS-HUMAN con migrazione generata ma NON applicata (niente backup garantito sul DB prod).
 
+## SESSIONE 2026-06-12 (notte) — coda 2, corsia G2: command palette ⌘K + mobile/PWA
+
+**Unità G2** (`feat/cmdk-mobile`) — **PR #83 mergiata** (squash `34dc113`), CI GitHub verde
+(Lint·Typecheck·Test·Build + E2E Playwright + Vercel), health-check `{"status":"ok"}`.
+Rischio **MEDIUM** (UI/comportamento, zero schema, zero invii reali) — merge da spec (CI verde).
+
+- **a) Command palette ⌘K** (`command-palette.tsx`, **custom** — niente nuove dipendenze, stesso
+  pattern accessibile del `ComboBox` esistente): navigazione a **tutte** le sezioni + azioni
+  rapide (_Nuovo soggiorno_, _Sincronizza iCal_ su tutti i feed dell'org, _Copia link check-in
+  dell'arrivo imminente_). Scorciatoia ⌘K/Ctrl-K + bottone discreto nell'header; apertura via
+  evento globale (riusato dal FAB mobile). Tastiera completa (↑↓/↵/esc), `role=dialog/combobox/
+listbox`, scroll-lock, click-outside. Le azioni **riusano i servizi di dominio**
+  (`ReservationImportService.syncProperty`, `createCheckinToken`) — nessuna logica server nuova.
+- **b) Mobile + PWA**: `manifest.webmanifest` (icona **sigillo** generata da SVG con sharp →
+  `public/icon-*.png`, nome Norma, tema **avorio**, standalone, start `/dashboard`), meta iOS
+  (`apple-touch-icon`, `appleWebApp`, `viewport-fit=cover`), **bottom-bar** mobile (< md) con le
+  4 sezioni chiave + **FAB concierge** che apre la ⌘K. Padding contenuto via
+  `body:has([data-mobile-nav]) main` (nessun `<main>` di pagina toccato). Niente service worker.
+- **Zero schema, zero invii reali**: sorgente unica delle sezioni in `src/lib/nav.ts` (condivisa
+  palette/bottom-bar). Aree intoccate: `src/app/dashboard` (corsia #71). Le icone PWA sono
+  rigenerabili con `node scripts/generate-pwa-icons.mjs`.
+- **Test**: invarianti config nav (la bottom-bar referenzia `NAV_SECTIONS` per indice → guardia
+  contro riordini). CI locale: format ✓ · lint ✓ · typecheck ✓ · test **452** ✓ · build ✓
+  (`/manifest.webmanifest` presente). NB: in locale fallisce **1** test pre-esistente non
+  correlato (`billing/stripe-gateway-signature`) — artefatto del mio `.env` (`STRIPE_SECRET_KEY`
+  presente → `isConfigured()` true); in CI, senza `.env`, passa (job verde). Verificato.
+- **Screenshot live non catturati**: night-run senza sessione locale seedata e `.env` punta al DB
+  di **produzione** (off-limits, guardrail). L'E2E smoke su CI ha esercitato i flussi autenticati
+  senza regressioni. Da rivedere a occhio umano sulla preview Vercel: apertura ⌘K, FAB mobile,
+  install PWA. Icona sigillo verificata visivamente (terracotta su avorio).
+
+---
+
 ## SESSIONE 2026-06-12 (notte) — coda 2, corsia G4: wizard iCal con anteprima
 
 **Unità G4** (`feat/ical-wizard`) — **PR #87 mergiata** (squash `052d5af`), CI GitHub verde
