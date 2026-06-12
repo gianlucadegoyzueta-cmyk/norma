@@ -119,6 +119,7 @@ link; feedback "INVIATA ✓" sobrio (stile Concierge). NESSUN invio automatico (
 log email-free (mai indirizzi in chiaro). Test: 17 nuovi (snapshot template IT/EN invito+promemoria,
 adapter con transport finto, scelta kind, validazione email). CI completa locale verde
 (format/lint/typecheck/build + 449 test). Feature additiva, azione solo manuale → merge consentito.
+
 ---
 
 ## SESSIONE 2026-06-11 (notte) — Corsia D: dashboard "Concierge MAX" (design)
