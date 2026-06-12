@@ -5,6 +5,35 @@
 > sicure, reversibili e SENZA migrazioni. Le feature con schema sono parcheggiate
 > in NEEDS-HUMAN con migrazione generata ma NON applicata (niente backup garantito sul DB prod).
 
+## SESSIONE 2026-06-12 (notte) — coda 2, corsia G1: fiducia nei dati
+
+**Unità G1** (`feat/stay-timeline-export`) — **PR #84 mergiata** (squash `8667ef9`), CI GitHub
+verde (Lint·Typecheck·Test·Build + E2E Playwright + Vercel), health-check `{"status":"ok"}`.
+
+- **a) Timeline del soggiorno** (`/stays/[id]`): storia verticale end-to-end stile concierge con
+  i soli eventi realmente accaduti — origine (import iCal / creazione manuale), check-in ospite
+  completato, schedine **preparate→inviate→acquisite** (con n. ricevuta), tassa
+  **conteggiata/dichiarata**. Nodi salvia, timestamp mono, "Norma:" sulle sue azioni. Dominio
+  puro `buildStayTimeline()` che aggrega le schedine per traguardo (N ospiti ≠ N×3 righe).
+- **b) Esporta i tuoi dati** (`/credentials`): bottone "Esporta i tuoi dati" → **un unico zip**
+  (`soggiorni`/`ospiti`/`tasse-di-soggiorno`/`istat`.csv). Copy "I dati sono tuoi, sempre.".
+  Encoder ZIP "store" **senza dipendenze nuove** (CRC-32 + APPNOTE), CSV con la convenzione
+  esistente (`;`, CRLF). Export escluso il sensibile (niente documenti/segreti), isolato per org.
+- **Zero schema, zero invii reali**: tutto calcolato da dati esistenti. Rischio **MEDIUM**, merge
+  consentito da spec (CI verde).
+- **Test**: dominio timeline (7) + CSV (7) + zip incl. CRC-32 noto e round-trip store (6).
+- **CI locale**: format ✓ · lint ✓ (0 errori) · typecheck ✓ · test ✓ · build ✓. NB: in locale
+  fallisce **1** test pre-esistente non correlato (`billing/stripe-gateway-signature` "non
+  configurato") — artefatto del mio `.env` caricato da `vitest.config.ts` (`STRIPE_SECRET_KEY`
+  presente → `isConfigured()` true); in CI, senza `.env`, passa. File identico a `main`.
+- **Screenshot**: viste dietro auth + dati seminati (timeline significativa richiede un soggiorno
+  con check-in/schedine/ricevuta/tassa) → non riproducibili in modo affidabile stanotte;
+  comportamento coperto dai test di dominio. Verificabile sulla preview Vercel della PR.
+- **NB founder**: l'export include nome/nascita/cittadinanza ospiti (no documenti) — è l'host che
+  scarica i **propri** dati (azione manuale, scoping per org), non un invio a terzi.
+
+---
+
 ## SESSIONE 2026-06-11 (giorno) — flotta diurna, corsia Q3 (a11y + copy, 2º giro)
 
 **Online (mergiato + CI verde + health-check):**
