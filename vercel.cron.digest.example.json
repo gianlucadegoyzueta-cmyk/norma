@@ -1,0 +1,15 @@
+{
+  "//": "ESEMPIO — NON è attivo. Per accendere il digest settimanale 'Fatto da Norma' (decisione del founder):",
+  "//1": "1) copiare il blocco `crons` in un vero vercel.json alla radice del repo (unendolo agli altri cron se presenti);",
+  "//2": "2) su Vercel impostare le env: CRON_SECRET (segreto del cron) e DIGEST_ENABLED=true;",
+  "//3": "3) Vercel invoca GET /api/cron/digest con `Authorization: Bearer $CRON_SECRET`.",
+  "//flag": "DIGEST_ENABLED è SEPARATO da ALLOGGIATI_CRON_ENABLED: accendere il digest NON tocca gli invii alla Questura.",
+  "//note": "Finché DIGEST_ENABLED ≠ 'true', la route risponde 200 {disabled:true} e non invia nulla.",
+  "//orario": "07:00 UTC del lunedì ≈ 09:00 Europe/Rome: riepilogo della settimana ISO appena conclusa (lun–dom).",
+  "crons": [
+    {
+      "path": "/api/cron/digest",
+      "schedule": "0 7 * * 1"
+    }
+  ]
+}
