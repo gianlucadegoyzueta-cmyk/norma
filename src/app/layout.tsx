@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Fraunces, Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,13 +16,16 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-// Display font di brand (come il marketing norma.casa): serif Fraunces sui titoli.
-// `opsz` ottico per rendere bene ai corpi grandi.
-const fraunces = Fraunces({
+// Display font di brand (come il marketing norma.casa): serif Fraunces sui titoli, servita
+// localmente via next/font/local dai woff2 variabili in src/app/fonts (OFL inclusa) — niente
+// dipendenza da Google Fonts a runtime, coerente con norma-marketing.
+const fraunces = localFont({
   variable: "--font-fraunces",
-  subsets: ["latin"],
   display: "swap",
-  axes: ["opsz"],
+  src: [
+    { path: "./fonts/Fraunces-roman.woff2", weight: "100 900", style: "normal" },
+    { path: "./fonts/Fraunces-italic.woff2", weight: "100 900", style: "italic" },
+  ],
 });
 
 export const metadata: Metadata = {
