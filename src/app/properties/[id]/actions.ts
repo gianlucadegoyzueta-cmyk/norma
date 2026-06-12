@@ -8,10 +8,20 @@ import {
   PrismaReservationImportRepository,
   ReservationImportService,
   ReservationsError,
+  sourceLabel,
 } from "@/server/modules/reservations";
+import type { ImportResponse, PreviewResponse } from "./ical-types";
 
 // Tipo locale (NON esportato): un file "use server" può esportare solo funzioni async.
 type Result = { ok: boolean; message: string };
+
+// Date dell'anteprima formattate qui (server) per coerenza col resto della pagina.
+const previewDateFmt = new Intl.DateTimeFormat("it-IT", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "Europe/Rome",
+});
 
 function makeService(): ReservationImportService {
   return new ReservationImportService(
@@ -32,23 +42,66 @@ async function assertOwnProperty(propertyId: string): Promise<string | null> {
   return owned ? orgId : null;
 }
 
-/** Collega un nuovo URL iCal all'immobile. */
-export async function addImportAction(_prev: Result | null, formData: FormData): Promise<Result> {
-  const propertyId = String(formData.get("propertyId") ?? "").trim();
-  const url = String(formData.get("url") ?? "").trim();
+/**
+ * ANTEPRIMA: legge il feed iCal e mostra le prenotazioni trovate PRIMA di importare.
+ * Nessuna scrittura a DB. Le date sono formattate qui (Europe/Rome) per la UI.
+ */
+export async function previewImportAction(input: {
+  propertyId: string;
+  url: string;
+}): Promise<PreviewResponse> {
+  const propertyId = input.propertyId.trim();
+  const url = input.url.trim();
 
   const orgId = await assertOwnProperty(propertyId);
   if (!orgId) return { ok: false, message: "Immobile non trovato o sessione scaduta." };
 
   try {
-    await makeService().addImport(orgId, propertyId, url);
+    const preview = await makeService().previewImport(url);
+    return {
+      ok: true,
+      sourceLabel: sourceLabel(preview.source),
+      total: preview.total,
+      blocked: preview.blocked,
+      items: preview.reservations.map((r) => ({
+        uid: r.uid,
+        arrival: previewDateFmt.format(r.arrivalDate),
+        departure: r.departureDate ? previewDateFmt.format(r.departureDate) : null,
+        nights: r.nights,
+        summary: r.summary,
+      })),
+    };
   } catch (err) {
     if (err instanceof ReservationsError) return { ok: false, message: err.message };
-    return { ok: false, message: "Errore nel collegare il calendario. Riprova." };
+    return { ok: false, message: "Errore nel leggere il calendario. Riprova." };
   }
+}
 
-  revalidatePath(`/properties/${propertyId}`);
-  return { ok: true, message: "Calendario collegato ✓ Premi «Sincronizza» per importare." };
+/** CONFERMA: collega il feed e lo sincronizza subito; ritorna il riepilogo dell'import. */
+export async function confirmImportAction(input: {
+  propertyId: string;
+  url: string;
+}): Promise<ImportResponse> {
+  const propertyId = input.propertyId.trim();
+  const url = input.url.trim();
+
+  const orgId = await assertOwnProperty(propertyId);
+  if (!orgId) return { ok: false, message: "Immobile non trovato o sessione scaduta." };
+
+  try {
+    const r = await makeService().importNow(orgId, propertyId, url);
+    revalidatePath(`/properties/${propertyId}`);
+    const parts: string[] = [];
+    if (r.created) parts.push(`${r.created} importate`);
+    if (r.updated) parts.push(`${r.updated} aggiornate`);
+    if (r.cancelled) parts.push(`${r.cancelled} annullate`);
+    if (r.flaggedForReview) parts.push(`${r.flaggedForReview} da verificare`);
+    const detail = parts.length ? ` · ${parts.join(" · ")}` : "";
+    return { ok: true, message: `Importato ✓ ${r.seen} prenotazioni nel calendario${detail}` };
+  } catch (err) {
+    if (err instanceof ReservationsError) return { ok: false, message: err.message };
+    return { ok: false, message: "Errore durante l'import. Riprova." };
+  }
 }
 
 /** Sincronizza un feed iCal: importa/aggiorna i soggiorni bozza. */
