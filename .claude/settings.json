@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "zsh \"$CLAUDE_PROJECT_DIR/scripts/hooks/guard.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}
