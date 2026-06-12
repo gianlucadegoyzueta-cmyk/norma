@@ -32,11 +32,23 @@ export const metadata: Metadata = {
   description:
     "Norma: SaaS di compliance per affitti brevi in Italia — gestione credenziali e invii ad Alloggiati Web.",
   applicationName: "Norma",
+  // PWA: manifest + icona Apple (apple-touch-icon) per l'aggiunta alla home su iOS.
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Norma",
+    statusBarStyle: "default",
+  },
+  icons: {
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {
+  // `viewport-fit=cover`: usa l'intero schermo sotto la notch su iOS (con le safe-area della bottom-bar).
+  viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: light)", color: "#f7f2e8" },
     { media: "(prefers-color-scheme: dark)", color: "#1a1a2e" },
   ],
 };
