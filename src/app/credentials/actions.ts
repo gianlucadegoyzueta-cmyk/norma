@@ -9,6 +9,7 @@ import {
   PrismaCredentialRepository,
 } from "@/server/modules/alloggiati";
 import { getSecretsVault } from "@/server/secrets";
+import { buildDataExport } from "@/server/modules/export/load";
 import { revalidatePath } from "next/cache";
 
 // Tipo locale (NON esportato): un file "use server" può esportare solo funzioni async.
@@ -81,4 +82,23 @@ export async function onboardCredentialAction(
     ok: true,
     message: `"${label}" salvata. Verifica non riuscita per un errore temporaneo: riprova più tardi.`,
   };
+}
+
+/**
+ * Export "I tuoi dati": zip di CSV (soggiorni, ospiti, tasse, ISTAT) della propria organizzazione.
+ * Solo dati dell'org dal contesto (isolamento) — niente segreti/credenziali. Ritorna il file in
+ * base64 perché un Server Action serializza JSON (i byte grezzi non attraversano il confine RSC).
+ */
+export async function exportDataAction(): Promise<
+  { ok: true; filename: string; base64: string } | { ok: false; message: string }
+> {
+  const ctx = await getCurrentContext();
+  if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+
+  try {
+    const { filename, bytes } = await buildDataExport(prisma, ctx.current.organizationId);
+    return { ok: true, filename, base64: Buffer.from(bytes).toString("base64") };
+  } catch {
+    return { ok: false, message: "Errore nella preparazione dell'export. Riprova." };
+  }
 }

@@ -12,6 +12,7 @@ import {
   checkReferenceTablesHealth,
 } from "@/server/modules/alloggiati";
 import { PrismaStaysRepository, StaysService } from "@/server/modules/stays";
+import { buildStayTimeline } from "@/server/modules/stays/domain/timeline";
 import { mapAlloggiatiError } from "@/app/schedine/error-codes";
 import { ReopenRejectedButton } from "@/components/reopen-rejected-button";
 import { PrismaTouristTaxConfigRepository } from "@/server/modules/tourist-tax/adapters/PrismaTouristTaxConfigRepository";
@@ -20,6 +21,7 @@ import { SiteHeader } from "@/components/site-header";
 import { UnverifiedNote } from "@/components/unverified-note";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StayTimeline } from "./StayTimeline";
 import { CheckinLinkButton } from "./CheckinLinkButton";
 import { SendCheckinEmailButton } from "./SendCheckinEmailButton";
 import { GenerateSchedineButton } from "./GenerateSchedineButton";
@@ -139,6 +141,45 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
     name: `${g.lastName} ${g.firstName}`,
   }));
 
+  // Timeline del soggiorno: storia end-to-end calcolata SOLO da dati esistenti (origine import,
+  // check-in completati, ciclo schedine nell'outbox, ricevute, tassa dichiarata). Niente campi nuovi.
+  const [timelineStay, timelineSchedine, timelineCheckins, timelineTaxLines] = await Promise.all([
+    prisma.stay.findFirst({
+      where: { id, organizationId: orgId },
+      select: { createdAt: true, importSource: true },
+    }),
+    prisma.schedina.findMany({
+      where: { organizationId: orgId, guest: { stayId: id } },
+      select: { createdAt: true, sentAt: true, acquiredAt: true, receiptRef: true },
+    }),
+    prisma.checkinToken.findMany({
+      where: { stayId: id, organizationId: orgId, completedAt: { not: null } },
+      select: { completedAt: true },
+    }),
+    prisma.touristTaxDeclarationLine.findMany({
+      where: { stayId: id, declaration: { organizationId: orgId } },
+      select: {
+        amountCents: true,
+        declaration: { select: { createdAt: true, period: true, submittedAt: true } },
+      },
+    }),
+  ]);
+  const timeline = timelineStay
+    ? buildStayTimeline({
+        stay: { createdAt: timelineStay.createdAt, importSource: timelineStay.importSource },
+        checkins: timelineCheckins.flatMap((c) =>
+          c.completedAt ? [{ completedAt: c.completedAt }] : [],
+        ),
+        schedine: timelineSchedine,
+        tax: timelineTaxLines.map((l) => ({
+          amountCents: l.amountCents,
+          countedAt: l.declaration.createdAt,
+          periodLabel: l.declaration.period,
+          submittedAt: l.declaration.submittedAt,
+        })),
+      })
+    : [];
+
   // Capi/singoli (leaderId null) e relativi membri.
   const leaders = stay.guests.filter((g) => g.leaderId === null);
   const membersOf = (leaderId: string) => stay.guests.filter((g) => g.leaderId === leaderId);
@@ -190,6 +231,14 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
             {stay.isShortStay && <span>· breve (≤24h)</span>}
           </p>
         </div>
+
+        {/* Storia del soggiorno: timeline end-to-end con i soli eventi realmente accaduti. */}
+        {timeline.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-muted-foreground mb-3 text-sm font-medium">Timeline</h2>
+            <StayTimeline events={timeline} />
+          </section>
+        )}
 
         {/* Check-in online: link pubblico da inviare all'ospite perché inserisca i propri dati. */}
         <section className="mb-8">
