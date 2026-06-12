@@ -138,4 +138,66 @@ describe("ReservationImportService", () => {
     const { id } = await service.addImport(ORG, PROP, "https://www.airbnb.com/calendar/ical/1.ics");
     await expect(service.syncImport(id, "org_altro")).rejects.toThrow(ReservationsError);
   });
+
+  it("previewImport: elenca le prenotazioni (ordinate per arrivo) e ignora i blocchi", async () => {
+    fetcher.body = feed([
+      { uid: "b@air", start: "20260620", end: "20260622" },
+      { uid: "a@air", start: "20260610", end: "20260615" },
+      { uid: "block@air", start: "20260701", end: "20260705", summary: "Airbnb (Not available)" },
+    ]);
+    const res = await service.previewImport("https://www.airbnb.com/calendar/ical/1.ics");
+    expect(res.total).toBe(2);
+    expect(res.blocked).toBe(1);
+    expect(res.source).toBe("AIRBNB");
+    expect(res.reservations.map((r) => r.uid)).toEqual(["a@air", "b@air"]);
+    expect(res.reservations[0].nights).toBe(5);
+  });
+
+  it("previewImport: non scrive nulla a DB (nessun feed creato)", async () => {
+    fetcher.body = feed([{ uid: "a@air", start: "20260610", end: "20260615" }]);
+    await service.previewImport("https://www.airbnb.com/calendar/ical/1.ics");
+    expect(await repo.listByProperty(PROP, ORG)).toHaveLength(0);
+  });
+
+  it("previewImport: URL non valido → ReservationsError", async () => {
+    await expect(service.previewImport("non-un-url")).rejects.toThrow(ReservationsError);
+  });
+
+  it("previewImport: errore di rete → ReservationsError", async () => {
+    fetcher.error = new ICalFetchError(
+      "Il calendario non ha risposto entro 10s. Riprova più tardi.",
+    );
+    await expect(
+      service.previewImport("https://www.airbnb.com/calendar/ical/1.ics"),
+    ).rejects.toThrow(ReservationsError);
+  });
+
+  it("previewImport: calendario con soli blocchi → total 0, blocked > 0", async () => {
+    fetcher.body = feed([
+      { uid: "block@air", start: "20260701", end: "20260705", summary: "Not available" },
+    ]);
+    const res = await service.previewImport("https://www.airbnb.com/calendar/ical/1.ics");
+    expect(res.total).toBe(0);
+    expect(res.blocked).toBe(1);
+  });
+
+  it("importNow: collega il feed e lo sincronizza in un solo gesto", async () => {
+    fetcher.body = feed([
+      { uid: "a@air", start: "20260610", end: "20260615" },
+      { uid: "b@air", start: "20260620", end: "20260622" },
+    ]);
+    const res = await service.importNow(ORG, PROP, "https://www.airbnb.com/calendar/ical/1.ics");
+    expect(res.created).toBe(2);
+    expect(res.importId).toBeTruthy();
+    expect(await repo.listImportedStaysForProperty(PROP, ORG)).toHaveLength(2);
+    const imp = await repo.getById(res.importId, ORG);
+    expect(imp?.lastImported).toBe(2);
+  });
+
+  it("importNow: URL duplicato → ReservationsError", async () => {
+    const url = "https://www.airbnb.com/calendar/ical/1.ics";
+    fetcher.body = feed([{ uid: "a@air", start: "20260610", end: "20260615" }]);
+    await service.importNow(ORG, PROP, url);
+    await expect(service.importNow(ORG, PROP, url)).rejects.toThrow(ReservationsError);
+  });
 });

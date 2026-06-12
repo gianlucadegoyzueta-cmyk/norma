@@ -9,8 +9,8 @@ import { PrismaReservationImportRepository, sourceLabel } from "@/server/modules
 import { SiteHeader } from "@/components/site-header";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { AddICalForm } from "./AddICalForm";
 import { ICalImportRow, type ICalImportRowData } from "./ICalImportRow";
+import { ICalWizard } from "./ICalWizard";
 
 export const metadata: Metadata = { title: "Immobile" };
 export const dynamic = "force-dynamic";
@@ -100,9 +100,9 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           <Card>
             <CardContent className="grid gap-4 py-5">
               <p className="text-muted-foreground max-w-prose text-sm">
-                Collega il calendario iCal di Airbnb, Booking.com o VRBO: Norma legge le
-                prenotazioni e crea i soggiorni in bozza, pronti da completare con gli ospiti. La
-                sincronizzazione è manuale — premi «Sincronizza ora» quando vuoi aggiornare.
+                Collega il calendario iCal di Airbnb, Booking.com o VRBO: incolla il link e Norma ti
+                mostra le prenotazioni trovate prima di importarle. Crea i soggiorni in bozza,
+                pronti da completare con gli ospiti. Aggiorni quando vuoi con «Sincronizza ora».
               </p>
 
               {importRows.length > 0 && (
@@ -114,7 +114,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
               )}
 
               <div className="border-border/60 border-t pt-4">
-                <AddICalForm propertyId={property.id} />
+                <ICalWizard propertyId={property.id} />
               </div>
             </CardContent>
           </Card>

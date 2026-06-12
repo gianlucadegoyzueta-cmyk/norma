@@ -2,6 +2,7 @@
 // (InMemoryReservationImportRepository è escluso: è un aiuto per i test.)
 
 export * from "./domain/ical";
+export * from "./domain/preview";
 export * from "./domain/reconcile";
 export * from "./domain/source";
 export * from "./ports";
