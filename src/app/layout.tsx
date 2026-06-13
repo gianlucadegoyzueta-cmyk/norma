@@ -51,29 +51,13 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   // `viewport-fit=cover`: usa l'intero schermo sotto la notch su iOS (con le safe-area della bottom-bar).
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f2e8" },
-    { media: "(prefers-color-scheme: dark)", color: "#1a1a2e" },
-  ],
+  // Norma è un brand a tema unico "Carta & Inchiostro": sempre carta chiara, nessun dark mode.
+  themeColor: "#f7f2e8",
 };
-
-// Applica il tema prima del paint per evitare il flash (FOUC) al primo render.
-const themeScript = `(() => {
-  try {
-    const stored = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    if (stored === "dark" || (!stored && prefersDark)) {
-      document.documentElement.classList.add("dark");
-    }
-  } catch (_) {}
-})();`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="it" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
+    <html lang="it">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} min-h-dvh antialiased`}
       >

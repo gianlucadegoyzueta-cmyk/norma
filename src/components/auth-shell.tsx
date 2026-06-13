@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Brand } from "@/components/brand";
 import { SealMark } from "@/components/ui/seal-mark";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 /**
@@ -67,10 +66,6 @@ export function AuthShell({
           <circle cx="100" cy="100" r="34" strokeDasharray="1 5" />
           <circle cx="100" cy="100" r="24" strokeDasharray="1 5" />
         </svg>
-      </div>
-
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
       </div>
 
       <div className={cn("w-full", width === "sm" ? "max-w-sm" : "max-w-md")}>
