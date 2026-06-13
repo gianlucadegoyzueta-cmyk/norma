@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { currentPeriod, loadIstatReport } from "@/server/modules/istat/report";
-import { SiteHeader } from "@/components/site-header";
+import { ConciergePage } from "@/components/concierge/concierge-page";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -40,58 +40,50 @@ export default async function IstatPage({
     : null;
 
   return (
-    <div className="min-h-dvh">
-      <SiteHeader />
-      <main
-        id="main-content"
-        tabIndex={-1}
-        className="mx-auto w-full max-w-4xl px-4 py-8 outline-none sm:px-6 sm:py-10"
+    <ConciergePage
+      kicker="STATISTICA · MOVIMENTO TURISTICO"
+      title="ISTAT"
+      intro="Arrivi e presenze del mese per provenienza, pronti da riportare sul portale regionale."
+    >
+      <div
+        className="cmx-section flex flex-wrap items-end justify-between gap-3"
+        style={{ marginTop: 0 }}
       >
-        <div className="mb-6">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">
-            ISTAT — movimento turistico
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Arrivi e presenze del mese per provenienza, pronti da riportare sul portale regionale.
-          </p>
-        </div>
-
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <form method="get" className="flex items-end gap-2">
-            <div className="grid gap-1.5">
-              <label htmlFor="period" className="text-muted-foreground text-xs font-medium">
-                Mese
-              </label>
-              <Input
-                id="period"
-                name="period"
-                type="month"
-                defaultValue={period}
-                className="h-9 w-44"
-              />
-            </div>
-            <Button type="submit" size="sm" variant="secondary">
-              Mostra
-            </Button>
-          </form>
-          <div className="flex flex-wrap items-center gap-2">
-            <IstatExportButton period={period} disabled={report.rows.length === 0} />
-            <IstatSubmitButton
-              period={period}
-              submittedLabel={submittedLabel}
-              disabled={report.rows.length === 0}
+        <form method="get" className="flex items-end gap-2">
+          <div className="grid gap-1.5">
+            <label htmlFor="period" className="text-muted-foreground text-xs font-medium">
+              Mese
+            </label>
+            <Input
+              id="period"
+              name="period"
+              type="month"
+              defaultValue={period}
+              className="h-9 w-44"
             />
           </div>
+          <Button type="submit" size="sm" variant="secondary">
+            Mostra
+          </Button>
+        </form>
+        <div className="flex flex-wrap items-center gap-2">
+          <IstatExportButton period={period} disabled={report.rows.length === 0} />
+          <IstatSubmitButton
+            period={period}
+            submittedLabel={submittedLabel}
+            disabled={report.rows.length === 0}
+          />
         </div>
+      </div>
 
+      <div className="cmx-section" style={{ marginTop: 24 }}>
         {report.rows.length === 0 ? (
-          <Card>
-            <CardContent className="text-muted-foreground py-10 text-center text-sm">
-              Nessun movimento turistico per questo mese.
-            </CardContent>
-          </Card>
+          <div className="cmx-empty">
+            <p className="cmx-empty-title">Nessun movimento turistico</p>
+            <p className="cmx-empty-text">Per questo mese non risultano arrivi né presenze.</p>
+          </div>
         ) : (
-          <Card>
+          <Card style={{ borderRadius: 18 }}>
             <CardContent className="p-0">
               <table className="w-full text-sm">
                 <caption className="sr-only">
@@ -130,14 +122,14 @@ export default async function IstatPage({
             </CardContent>
           </Card>
         )}
+      </div>
 
-        <p className="text-muted-foreground mt-4 text-xs">
-          {guestsConsidered} ospiti considerati nel mese.
-          {approximated > 0
-            ? ` ${approximated} con provenienza stimata dalla cittadinanza (residenza non indicata): valorizza la residenza nell'ospite per un dato preciso.`
-            : ""}
-        </p>
-      </main>
-    </div>
+      <p className="text-muted-foreground mt-4 text-xs">
+        {guestsConsidered} ospiti considerati nel mese.
+        {approximated > 0
+          ? ` ${approximated} con provenienza stimata dalla cittadinanza (residenza non indicata): valorizza la residenza nell'ospite per un dato preciso.`
+          : ""}
+      </p>
+    </ConciergePage>
   );
 }

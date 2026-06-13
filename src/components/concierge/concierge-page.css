@@ -1,0 +1,171 @@
+/* Stili a livello-pagina per il guscio Concierge riusabile (ConciergePage).
+   Estende il linguaggio .cmx (definito in app/dashboard/concierge.css) alle pagine interne:
+   testata sinistra editoriale, sezioni, card, tabelle, badge di stato — tutto carta chiara. */
+
+.cmx-pagehead {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 40px;
+  max-width: 760px;
+}
+.cmx-pagetitle {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(34px, 4vw, 54px);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  color: var(--inchiostro);
+  margin: 14px 0 0;
+}
+.cmx-pagetitle em {
+  font-style: italic;
+  color: var(--terracotta);
+}
+.cmx-pagesub {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--soft);
+  margin: 16px 0 0;
+}
+
+/* Link "torna alla dashboard" nell'header, stile coerente con cmx-signout */
+.cmx-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  color: var(--soft);
+  border-radius: 99px;
+  padding: 9px 16px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    border-color 0.25s,
+    color 0.25s;
+}
+.cmx-back:hover {
+  border-color: var(--inchiostro);
+  color: var(--inchiostro);
+}
+
+/* Sezione di contenuto */
+.cmx-section {
+  position: relative;
+  z-index: 2;
+  margin-top: 40px;
+}
+.cmx-section-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  color: var(--inchiostro);
+  margin: 0 0 18px;
+}
+
+/* Card carta riusabile a livello pagina */
+.cmx-card {
+  background: var(--carta);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  padding: 26px 28px;
+  transition:
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
+}
+.cmx-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(33, 28, 21, 0.1);
+}
+
+/* Riga elenco (es. outbox schedine, soggiorni) */
+.cmx-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  background: var(--carta);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  padding: 16px 20px;
+  transition:
+    transform 0.25s var(--ease),
+    box-shadow 0.25s var(--ease),
+    border-color 0.25s var(--ease);
+}
+.cmx-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(33, 28, 21, 0.1);
+}
+.cmx-row + .cmx-row {
+  margin-top: 10px;
+}
+.cmx-row-main {
+  min-width: 0;
+}
+.cmx-row-title {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--inchiostro);
+}
+.cmx-row-meta {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--soft);
+  margin-top: 2px;
+}
+
+/* Badge di stato (acquisita / in attesa / errore / pronta) */
+.cmx-badge {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.cmx-badge-ok {
+  color: var(--salvia);
+  background: var(--salvia-soft);
+}
+.cmx-badge-go {
+  color: var(--carta);
+  background: var(--terracotta);
+}
+.cmx-badge-wait {
+  color: var(--soft);
+  background: var(--carta);
+  border: 1px solid var(--hairline);
+}
+.cmx-badge-err {
+  color: var(--terracotta-dark);
+  background: rgba(188, 75, 43, 0.1);
+  border: 1px solid rgba(188, 75, 43, 0.3);
+}
+
+/* Stato vuoto elegante */
+.cmx-empty {
+  text-align: center;
+  padding: 64px 24px;
+  background: var(--carta);
+  border: 1px dashed var(--hairline);
+  border-radius: 18px;
+}
+.cmx-empty-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--inchiostro);
+  margin: 0 0 8px;
+}
+.cmx-empty-text {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--soft);
+  max-width: 420px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
