@@ -53,7 +53,48 @@ export function OnboardingWizard({
   }, []);
 
   return (
-    <main className="flex min-h-dvh flex-col">
+    <main className="relative flex min-h-dvh flex-col">
+      {/* Stessa "carta" della superficie auth: grana + sigillo in filigrana, theme-safe. */}
+      <svg
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.5] mix-blend-multiply dark:opacity-[0.18] dark:mix-blend-screen"
+      >
+        <filter id="ob-grain">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.85"
+            numOctaves="2"
+            stitchTiles="stitch"
+          />
+          <feColorMatrix
+            type="matrix"
+            values="0 0 0 0 0.13 0 0 0 0 0.11 0 0 0 0 0.08 0 0 0 0.04 0"
+          />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#ob-grain)" />
+      </svg>
+      <div
+        aria-hidden
+        className="text-foreground pointer-events-none absolute top-[18%] left-1/2 -z-10 -translate-x-1/2 opacity-[0.035]"
+      >
+        <svg
+          viewBox="0 0 200 200"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="0.5"
+          className="size-[420px]"
+        >
+          <circle cx="100" cy="100" r="96" />
+          <circle cx="100" cy="100" r="88" strokeDasharray="1 3" />
+          <circle cx="100" cy="100" r="78" strokeDasharray="6 4" />
+          <circle cx="100" cy="100" r="66" strokeDasharray="1 2" />
+          <circle cx="100" cy="100" r="55" />
+          <circle cx="100" cy="100" r="44" strokeDasharray="8 3" />
+          <circle cx="100" cy="100" r="34" strokeDasharray="1 5" />
+          <circle cx="100" cy="100" r="24" strokeDasharray="1 5" />
+        </svg>
+      </div>
+
       <header className="border-border flex items-center justify-between gap-4 border-b px-4 py-3 sm:px-6">
         <Brand />
         {step > 0 ? <Stepper current={step} /> : <span aria-hidden />}

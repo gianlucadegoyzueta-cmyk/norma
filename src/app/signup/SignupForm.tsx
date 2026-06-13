@@ -20,7 +20,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Crea il tuo account</CardTitle>
+          <CardTitle className="font-display text-xl">Crea il tuo account</CardTitle>
           <CardDescription>Bastano pochi dati per iniziare.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">

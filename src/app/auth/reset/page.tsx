@@ -18,7 +18,7 @@ export default async function ResetPage({
     <AuthShell>
       <Card>
         <CardHeader>
-          <CardTitle>Imposta una nuova password</CardTitle>
+          <CardTitle className="font-display text-xl">Imposta una nuova password</CardTitle>
           <CardDescription>Scegli una password nuova per il tuo account.</CardDescription>
         </CardHeader>
         <CardContent>
