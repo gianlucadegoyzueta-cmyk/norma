@@ -4,7 +4,6 @@ import { Brand } from "@/components/brand";
 import { CommandPalette } from "@/components/command-palette";
 import { CommandTrigger } from "@/components/command-trigger";
 import { MobileNav } from "@/components/mobile-nav";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 // Header sticky per le pagine autenticate. `actions` accoglie slot a destra
 // (es. menu organizzazione, logout) renderizzati dal chiamante.
@@ -29,7 +28,6 @@ export function SiteHeader({ actions }: { actions?: ReactNode }) {
           <div className="flex items-center gap-2">
             <CommandTrigger />
             {actions}
-            <ThemeToggle />
           </div>
         </div>
       </header>

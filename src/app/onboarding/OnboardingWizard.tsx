@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useState } from "react";
 import { Brand } from "@/components/brand";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Stepper } from "./_components/Stepper";
 import { startStepTransition } from "./_lib/view-transition";
 import { setStepAction } from "./actions";
@@ -105,7 +104,6 @@ export function OnboardingWizard({
           >
             Esci
           </Link>
-          <ThemeToggle />
         </div>
       </header>
 
