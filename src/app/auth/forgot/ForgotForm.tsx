@@ -15,7 +15,7 @@ export function ForgotForm() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Controlla la tua email</CardTitle>
+          <CardTitle className="font-display text-xl">Controlla la tua email</CardTitle>
           <CardDescription>
             Se esiste un account con questa email, ti abbiamo inviato un link per reimpostare la
             password. È valido per 30 minuti.
@@ -36,7 +36,7 @@ export function ForgotForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Password dimenticata?</CardTitle>
+        <CardTitle className="font-display text-xl">Password dimenticata?</CardTitle>
         <CardDescription>
           Inserisci la tua email: ti invieremo un link per impostarne una nuova.
         </CardDescription>

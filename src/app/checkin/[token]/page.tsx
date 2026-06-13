@@ -50,7 +50,26 @@ export default async function CheckinPage({
   const ctx = await resolveCheckinToken(token);
 
   return (
-    <div className="bg-background min-h-dvh">
+    <div className="bg-background relative min-h-dvh">
+      {/* Grana di carta appena percettibile, coerente con la superficie auth (theme-safe). */}
+      <svg
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.5] mix-blend-multiply dark:opacity-[0.18] dark:mix-blend-screen"
+      >
+        <filter id="checkin-grain">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.85"
+            numOctaves="2"
+            stitchTiles="stitch"
+          />
+          <feColorMatrix
+            type="matrix"
+            values="0 0 0 0 0.13 0 0 0 0 0.11 0 0 0 0 0.08 0 0 0 0.04 0"
+          />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#checkin-grain)" />
+      </svg>
       <div className="mx-auto w-full max-w-md px-4 py-8 sm:py-12">
         <div className="mb-6 flex items-center justify-between gap-3">
           <Brand />

@@ -17,7 +17,7 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Bentornato</CardTitle>
+          <CardTitle className="font-display text-xl">Bentornato</CardTitle>
           <CardDescription>Accedi al tuo spazio Norma.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
