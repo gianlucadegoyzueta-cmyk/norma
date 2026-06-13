@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 // Header di sicurezza applicati a tutte le risposte.
 const securityHeaders = [
@@ -34,4 +35,18 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry: avvolge la config solo se il DSN è presente, così dev/CI senza DSN buildano
+// identici a prima. L'upload dei sourcemap avviene solo con SENTRY_AUTH_TOKEN (assente =
+// nessun upload, build comunque verde). Org su regione EU (de.sentry.io).
+export default process.env.NEXT_PUBLIC_SENTRY_DSN
+  ? withSentryConfig(nextConfig, {
+      org: "norma-i2",
+      project: "norma-app",
+      sentryUrl: "https://de.sentry.io",
+      silent: !process.env.CI,
+      widenClientFileUpload: true,
+      disableLogger: true,
+      // Evita ad-blocker che bloccano il path /monitoring instradando via il dominio del sito.
+      tunnelRoute: "/monitoring",
+    })
+  : nextConfig;
