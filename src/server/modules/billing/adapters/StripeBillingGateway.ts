@@ -32,8 +32,15 @@ export class StripeBillingGateway implements BillingGateway {
   private readonly webhookSecret: string | null;
 
   constructor(config: StripeBillingGatewayConfig = {}) {
-    const secretKey = config.secretKey ?? process.env.STRIPE_SECRET_KEY ?? null;
-    this.webhookSecret = config.webhookSecret ?? process.env.STRIPE_WEBHOOK_SECRET ?? null;
+    // Una chiave passata ESPLICITAMENTE nel config (anche `null`) ha la precedenza sull'env:
+    // così un caller — test inclusi — può simulare "non configurato" senza essere inquinato
+    // dalle chiavi presenti nell'env locale. In produzione si costruisce con `{}` → usa l'env.
+    const secretKey =
+      "secretKey" in config ? (config.secretKey ?? null) : (process.env.STRIPE_SECRET_KEY ?? null);
+    this.webhookSecret =
+      "webhookSecret" in config
+        ? (config.webhookSecret ?? null)
+        : (process.env.STRIPE_WEBHOOK_SECRET ?? null);
     this.stripe = secretKey ? new Stripe(secretKey) : null;
   }
 
