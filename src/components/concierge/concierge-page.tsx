@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { SealMark } from "@/components/ui/seal-mark";
 import "@/app/dashboard/concierge.css";
 import "./concierge-page.css";
 
@@ -77,32 +78,7 @@ export function ConciergePage({
 
         <header className="cmx-top">
           <Link className="cmx-brand" href="/dashboard" aria-label="Norma — dashboard">
-            <svg viewBox="0 0 40 40" fill="none" aria-hidden>
-              <path
-                d="M 37.00 20.00 A 8.84 8.84 0 0 1 35.32 27.38 A 8.84 8.84 0 0 1 30.60 33.29 A 8.84 8.84 0 0 1 23.78 36.57 A 8.84 8.84 0 0 1 16.22 36.57 A 8.84 8.84 0 0 1 9.40 33.29 A 8.84 8.84 0 0 1 4.68 27.38 A 8.84 8.84 0 0 1 3.00 20.00 A 8.84 8.84 0 0 1 4.68 12.62 A 8.84 8.84 0 0 1 9.40 6.71 A 8.84 8.84 0 0 1 16.22 3.43 A 8.84 8.84 0 0 1 23.78 3.43 A 8.84 8.84 0 0 1 30.60 6.71 A 8.84 8.84 0 0 1 35.32 12.62 A 8.84 8.84 0 0 1 37.00 20.00 Z"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinejoin="round"
-              />
-              <circle
-                cx="20"
-                cy="20"
-                r="12.2"
-                stroke="currentColor"
-                strokeWidth="0.9"
-                opacity="0.45"
-              />
-              <g
-                stroke="currentColor"
-                strokeWidth="2.3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M13.4 26.6V13.4" />
-                <path d="M13.4 13.4L26.6 26.6" />
-                <path d="M26.6 26.6V16.4L24.2 14" />
-              </g>
-            </svg>
+            <SealMark />
             <span>Norma</span>
           </Link>
           <div className="cmx-top-right">
