@@ -141,6 +141,18 @@ export class InMemorySchedinaRepository implements SchedinaRepository {
     return count;
   }
 
+  async parkByIds(ids: readonly string[]): Promise<number> {
+    const want = new Set(ids);
+    let count = 0;
+    for (const row of this.rows.values()) {
+      if (!want.has(row.id) || row.status !== SchedinaStatus.PENDING) continue;
+      assertValidTransition(row.status, SchedinaStatus.NEEDS_REVIEW);
+      row.status = SchedinaStatus.NEEDS_REVIEW;
+      count += 1;
+    }
+    return count;
+  }
+
   async reopenForRetry(id: string): Promise<void> {
     const row = this.must(id);
     assertValidTransition(row.status, SchedinaStatus.PENDING);

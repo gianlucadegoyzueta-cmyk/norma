@@ -81,6 +81,16 @@ export class PrismaCredentialRepository {
     return rows.map((r) => r.id);
   }
 
+  /** Credenziali ATTIVE con opt-in all'auto-invio (autoSend=true): le sole che il cron auto-invia. */
+  async listAutoSendCredentialIds(): Promise<string[]> {
+    const rows = await this.prisma.alloggiatiCredential.findMany({
+      where: { status: "ACTIVE", autoSend: true },
+      select: { id: true },
+      orderBy: { createdAt: "asc" },
+    });
+    return rows.map((r) => r.id);
+  }
+
   async updateStatus(id: string, organizationId: string, status: CredentialStatus): Promise<void> {
     // updateMany con (id, organizationId): una credenziale di un'altra org non viene aggiornata
     // (0 righe), mai un'eccezione e mai una scrittura cross-tenant. Isolamento by query.

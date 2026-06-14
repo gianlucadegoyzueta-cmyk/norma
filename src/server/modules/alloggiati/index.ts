@@ -26,6 +26,7 @@ export * from "./adapters/SoapTabellaClient";
 export * from "./adapters/FakeTabellaClient";
 export * from "./services/outbox.service";
 export * from "./services/verify.service";
+export * from "./services/smart-send.service";
 export * from "./services/reconcile.service";
 export * from "./services/cron-runner";
 export * from "./services/credential.service";

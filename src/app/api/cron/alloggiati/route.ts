@@ -11,10 +11,12 @@ import {
   SchedinaOutboxService,
   SchedinaRecordBuilder,
   SchedinaReconcileService,
+  SchedinaVerifyService,
   SoapAlloggiatiSender,
   SoapRicevutaSummaryReader,
   TokenManager,
   VaultCredentialProvider,
+  verifyParkAndSend,
 } from "@/server/modules/alloggiati";
 
 // ⚠️ SCHEDULER INVIO + RICONCILIAZIONE — DISATTIVATO DI DEFAULT.
@@ -71,14 +73,28 @@ export async function GET(req: Request) {
     new SoapAlloggiatiSender(tokens, client),
     (id) => recordBuilder.build(id),
   );
+  // Test-gate (intelligenza): dry-run Test prima dell'invio, le righe bocciate → NEEDS_REVIEW.
+  const verify = new SchedinaVerifyService(schedinaRepo, tokens, client, (id) =>
+    recordBuilder.build(id),
+  );
   const reconcile = new SchedinaReconcileService(
     schedinaRepo,
     new SoapRicevutaSummaryReader(tokens, client),
   );
 
   const report = await runSendAndReconcile({
-    listActiveCredentialIds: () => credRepo.listActiveCredentialIds(),
-    send: (credentialId) => outbox.processCredentialBatch(credentialId),
+    // Solo credenziali ATTIVE con opt-in autoSend (oltre alla tripla barriera del gate).
+    listActiveCredentialIds: () => credRepo.listAutoSendCredentialIds(),
+    // Smart-send: Test → parcheggia le bocciate → invia solo le valide.
+    send: (credentialId) =>
+      verifyParkAndSend(
+        {
+          verify: (id) => verify.verifyCredentialBatch(id),
+          parkByIds: (ids) => schedinaRepo.parkByIds(ids),
+          send: (id) => outbox.processCredentialBatch(id),
+        },
+        credentialId,
+      ).then(() => undefined),
     reconcile: (credentialId, dateIso) => reconcile.reconcileCredential(credentialId, dateIso),
     reconcileDateIso: romeYesterdayIso(),
   });
