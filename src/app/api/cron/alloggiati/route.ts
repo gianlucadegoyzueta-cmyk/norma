@@ -82,19 +82,34 @@ export async function GET(req: Request) {
     new SoapRicevutaSummaryReader(tokens, client),
   );
 
+  const smartDeps = {
+    verify: (id: string) => verify.verifyCredentialBatch(id),
+    parkByIds: (ids: readonly string[]) => schedinaRepo.parkByIds(ids),
+    send: (id: string) => outbox.processCredentialBatch(id),
+  };
+
+  // DRY-RUN ("finto, senza rischi"): esegue il Test REALE contro l'endpoint Alloggiati e riporta cosa
+  // invierebbe/parcheggerebbe, MA non parcheggia, non invia, non riconcilia → zero mutazioni, zero
+  // acquisizione. Per validare la pipeline su dati reali prima del primo Send vero. Attivo se
+  // ALLOGGIATI_CRON_DRY_RUN === "true" (oltre al gate). Resiliente per-credenziale.
+  if (process.env.ALLOGGIATI_CRON_DRY_RUN === "true") {
+    const ids = await credRepo.listAutoSendCredentialIds();
+    const results: unknown[] = [];
+    for (const id of ids) {
+      try {
+        results.push(await verifyParkAndSend(smartDeps, id, { dryRun: true }));
+      } catch (err) {
+        results.push({ credentialId: id, error: err instanceof Error ? err.message : "errore" });
+      }
+    }
+    return NextResponse.json({ ok: true, dryRun: true, credentials: ids.length, results });
+  }
+
   const report = await runSendAndReconcile({
     // Solo credenziali ATTIVE con opt-in autoSend (oltre alla tripla barriera del gate).
     listActiveCredentialIds: () => credRepo.listAutoSendCredentialIds(),
     // Smart-send: Test → parcheggia le bocciate → invia solo le valide.
-    send: (credentialId) =>
-      verifyParkAndSend(
-        {
-          verify: (id) => verify.verifyCredentialBatch(id),
-          parkByIds: (ids) => schedinaRepo.parkByIds(ids),
-          send: (id) => outbox.processCredentialBatch(id),
-        },
-        credentialId,
-      ).then(() => undefined),
+    send: (credentialId) => verifyParkAndSend(smartDeps, credentialId).then(() => undefined),
     reconcile: (credentialId, dateIso) => reconcile.reconcileCredential(credentialId, dateIso),
     reconcileDateIso: romeYesterdayIso(),
   });

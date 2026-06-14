@@ -20,26 +20,59 @@ export interface SmartSendDeps {
 export interface SmartSendOutcome {
   credentialId: string;
   tested: number; // righe testate
-  parked: number; // bocciate dal Test → NEEDS_REVIEW (non inviate)
-  sentBatch: boolean; // true se almeno una riga valida è stata inviata
+  parked: number; // bocciate dal Test → NEEDS_REVIEW (0 in dry-run: non si parcheggia)
+  sentBatch: boolean; // true se almeno una riga valida è stata inviata (sempre false in dry-run)
+  dryRun: boolean; // true = solo Test + report, nessuna mutazione e nessun invio
+  wouldSend: number; // righe che PASSEREBBERO il Test (inviate, o inviabili in dry-run)
+  wouldPark: number; // righe che il Test BOCCEREBBE (parcheggiate, o da parcheggiare in dry-run)
+}
+
+export interface SmartSendOptions {
+  /** dry-run: esegue il Test reale e riporta cosa farebbe, ma NON parcheggia, NON invia (zero rischi). */
+  dryRun?: boolean;
 }
 
 /**
  * Test-gate poi invio. Se il Test boccia tutte le righe → nessun Send. Resiliente all'esterno solo
  * quanto basta: lascia propagare gli errori al chiamante (il cron-runner li isola per-credenziale).
+ * In `dryRun` si ferma dopo il Test: nessun parcheggio, nessun invio → validazione a rischio zero.
  */
 export async function verifyParkAndSend(
   deps: SmartSendDeps,
   credentialId: string,
+  opts: SmartSendOptions = {},
 ): Promise<SmartSendOutcome> {
   const result = await deps.verify(credentialId);
 
   const invalidIds = result.rows.filter((r) => !r.valid).map((r) => r.schedinaId);
-  const parked = invalidIds.length > 0 ? await deps.parkByIds(invalidIds) : 0;
+  const wouldPark = invalidIds.length;
+  const wouldSend = result.valid;
 
+  if (opts.dryRun) {
+    // Solo Test (già eseguito sopra) + report: nessuna mutazione, nessuna acquisizione.
+    return {
+      credentialId,
+      tested: result.total,
+      parked: 0,
+      sentBatch: false,
+      dryRun: true,
+      wouldSend,
+      wouldPark,
+    };
+  }
+
+  const parked = wouldPark > 0 ? await deps.parkByIds(invalidIds) : 0;
   // Restano da inviare solo le righe valide (le bocciate sono ora in NEEDS_REVIEW, fuori dall'outbox).
-  const sentBatch = result.valid > 0;
+  const sentBatch = wouldSend > 0;
   if (sentBatch) await deps.send(credentialId);
 
-  return { credentialId, tested: result.total, parked, sentBatch };
+  return {
+    credentialId,
+    tested: result.total,
+    parked,
+    sentBatch,
+    dryRun: false,
+    wouldSend,
+    wouldPark,
+  };
 }

@@ -85,6 +85,28 @@ describe("verifyParkAndSend (Test-gate)", () => {
     expect(out.sentBatch).toBe(false);
     expect(sendCalls).toBe(0);
   });
+
+  it("dryRun → Test eseguito ma NIENTE parcheggio né invio (zero mutazioni, zero rischi)", async () => {
+    const parkedWith: string[][] = [];
+    let sendCalls = 0;
+    const deps: SmartSendDeps = {
+      verify: async () =>
+        verifyResult([
+          { id: "ok", valid: true },
+          { id: "bad", valid: false },
+        ]),
+      parkByIds: async (ids) => (parkedWith.push([...ids]), ids.length),
+      send: async () => void (sendCalls += 1),
+    };
+    const out = await verifyParkAndSend(deps, "cred_1", { dryRun: true });
+    expect(out.dryRun).toBe(true);
+    expect(out.wouldSend).toBe(1);
+    expect(out.wouldPark).toBe(1);
+    expect(out.parked).toBe(0);
+    expect(out.sentBatch).toBe(false);
+    expect(parkedWith).toHaveLength(0); // non ha parcheggiato
+    expect(sendCalls).toBe(0); // non ha inviato
+  });
 });
 
 // ---- parkByIds (InMemory): parcheggia solo le PENDING indicate, idempotente ----
