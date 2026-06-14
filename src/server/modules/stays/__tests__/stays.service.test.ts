@@ -94,6 +94,47 @@ describe("StaysService", () => {
     expect(second.existing).toBe(2);
   });
 
+  it("tryGenerate: dati completi + finestra → genera (passa, non skipped)", async () => {
+    const { stayId } = await setupStayWithFamily();
+    const res = await service.tryGenerateSchedine(stayId);
+    expect("created" in res).toBe(true);
+    if ("created" in res) expect(res.created).toBe(2);
+  });
+
+  it("tryGenerate: fuori finestra → skipped, NESSUN throw (best-effort)", async () => {
+    const { id: stayId } = await service.createStay({
+      organizationId: "org_1",
+      propertyId: "prop_1",
+      arrivalDate: new Date("2026-05-28T15:00:00.000Z"), // 4 giorni prima del now iniettato
+      departureDate: new Date("2026-05-30T10:00:00.000Z"),
+      guestsCount: 1,
+      isShortStay: false,
+    });
+    await service.addGuests(stayId, "org_1", [{ tipo: "SINGOLO", ospite: persona() }]);
+    const res = await service.tryGenerateSchedine(stayId);
+    expect("skipped" in res).toBe(true);
+  });
+
+  it("tryGenerate: ospite incompleto → skipped, NESSUN throw", async () => {
+    const { id: stayId } = await service.createStay({
+      organizationId: "org_1",
+      propertyId: "prop_1",
+      arrivalDate: new Date("2026-06-01T15:00:00.000Z"),
+      departureDate: new Date("2026-06-03T10:00:00.000Z"),
+      guestsCount: 1,
+      isShortStay: false,
+    });
+    // OSPITE_SINGOLO senza documento → il resolver lancia in generateSchedine → tryGenerate fa skip.
+    await service.addGuests(stayId, "org_1", [
+      {
+        tipo: "SINGOLO",
+        ospite: persona({ documentTypeId: null, documentNumber: null, documentPlaceId: null }),
+      },
+    ]);
+    const res = await service.tryGenerateSchedine(stayId);
+    expect("skipped" in res).toBe(true);
+  });
+
   it("data di arrivo fuori finestra (oltre ieri) → errore, nessuna schedina", async () => {
     // "now" iniettato = 01/06; un arrivo del 28/05 è 4 giorni prima → fuori finestra.
     const { id: stayId } = await service.createStay({
