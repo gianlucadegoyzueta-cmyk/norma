@@ -28,6 +28,7 @@ describe.skipIf(!runDb)("loadRoss1000Report — integrazione (DB reale)", () => 
     propNoCap: `r1_pnc_${s}`,
     propNoCode: `r1_pncode_${s}`,
     propForeign: `r1_pf_${s}`,
+    propForeignOk: `r1_pfok_${s}`,
     propFamiliare: `r1_pfam_${s}`,
   };
 
@@ -125,11 +126,21 @@ describe.skipIf(!runDb)("loadRoss1000Report — integrazione (DB reale)", () => 
       transportMeans: "AUTO",
     });
 
-    // Residente ESTERO: nessuna sorgente per luogoresidenza → missing
+    // Residente ESTERO senza località estera: luogoresidenza → missing
     await makeProperty(ids.propForeign, ids.orgA, { code: CODE, camere: 4, letti: 8 });
     await makeStayWithGuest(ids.propForeign, ids.orgA, {
       residenceCountryId: ids.frCountry, // estero
       residenceComuneId: null,
+      tourismType: "ALTRO",
+      transportMeans: "AUTO",
+    });
+
+    // Residente ESTERO CON residenceForeignLocality valorizzato → completo (luogoresidenza presente)
+    await makeProperty(ids.propForeignOk, ids.orgA, { code: CODE, camere: 4, letti: 8 });
+    await makeStayWithGuest(ids.propForeignOk, ids.orgA, {
+      residenceCountryId: ids.frCountry, // estero
+      residenceComuneId: null,
+      residenceForeignLocality: "FR101", // NUTS/stringa
       tourismType: "ALTRO",
       transportMeans: "AUTO",
     });
@@ -212,6 +223,18 @@ describe.skipIf(!runDb)("loadRoss1000Report — integrazione (DB reale)", () => 
       );
       // lo Stato di residenza estero invece è disponibile → NON deve risultare mancante
       expect(out.missing.some((m) => m.field === "statoresidenza")).toBe(false);
+    }
+  });
+
+  it("residente estero CON residenceForeignLocality → OK, luogoresidenza non mancante", async () => {
+    const out = await loadRoss1000Report(prisma, {
+      organizationId: ids.orgA,
+      propertyId: ids.propForeignOk,
+      period: PERIOD,
+    });
+    expect(out.kind).toBe("OK");
+    if (out.kind === "OK") {
+      expect(out.xml).toContain("<luogoresidenza>FR101</luogoresidenza>");
     }
   });
 
