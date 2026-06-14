@@ -67,6 +67,20 @@ export class PrismaCredentialRepository {
     return this.prisma.alloggiatiCredential.findMany({ where: { organizationId }, select: SELECT });
   }
 
+  /**
+   * Tutti gli id delle credenziali ATTIVE, di OGNI organizzazione. Lettura INTERNA per i job di
+   * sistema (es. lo scheduler invio+reconcile): non c'è un'org chiamante, l'autorizzazione è il
+   * contesto di sistema del cron. Ritorna solo gli id (nessun metadato/segreto di tenant).
+   */
+  async listActiveCredentialIds(): Promise<string[]> {
+    const rows = await this.prisma.alloggiatiCredential.findMany({
+      where: { status: "ACTIVE" },
+      select: { id: true },
+      orderBy: { createdAt: "asc" },
+    });
+    return rows.map((r) => r.id);
+  }
+
   async updateStatus(id: string, organizationId: string, status: CredentialStatus): Promise<void> {
     // updateMany con (id, organizationId): una credenziale di un'altra org non viene aggiornata
     // (0 righe), mai un'eccezione e mai una scrittura cross-tenant. Isolamento by query.
