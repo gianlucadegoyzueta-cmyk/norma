@@ -8,6 +8,7 @@ export interface CredentialMetadata {
   category: CredentialCategory;
   provincia: string;
   status: CredentialStatus;
+  autoSend: boolean;
   secretRef: string;
 }
 
@@ -27,6 +28,7 @@ const SELECT = {
   category: true,
   provincia: true,
   status: true,
+  autoSend: true,
   secretRef: true,
 } satisfies Prisma.AlloggiatiCredentialSelect;
 
@@ -97,6 +99,14 @@ export class PrismaCredentialRepository {
     await this.prisma.alloggiatiCredential.updateMany({
       where: { id, organizationId },
       data: { status },
+    });
+  }
+
+  /** Opt-in/out all'auto-invio per la credenziale. Isolamento by query (updateMany con org). */
+  async setAutoSend(id: string, organizationId: string, autoSend: boolean): Promise<void> {
+    await this.prisma.alloggiatiCredential.updateMany({
+      where: { id, organizationId },
+      data: { autoSend },
     });
   }
 

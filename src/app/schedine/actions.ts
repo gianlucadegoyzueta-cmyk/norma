@@ -63,6 +63,30 @@ async function guardCredential(
 }
 
 /**
+ * Opt-in/out della credenziale all'AUTO-INVIO schedulato. Cambia solo un flag (reversibile): NON
+ * invia nulla. L'auto-invio reale resta dietro la tripla barriera (env ALLOGGIATI_CRON_ENABLED +
+ * CRON_SECRET + questo flag). Isolamento per org via guardCredential.
+ */
+export async function setCredentialAutoSendAction(
+  credentialId: string,
+  enabled: boolean,
+): Promise<Result> {
+  const ctx = await getCurrentContext();
+  if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+
+  const credRepo = new PrismaCredentialRepository(prisma);
+  const denied = await guardCredential(credRepo, credentialId, ctx.current.organizationId);
+  if (denied) return { ok: false, message: denied };
+
+  await credRepo.setAutoSend(credentialId, ctx.current.organizationId, enabled);
+  revalidatePath("/schedine");
+  return {
+    ok: true,
+    message: enabled ? "Auto-invio attivato per questa credenziale." : "Auto-invio disattivato.",
+  };
+}
+
+/**
  * VERIFICA (Test) le schedine PENDING di una credenziale: validazione lato Alloggiati, SENZA
  * inviare nulla e senza cambiare stato. Sicuro e ripetibile: è il passo da fare prima dell'invio.
  */

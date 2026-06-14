@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isOverdue } from "@/lib/schedina-status";
 import { cn } from "@/lib/utils";
+import { AutoSendToggle } from "./AutoSendToggle";
 import { CredentialOutboxControls } from "./CredentialOutboxControls";
 import { mapAlloggiatiError } from "./error-codes";
 import { ReconcileControls } from "./ReconcileControls";
@@ -173,6 +174,43 @@ export default async function SchedinePage() {
                     unverifiedCount={count}
                     active={credStatus.get(credId) === "ACTIVE"}
                     defaultReceiptDate={romeYesterday}
+                  />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      {credentials.length > 0 && (
+        <section className="cmx-section">
+          <Card style={{ borderRadius: 18 }}>
+            <CardHeader>
+              <CardTitle className="font-display">Auto-invio programmato</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <p className="text-muted-foreground text-sm">
+                Quando attivo per una credenziale, Norma può inviare da sola le schedine già{" "}
+                <em>validate dal Test</em>; quelle che il Test boccia restano da rivedere e{" "}
+                <strong>non partono mai</strong>. L&apos;invio automatico richiede anche
+                l&apos;abilitazione lato server: finché non è attiva, questo interruttore esprime
+                solo la tua preferenza.
+              </p>
+              {credentials.map((c) => (
+                <div
+                  key={c.id}
+                  className="border-border flex items-center justify-between gap-4 rounded-xl border p-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{c.label}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {c.provincia} · {c.status === "ACTIVE" ? "attiva" : "non attiva"}
+                    </p>
+                  </div>
+                  <AutoSendToggle
+                    credentialId={c.id}
+                    initialEnabled={c.autoSend}
+                    active={c.status === "ACTIVE"}
                   />
                 </div>
               ))}
