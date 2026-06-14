@@ -49,7 +49,9 @@ export interface ReminderResult {
   ready: number; // strutture FILE con report OK
   incomplete: number; // strutture FILE con dati mancanti
   assistito: number; // strutture in regione a inserimento manuale
+  errored: number; // strutture il cui report ha lanciato (dati malformati) — isolate, non bloccano il batch
   skippedNoEmail: number; // org senza email owner
+  emailFailed: number; // invii email falliti (isolati, non bloccano gli altri)
 }
 
 /** Periodo del mese PRECEDENTE rispetto a `now` (il movimento da dichiarare entro il 5). */
@@ -57,7 +59,7 @@ function previousPeriod(now: Date): string {
   return periodOf(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)));
 }
 
-type Line = { kind: "ready" | "incomplete" | "assistito"; text: string };
+type Line = { kind: "ready" | "incomplete" | "assistito" | "errore"; text: string };
 
 export async function runMonthlyIstatReminders(
   deps: IstatReminderDeps,
@@ -77,7 +79,9 @@ export async function runMonthlyIstatReminders(
     ready: 0,
     incomplete: 0,
     assistito: 0,
+    errored: 0,
     skippedNoEmail: 0,
+    emailFailed: 0,
   };
 
   for (const p of properties) {
@@ -87,7 +91,20 @@ export async function runMonthlyIstatReminders(
     const bucket = byOrg.get(p.organizationId) ?? { email: p.ownerEmail, lines: [] };
 
     if (rm.status === "FILE" && rm.serializerId === "ross1000-xml") {
-      const out = await deps.loadRoss1000(p.organizationId, p.propertyId, period);
+      // Isolamento per-struttura: loadRoss1000 può LANCIARE (es. campo fuori vincolo nel tracciato).
+      // Una struttura malformata NON deve abortire il run mensile di tutte le altre.
+      let out;
+      try {
+        out = await deps.loadRoss1000(p.organizationId, p.propertyId, period);
+      } catch {
+        res.errored += 1;
+        bucket.lines.push({
+          kind: "errore",
+          text: `⚠ ${p.name} (${rm.label}): errore nel preparare il file — verifica i dati della struttura/ospiti.`,
+        });
+        byOrg.set(p.organizationId, bucket);
+        continue;
+      }
       if (out.kind === "OK") {
         res.ready += 1;
         bucket.lines.push({
@@ -127,12 +144,17 @@ export async function runMonthlyIstatReminders(
       `Scadenza di trasmissione: ${deadlineStr}.\n\n` +
       bucket.lines.map((l) => l.text).join("\n") +
       `\n\nNorma prepara il file/i numeri; il caricamento sul portale resta a te (non inviamo noi).`;
-    await deps.email.send({
-      to: bucket.email,
-      subject: `Movimento turistico ${label}: cosa fare entro il ${deadlineStr}`,
-      text: body,
-    });
-    res.orgsNotified += 1;
+    // Isolamento per-email: un invio fallito non deve impedire i reminder alle altre org.
+    try {
+      await deps.email.send({
+        to: bucket.email,
+        subject: `Movimento turistico ${label}: cosa fare entro il ${deadlineStr}`,
+        text: body,
+      });
+      res.orgsNotified += 1;
+    } catch {
+      res.emailFailed += 1;
+    }
   }
 
   return res;

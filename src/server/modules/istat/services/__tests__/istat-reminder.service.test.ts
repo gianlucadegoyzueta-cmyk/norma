@@ -133,4 +133,72 @@ describe("runMonthlyIstatReminders", () => {
     expect(res.orgsNotified).toBe(0);
     expect(res.ready + res.incomplete + res.assistito).toBe(0);
   });
+
+  it("loadRoss1000 che LANCIA su una struttura → errored, le altre proseguono (batch non abortisce)", async () => {
+    const sent: EmailMessage[] = [];
+    const deps: IstatReminderDeps = {
+      listProperties: async () => [
+        {
+          organizationId: "org1",
+          propertyId: "boom",
+          name: "Casa Boom",
+          provincia: "RM",
+          ownerEmail: "a@x.it",
+        },
+        {
+          organizationId: "org1",
+          propertyId: "ok",
+          name: "Casa Ok",
+          provincia: "RM",
+          ownerEmail: "a@x.it",
+        },
+      ],
+      loadRoss1000: async (_o, propertyId) => {
+        if (propertyId === "boom") throw new Error("tracciato: luogoresidenza troppo lungo");
+        return OK;
+      },
+      email: { send: async (m) => void sent.push(m) },
+    };
+    const res = await runMonthlyIstatReminders(deps, NOW);
+    expect(res.errored).toBe(1);
+    expect(res.ready).toBe(1);
+    expect(res.orgsNotified).toBe(1); // l'email parte comunque, con riga di errore + riga ok
+    expect(sent).toHaveLength(1);
+    expect(sent[0].text).toContain("errore nel preparare");
+    expect(sent[0].text).toContain("Casa Ok");
+  });
+
+  it("email.send che LANCIA su una org → emailFailed, le altre proseguono", async () => {
+    const sent: EmailMessage[] = [];
+    const deps: IstatReminderDeps = {
+      listProperties: async () => [
+        {
+          organizationId: "orgBad",
+          propertyId: "p1",
+          name: "A",
+          provincia: "RM",
+          ownerEmail: "bad@x.it",
+        },
+        {
+          organizationId: "orgGood",
+          propertyId: "p2",
+          name: "B",
+          provincia: "RM",
+          ownerEmail: "good@x.it",
+        },
+      ],
+      loadRoss1000: async () => OK,
+      email: {
+        send: async (m) => {
+          if (m.to === "bad@x.it") throw new Error("smtp down");
+          sent.push(m);
+        },
+      },
+    };
+    const res = await runMonthlyIstatReminders(deps, NOW);
+    expect(res.emailFailed).toBe(1);
+    expect(res.orgsNotified).toBe(1);
+    expect(sent).toHaveLength(1);
+    expect(sent[0].to).toBe("good@x.it");
+  });
 });
