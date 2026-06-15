@@ -394,6 +394,9 @@ model Guest {
   // con fallback approssimato lato ISTAT finché non è valorizzata. residenceComuneId solo se Italia.
   residenceCountryId String? // Stato di residenza
   residenceComuneId  String? // Comune di residenza (solo se residenza in Italia)
+  // luogoresidenza per residenti ESTERI (NUTS o stringa, max 30): per l'Italia si usa residenceComune.
+  // Senza questo, per un estero il movimento turistico resterebbe sempre INCOMPLETE (mai inventare).
+  residenceForeignLocality String? // luogo di residenza estero (Ross1000 <luogoresidenza>)
 
   // Ross1000 (movimento turistico): NON richiesti da Alloggiati, ma obbligatori nel tracciato <arrivo>.
   // Null finché non raccolti → il report li segnala come mancanti (mai inventati).

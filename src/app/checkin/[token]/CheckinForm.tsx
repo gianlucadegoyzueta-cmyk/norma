@@ -9,6 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { SubmitButton } from "@/components/ui/submit-button";
 import type { CheckinMessages } from "@/server/modules/checkin/messages";
+import {
+  MEZZO_TRASPORTO_OPTIONS,
+  TIPO_TURISMO_OPTIONS,
+} from "@/server/modules/istat/ross1000/domains";
 import { type CheckinSubmitState, submitCheckinAction } from "./actions";
 
 type Country = { id: string; name: string };
@@ -238,6 +242,41 @@ export function CheckinForm({
           options={comuni}
           placeholder={m.select}
         />
+      </div>
+
+      <div className="grid gap-1.5">
+        <Label htmlFor="residenceForeignLocality">
+          {m.residenceForeignLocality} <span className="text-muted-foreground">({m.optional})</span>
+        </Label>
+        <Input id="residenceForeignLocality" name="residenceForeignLocality" maxLength={30} />
+      </div>
+
+      <div className="grid gap-1.5">
+        <Label htmlFor="tourismType">
+          {m.tourismType} <span className="text-muted-foreground">({m.optional})</span>
+        </Label>
+        <Select id="tourismType" name="tourismType" defaultValue="">
+          <option value="">—</option>
+          {TIPO_TURISMO_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      <div className="grid gap-1.5">
+        <Label htmlFor="transportMeans">
+          {m.transportMeans} <span className="text-muted-foreground">({m.optional})</span>
+        </Label>
+        <Select id="transportMeans" name="transportMeans" defaultValue="">
+          <option value="">—</option>
+          {MEZZO_TRASPORTO_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </Select>
       </div>
 
       <SubmitButton className="mt-2 w-full" pendingLabel={m.submitting}>

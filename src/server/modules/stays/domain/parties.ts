@@ -15,6 +15,10 @@ export interface GuestData {
   // Residenza (provenienza) — opzionale, per ISTAT/check-in. Non usata da Alloggiati.
   residenceCountryId?: string | null;
   residenceComuneId?: string | null;
+  residenceForeignLocality?: string | null; // luogo di residenza estero (Ross1000 <luogoresidenza>)
+  // Movimento turistico (Ross1000) — opzionali, non usati da Alloggiati.
+  tourismType?: string | null;
+  transportMeans?: string | null;
   documentTypeId?: string | null;
   documentNumber?: string | null;
   documentPlaceId?: string | null;

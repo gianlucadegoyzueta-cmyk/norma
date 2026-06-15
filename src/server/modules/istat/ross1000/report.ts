@@ -3,9 +3,9 @@
 // aggregazione → serializzazione XML. Il PrismaClient è iniettato (testabilità).
 //
 // DISCIPLINA "mai inventare": i campi obbligatori del tracciato non disponibili NON vengono
-// inventati — finiscono in `missing` e il report resta INCOMPLETE. In particolare la RESIDENZA
-// ESTERA non ha una sorgente nel modello attuale (esiste solo residenceComune per l'Italia):
-// per un residente estero `luogoresidenza` è segnalato mancante, non riempito a caso.
+// inventati — finiscono in `missing` e il report resta INCOMPLETE. La RESIDENZA usa il Comune
+// (residenceComune) per l'Italia e `residenceForeignLocality` per l'estero; se il campo del caso
+// è assente, `luogoresidenza` è segnalato mancante, non riempito a caso.
 //
 // Isolamento multi-tenant: ogni query filtra per organizationId.
 
@@ -104,6 +104,7 @@ export async function loadRoss1000Report(
           citizenship: { select: { code: true } },
           residenceCountry: { select: { code: true } },
           residenceComune: { select: { code: true } },
+          residenceForeignLocality: true,
           birthCountry: { select: { code: true } },
           birthComune: { select: { code: true } },
         },
@@ -129,10 +130,11 @@ export async function loadRoss1000Report(
         ? need(g.leaderId ? shortIdswh(g.leaderId) : undefined, "idcapo")
         : undefined;
 
-      // luogoresidenza: Italia → codice Comune di residenza; estero → nessuna sorgente nel modello → missing.
+      // luogoresidenza: Italia → codice Comune di residenza; estero → residenceForeignLocality
+      // (NUTS/stringa). Se la sorgente del caso manca → missing (mai inventato).
       const isItalyResidence = g.residenceCountry?.code === ITALIA_CODE;
       const luogoResidenza = need(
-        isItalyResidence ? g.residenceComune?.code : undefined,
+        isItalyResidence ? g.residenceComune?.code : g.residenceForeignLocality,
         "luogoresidenza",
       );
 

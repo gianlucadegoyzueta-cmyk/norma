@@ -36,6 +36,9 @@ export interface CheckinMessages {
   documentPlace: string;
   residenceCountry: string;
   residenceComune: string;
+  residenceForeignLocality: string;
+  tourismType: string;
+  transportMeans: string;
   select: string;
   optional: string;
   ifItaly: string;
@@ -69,6 +72,9 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     documentPlace: "Luogo di rilascio",
     residenceCountry: "Stato di residenza",
     residenceComune: "Comune di residenza",
+    residenceForeignLocality: "Località di residenza (estero)",
+    tourismType: "Tipo di turismo",
+    transportMeans: "Mezzo di trasporto",
     select: "Seleziona",
     optional: "facoltativo",
     ifItaly: "solo se in Italia",
@@ -101,6 +107,9 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     documentPlace: "Place of issue",
     residenceCountry: "Country of residence",
     residenceComune: "Municipality of residence",
+    residenceForeignLocality: "Place of residence (abroad)",
+    tourismType: "Type of tourism",
+    transportMeans: "Means of transport",
     select: "Select",
     optional: "optional",
     ifItaly: "only if in Italy",
@@ -132,6 +141,9 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     documentPlace: "Ausstellungsort",
     residenceCountry: "Wohnsitzland",
     residenceComune: "Wohnsitzgemeinde",
+    residenceForeignLocality: "Wohnort (Ausland)",
+    tourismType: "Reiseart",
+    transportMeans: "Verkehrsmittel",
     select: "Auswählen",
     optional: "optional",
     ifItaly: "nur wenn in Italien",
@@ -164,6 +176,9 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     documentPlace: "Lieu de délivrance",
     residenceCountry: "Pays de résidence",
     residenceComune: "Commune de résidence",
+    residenceForeignLocality: "Lieu de résidence (étranger)",
+    tourismType: "Type de tourisme",
+    transportMeans: "Moyen de transport",
     select: "Sélectionner",
     optional: "facultatif",
     ifItaly: "uniquement si en Italie",
@@ -196,6 +211,9 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     documentPlace: "Lugar de expedición",
     residenceCountry: "País de residencia",
     residenceComune: "Municipio de residencia",
+    residenceForeignLocality: "Localidad de residencia (extranjero)",
+    tourismType: "Tipo de turismo",
+    transportMeans: "Medio de transporte",
     select: "Seleccionar",
     optional: "opcional",
     ifItaly: "solo si está en Italia",
