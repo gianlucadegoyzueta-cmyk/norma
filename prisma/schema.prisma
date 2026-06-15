@@ -273,6 +273,12 @@ model Property {
   accommodationCategory String? // null = si userà la tariffa jolly DEFAULT del comune
   touristTaxZone        String? // null = zona DEFAULT del comune
 
+  // Ross1000 (movimento turistico ISTAT): codice struttura assegnato dall'ente + capacità ricettiva.
+  // Alimentano il file <movimenti> (<codice>, <cameredisponibili>, <lettidisponibili>). Null = non configurato.
+  ross1000Code      String? // codice struttura per la trasmissione del movimento turistico
+  camereDisponibili Int? // unità ricettive potenzialmente vendibili
+  lettiDisponibili  Int? // posti letto totali
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -388,6 +394,11 @@ model Guest {
   // con fallback approssimato lato ISTAT finché non è valorizzata. residenceComuneId solo se Italia.
   residenceCountryId String? // Stato di residenza
   residenceComuneId  String? // Comune di residenza (solo se residenza in Italia)
+
+  // Ross1000 (movimento turistico): NON richiesti da Alloggiati, ma obbligatori nel tracciato <arrivo>.
+  // Null finché non raccolti → il report li segnala come mancanti (mai inventati).
+  tourismType    String? // tipoturismo (es. "ENOGASTRONOMICO")
+  transportMeans String? // mezzotrasporto (es. "AUTO", "AEREO")
 
   documentTypeId  String? // documento: obbligatorio solo per 16/17/18
   documentNumber  String?

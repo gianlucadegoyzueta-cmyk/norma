@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { IstatExportButton } from "./IstatExportButton";
 import { IstatSubmitButton } from "./IstatSubmitButton";
+import { regionMovementForProvincia } from "@/server/modules/istat/regional/routing";
+import { Ross1000ExportButton } from "./Ross1000ExportButton";
 
 export const metadata: Metadata = { title: "ISTAT" };
 export const dynamic = "force-dynamic";
@@ -38,6 +40,13 @@ export default async function IstatPage({
   const submittedLabel = submission
     ? new Intl.DateTimeFormat("it-IT", { dateStyle: "medium" }).format(submission.submittedAt)
     : null;
+
+  // Ross1000 è per-struttura (a differenza del CSV per-provenienza, che è per-organizzazione).
+  const properties = await prisma.property.findMany({
+    where: { organizationId: ctx.current.organizationId },
+    select: { id: true, name: true, ross1000Code: true, comune: { select: { provincia: true } } },
+    orderBy: { name: "asc" },
+  });
 
   return (
     <ConciergePage
@@ -130,6 +139,49 @@ export default async function IstatPage({
           ? ` ${approximated} con provenienza stimata dalla cittadinanza (residenza non indicata): valorizza la residenza nell'ospite per un dato preciso.`
           : ""}
       </p>
+
+      <div className="cmx-section" style={{ marginTop: 32 }}>
+        <h2 className="text-sm font-medium">Ross1000 — file XML per struttura</h2>
+        <p className="text-muted-foreground mt-1 mb-3 text-xs">
+          Movimento turistico in formato Ross1000 (Lazio e altre ~13 regioni). Scarica il file .xml
+          di ogni struttura e caricalo sul portale regionale. Se mancano dati obbligatori il file
+          non viene generato: completa prima i dati indicati (mai inviamo dati inventati).
+        </p>
+        {properties.length === 0 ? (
+          <p className="text-muted-foreground text-xs">Nessuna struttura configurata.</p>
+        ) : (
+          <Card style={{ borderRadius: 18 }}>
+            <CardContent className="p-0">
+              <ul className="divide-border/60 divide-y">
+                {properties.map((p) => {
+                  const rm = regionMovementForProvincia(p.comune.provincia);
+                  const canDownload = rm?.status === "FILE" && rm.serializerId === "ross1000-xml";
+                  return (
+                    <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{p.name}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {rm ? `${rm.label} · ${rm.system}` : "Regione non riconosciuta"}
+                          {p.ross1000Code ? ` · codice ${p.ross1000Code}` : ""}
+                        </p>
+                      </div>
+                      {canDownload ? (
+                        <Ross1000ExportButton propertyId={p.id} period={period} />
+                      ) : (
+                        <span className="text-muted-foreground max-w-[16rem] text-right text-xs">
+                          {rm
+                            ? `Portale ${rm.system}: non integrato. Usa i numeri del report qui sopra e inseriscili a mano.`
+                            : "Comune senza provincia riconosciuta: verifica i dati della struttura."}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </ConciergePage>
   );
 }
