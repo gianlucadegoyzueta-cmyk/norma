@@ -1,53 +1,33 @@
+"use client";
+
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
-import {
-  LayoutGrid,
-  CalendarCheck,
-  ScrollText,
-  BarChart3,
-  Building2,
-  KeyRound,
-  CreditCard,
-  Settings,
-  Search,
-  ChevronsUpDown,
-  LogOut,
-} from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Building2, ChevronsUpDown, LogOut, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SealMark } from "@/components/ui/seal-mark";
+import { NAV, matchActive } from "./shell-nav";
 
 // App-shell laterale (struttura ispirata allo Studio di Supabase: switcher di workspace,
 // ricerca ⌘K, nav raggruppata con stato attivo, footer utente) vestita "Carta & Inchiostro".
-// Presentazionale: `active` indica la sezione corrente (in produzione verrà da usePathname).
-type NavItem = { key: string; label: string; href: string; icon: LucideIcon; badge?: string };
+// Lo stato attivo deriva da usePathname; `active` lo forza (utile nelle anteprime dev).
+// `workspace`/`user` hanno default neutri e veritieri — i dati reali si passano da chi monta lo shell.
+type Workspace = { name: string; sub?: string };
+type User = { name: string; email?: string; initials: string };
 
-const NAV: { heading?: string; items: NavItem[] }[] = [
-  { items: [{ key: "dashboard", label: "Dashboard", href: "/dashboard", icon: LayoutGrid }] },
-  {
-    heading: "Adempimenti",
-    items: [
-      { key: "stays", label: "Soggiorni", href: "/stays", icon: CalendarCheck },
-      { key: "schedine", label: "Schedine", href: "/schedine", icon: ScrollText, badge: "3" },
-      { key: "istat", label: "Movimento ISTAT", href: "/istat", icon: BarChart3 },
-    ],
-  },
-  {
-    heading: "Struttura",
-    items: [
-      { key: "properties", label: "Immobili", href: "/properties", icon: Building2 },
-      { key: "credentials", label: "Credenziali", href: "/credentials", icon: KeyRound },
-    ],
-  },
-  {
-    heading: "Account",
-    items: [
-      { key: "billing", label: "Abbonamento", href: "/billing", icon: CreditCard },
-      { key: "account", label: "Impostazioni", href: "/account", icon: Settings },
-    ],
-  },
-];
+export function AppSidebar({
+  active,
+  workspace,
+  user,
+}: {
+  active?: string;
+  workspace?: Workspace;
+  user?: User;
+}) {
+  const pathname = usePathname() ?? "";
+  const activeKey = active ?? matchActive(pathname)?.key;
+  const ws = workspace ?? { name: "Le tue strutture" };
+  const u = user ?? { name: "Il tuo account", initials: "N" };
 
-export function AppSidebar({ active }: { active: string }) {
   return (
     <aside className="hidden w-[264px] shrink-0 flex-col border-r border-[var(--brand-hairline)] bg-[var(--brand-carta)] lg:flex">
       {/* Marchio */}
@@ -60,18 +40,23 @@ export function AppSidebar({ active }: { active: string }) {
 
       {/* Switcher struttura + ricerca */}
       <div className="space-y-2 px-3 pt-3 pb-2">
-        <button className="flex w-full items-center gap-2.5 rounded-lg border border-[var(--brand-hairline)] bg-[var(--brand-avorio)]/60 px-2.5 py-2 text-left transition-colors hover:bg-[var(--brand-avorio)]">
+        <Link
+          href="/properties"
+          className="flex w-full items-center gap-2.5 rounded-lg border border-[var(--brand-hairline)] bg-[var(--brand-avorio)]/60 px-2.5 py-2 text-left transition-colors hover:bg-[var(--brand-avorio)]"
+        >
           <span className="bg-primary/10 text-primary flex size-7 items-center justify-center rounded-md">
             <Building2 className="size-4" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="text-foreground block truncate text-[13px] font-medium">
-              Villa Vista · Como
+              {ws.name}
             </span>
-            <span className="text-muted-foreground block truncate text-[11px]">3 strutture</span>
+            {ws.sub && (
+              <span className="text-muted-foreground block truncate text-[11px]">{ws.sub}</span>
+            )}
           </span>
           <ChevronsUpDown className="text-muted-foreground size-3.5 shrink-0" />
-        </button>
+        </Link>
 
         <div className="text-muted-foreground flex h-9 items-center gap-2 rounded-lg border border-[var(--brand-hairline)] bg-[var(--brand-avorio)]/40 px-2.5">
           <Search className="size-3.5" />
@@ -93,7 +78,7 @@ export function AppSidebar({ active }: { active: string }) {
             )}
             <ul className="space-y-0.5">
               {group.items.map((it) => {
-                const isActive = it.key === active;
+                const isActive = it.key === activeKey;
                 const Icon = it.icon;
                 return (
                   <li key={it.key}>
@@ -119,18 +104,6 @@ export function AppSidebar({ active }: { active: string }) {
                         )}
                       />
                       <span className="flex-1 truncate">{it.label}</span>
-                      {it.badge && (
-                        <span
-                          className={cn(
-                            "rounded-full px-1.5 py-0.5 text-[10.5px] font-medium tabular-nums",
-                            isActive
-                              ? "bg-primary/15 text-primary"
-                              : "text-muted-foreground bg-[var(--brand-hairline)]/60",
-                          )}
-                        >
-                          {it.badge}
-                        </span>
-                      )}
                     </Link>
                   </li>
                 );
@@ -142,18 +115,21 @@ export function AppSidebar({ active }: { active: string }) {
 
       {/* Footer utente */}
       <div className="border-t border-[var(--brand-hairline)]/70 p-3">
-        <div className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--brand-avorio)]">
+        <Link
+          href="/account"
+          className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--brand-avorio)]"
+        >
           <span className="flex size-8 items-center justify-center rounded-full bg-[var(--brand-salvia-soft)] text-[12px] font-medium text-[var(--brand-salvia)]">
-            GD
+            {u.initials}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="text-foreground block truncate text-[13px] font-medium">Gianluca</span>
-            <span className="text-muted-foreground block truncate text-[11px]">
-              gianluca@norma.casa
-            </span>
+            <span className="text-foreground block truncate text-[13px] font-medium">{u.name}</span>
+            {u.email && (
+              <span className="text-muted-foreground block truncate text-[11px]">{u.email}</span>
+            )}
           </span>
           <LogOut className="text-muted-foreground size-4" />
-        </div>
+        </Link>
       </div>
     </aside>
   );

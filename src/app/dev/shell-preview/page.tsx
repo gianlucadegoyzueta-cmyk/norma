@@ -187,6 +187,8 @@ export default function ShellPreviewPage() {
   return (
     <AppShell
       active="schedine"
+      workspace={{ name: "Villa Vista · Como", sub: "3 strutture" }}
+      user={{ name: "Gianluca", email: "gianluca@norma.casa", initials: "GD" }}
       breadcrumb={
         <>
           <span className="text-foreground/70">Villa Vista · Como</span>
@@ -209,7 +211,7 @@ export default function ShellPreviewPage() {
         </>
       }
     >
-      <div className="mx-auto max-w-[1180px]">
+      <div className="mx-auto max-w-[1180px] px-6 py-7 lg:px-8">
         {/* Intestazione pagina */}
         <div>
           <h1 className="font-display text-foreground text-[26px] font-semibold tracking-tight">
