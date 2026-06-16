@@ -213,6 +213,19 @@ export class PrismaSchedinaRepository implements SchedinaRepository {
     return exhausted.length;
   }
 
+  async parkByIds(ids: readonly string[]): Promise<number> {
+    if (ids.length === 0) return 0;
+    // Solo quelle ancora PENDING tra gli id dati (idempotente: salta le altre).
+    const pending = await this.prisma.schedina.findMany({
+      where: { id: { in: [...ids] }, status: "PENDING" },
+      select: { id: true },
+    });
+    for (const row of pending) {
+      await this.transition(row.id, "NEEDS_REVIEW", null, null);
+    }
+    return pending.length;
+  }
+
   async reopenForRetry(id: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       const current = await tx.schedina.findUnique({ where: { id }, select: { status: true } });

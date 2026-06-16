@@ -231,6 +231,11 @@ model AlloggiatiCredential {
   provincia      String // sigla, es. "RM". Una GESTIONE_APPARTAMENTI copre UNA sola provincia.
   status         CredentialStatus   @default(PENDING_REONBOARDING)
 
+  // Opt-in per-credenziale all'AUTO-INVIO del cron (default OFF): l'host decide quando si fida.
+  // Il cron auto-send considera solo le credenziali ACTIVE con autoSend=true; il Send resta gated
+  // anche da ALLOGGIATI_CRON_ENABLED + CRON_SECRET (tripla barriera).
+  autoSend Boolean @default(false)
+
   secretRef String @unique // riferimento al vault (NON il segreto in chiaro)
 
   // Metadati operativi (NON il token vero: quello è effimero e vive in cache a runtime)
