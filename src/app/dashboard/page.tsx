@@ -4,6 +4,7 @@ import { signOut } from "@/auth";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { getOnboardingState } from "@/server/modules/onboarding/state";
+import { LogOut } from "lucide-react";
 import { ConciergeScene } from "@/components/dashboard/concierge-scene";
 import { getDashboardData, type DashboardProposal } from "./_lib/data";
 import { buildSceneCopy } from "./_lib/scene";
@@ -64,7 +65,11 @@ export default async function DashboardPage() {
       diary={data.diary}
       signOutSlot={
         <form action={signOutAction}>
-          <button type="submit" className="cmx-signout">
+          <button
+            type="submit"
+            className="bg-card text-muted-foreground hover:text-foreground flex h-9 items-center gap-1.5 rounded-lg border border-[var(--brand-hairline)] px-3 text-[13px] font-medium transition-colors"
+          >
+            <LogOut className="size-4" />
             Esci
           </button>
         </form>
