@@ -4,15 +4,24 @@ Contesto operativo per Claude (Code, Cowork, agenti). Leggi PRIMA di toccare il 
 
 ## Cos'è Norma
 
-SaaS di compliance per affitti brevi in Italia (norma.casa, app su app.norma.casa, €12/mese).
-Fa al posto dell'host: schedine Alloggiati Web (Polizia di Stato), tassa di soggiorno,
-ISTAT, gestione CIN, check-in ospiti self-service multilingua.
+SaaS di compliance per affitti brevi in Italia (norma.casa, app su app.norma.casa,
+€120/anno — gratis fino al primo ospite gestito). **Pivot 2026-06-17: due soli pilastri ricorrenti.**
+
+1. **Alloggiati** — schedine alla Polizia di Stato (Alloggiati Web, art. 109 TULPS).
+2. **Turismo** — tassa di soggiorno + ISTAT/movimento turistico (Ross1000 e portali regionali).
+
+Tutto il resto serve i due pilastri: check-in self-service multilingua, import iCal, stays,
+properties, onboarding alimentano schedine e dichiarazioni. **CIN non è un pilastro né sta nel
+pitch** (adempimento una-tantum): NON si vende. Ma resta nel prodotto perché è load-bearing —
+`Property.cin` è richiesto dalla dichiarazione tassa di soggiorno (`tourist-tax/actions.ts`):
+NON rimuoverlo, NON deprecare il modulo. Verità editoriale: "Norma prepara, tu confermi con un
+click" — mai "invia da sola".
 
 - **Stack:** Next.js App Router + TypeScript strict + PostgreSQL (Supabase, Frankfurt) + Prisma.
   Deploy su Vercel (progetto `norma`, team `norma-compliance`). Marketing site = repo separato `norma-marketing`.
-- **Architettura:** moduli dominio in `src/server/modules/*` (alloggiati, checkin, cin, istat,
-  onboarding, properties, stays, tourist-tax) con pattern ports/adapters. Domain = puro e
-  testabile; I/O negli adapters. Outbox pattern per gli invii (Send NON idempotente).
+- **Architettura:** moduli dominio in `src/server/modules/*` (alloggiati, checkin, istat,
+  onboarding, properties, reservations, stays, tourist-tax; `cin` = **enabler** della tassa, non in pitch) con pattern
+  ports/adapters. Domain = puro e testabile; I/O negli adapters. Outbox pattern per gli invii (Send NON idempotente).
 - **Segreti ospiti/credenziali:** mai in chiaro — passano dal `SecretsVault` (`src/server/secrets/`).
 
 ## Comandi
@@ -46,11 +55,15 @@ ISTAT, gestione CIN, check-in ospiti self-service multilingua.
 
 ## Stato e roadmap (aggiorna quando cambia)
 
-- ✅ Canale SOAP Questura verificato live (Gate #0, 2026-06-10). Parser ricevuta: #53. Reconcile per conteggio: #55.
-- ⛔ **Invii reali CONGELATI per decisione di Gianluca (2026-06-10):** prima si completa il resto
-  del prodotto. PR #56 (cron) resta aperta e NON va mergiata/attivata. Non riproporre.
-- 🔜 P1 (focus attuale): Stripe billing (€12/mese promesso sul sito) · import iCal Airbnb/Booking · Sentry.
-- 🔜 P2: ISTAT invio regionale reale (Ross1000/Lazio) · PDF tassa di soggiorno · review design system (PR #52, occhi umani).
+- ✅ **Pilastro Alloggiati:** schedine/outbox, canale SOAP verificato (Gate #0, 2026-06-10),
+  reconcile T+1 per conteggio (#55), auto-send opt-in + Test-gated + DRY-RUN (#99, **spento di default**) — in prod.
+- ✅ **Pilastro Turismo:** tassa di soggiorno (report/CSV/PDF, #35), ISTAT Ross1000 export XML
+  per-struttura + routing regionale (#98) — in prod. Invio regionale reale (Lazio) = prossimo gate.
+- ✅ Infra: billing €120/anno in prod ma **DORMIENTE** (mancano chiavi test + SDI) · Sentry EU PII-safe (#93)
+  · import iCal (#65) · design system unico "carta", no dark mode (#97).
+- ⛔ **Primo invio reale (Alloggiati e ISTAT) = decisione esplicita di Gianluca su ospite vero**
+  (guardrail #1). L'auto-send esiste ma è spento: non accenderlo in autonomia, non riproporlo.
+- 🔜 Focus: chiudere il redesign app (in volo, `feat/app-redesign`) + **GTM** (KPI: 3 conversazioni host/giorno).
 - Backlog umano: NEEDS-HUMAN.md. Log notturni: NIGHT-LOG.md.
 
 ## Costituzione operativa (/ops — vincolante)
