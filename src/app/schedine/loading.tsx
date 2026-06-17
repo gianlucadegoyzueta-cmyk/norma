@@ -1,5 +1,5 @@
-import { PageSkeleton } from "@/components/page-skeleton";
+import { AppShellSkeleton } from "@/components/shell/app-shell-skeleton";
 
 export default function Loading() {
-  return <PageSkeleton />;
+  return <AppShellSkeleton />;
 }
