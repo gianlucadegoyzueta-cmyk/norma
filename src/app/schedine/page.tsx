@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 import type { SchedinaStatus } from "@prisma/client";
@@ -7,38 +6,16 @@ import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaCredentialRepository, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
 import { ConciergePage } from "@/components/concierge/concierge-page";
-import { ReopenNeedsReviewButton } from "@/components/reopen-needs-review-button";
-import { ReopenRejectedButton } from "@/components/reopen-rejected-button";
-import { UnverifiedNote } from "@/components/unverified-note";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isOverdue } from "@/lib/schedina-status";
 import { cn } from "@/lib/utils";
 import { AutoSendToggle } from "./AutoSendToggle";
 import { CredentialOutboxControls } from "./CredentialOutboxControls";
-import { mapAlloggiatiError } from "./error-codes";
 import { ReconcileControls } from "./ReconcileControls";
+import { SchedineList, SCHEDINA_STATUS } from "./schedine-list";
 
 export const metadata: Metadata = { title: "Schedine" };
 export const dynamic = "force-dynamic";
-
-const dateTimeFmt = new Intl.DateTimeFormat("it-IT", {
-  day: "2-digit",
-  month: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "Europe/Rome",
-});
-
-// Etichetta + classe badge Concierge per ogni stato della schedina.
-const STATUS: Record<SchedinaStatus, { text: string; cmx: string }> = {
-  PENDING: { text: "Da inviare", cmx: "cmx-badge-wait" },
-  SENDING: { text: "In invio", cmx: "cmx-badge-wait" },
-  ACQUIRED: { text: "Acquisita", cmx: "cmx-badge-ok" },
-  REJECTED: { text: "Respinta", cmx: "cmx-badge-err" },
-  UNVERIFIED: { text: "Da verificare", cmx: "cmx-badge-wait" },
-  NEEDS_REVIEW: { text: "Da rivedere", cmx: "cmx-badge-wait" },
-};
 
 export default async function SchedinePage() {
   const ctx = await getCurrentContext();
@@ -108,11 +85,11 @@ export default async function SchedinePage() {
     >
       {schedine.length > 0 && (
         <div className="cmx-section flex flex-wrap gap-2" style={{ marginTop: 0 }}>
-          {(Object.keys(STATUS) as SchedinaStatus[])
+          {(Object.keys(SCHEDINA_STATUS) as SchedinaStatus[])
             .filter((st) => counts[st])
             .map((st) => (
-              <span key={st} className={cn("cmx-badge", STATUS[st].cmx)}>
-                {counts[st]} {STATUS[st].text.toLowerCase()}
+              <span key={st} className={cn("cmx-badge", SCHEDINA_STATUS[st].cmx)}>
+                {counts[st]} {SCHEDINA_STATUS[st].text.toLowerCase()}
               </span>
             ))}
           {overdueCount > 0 && (
@@ -220,114 +197,7 @@ export default async function SchedinePage() {
       )}
 
       <section className="cmx-section">
-        {schedine.length === 0 ? (
-          <div className="cmx-empty">
-            <p className="cmx-empty-title">Nessuna schedina, per ora</p>
-            <p className="cmx-empty-text">
-              Quando aggiungi un soggiorno, preparo qui le schedine pronte da confermare. Inizia da
-              un{" "}
-              <Link href="/stays" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
-                soggiorno
-              </Link>
-              .
-            </p>
-          </div>
-        ) : (
-          <ul className="grid gap-2.5">
-            {schedine.map((s) => {
-              const overdue = isOverdue(s, now);
-              return (
-                <li key={s.id}>
-                  <div
-                    className="cmx-row"
-                    style={{
-                      flexDirection: "column",
-                      alignItems: "stretch",
-                      ...(overdue ? { borderColor: "rgba(188,75,43,0.45)" } : {}),
-                    }}
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="cmx-row-main">
-                        <p className="cmx-row-title truncate">{s.guestName}</p>
-                        <p className="cmx-row-meta truncate">
-                          {s.propertyName} · {s.credentialLabel}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 flex-col items-end gap-1">
-                        <span className={cn("cmx-badge", STATUS[s.status].cmx)}>
-                          {STATUS[s.status].text}
-                        </span>
-                        <span
-                          className="text-xs"
-                          style={{
-                            color: overdue ? "var(--terracotta-dark)" : "var(--soft)",
-                            fontWeight: overdue ? 600 : 400,
-                          }}
-                        >
-                          {overdue ? "scaduta " : "entro "}
-                          {dateTimeFmt.format(s.deadlineAt)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {s.status === "REJECTED" && (
-                      <div
-                        className="mt-3 grid gap-1.5 border-t pt-3"
-                        style={{ borderColor: "var(--hairline)" }}
-                      >
-                        <p className="text-xs" style={{ color: "var(--terracotta-dark)" }}>
-                          {s.lastErrorCod ? (
-                            <span style={{ color: "var(--soft)" }}>[{s.lastErrorCod}] </span>
-                          ) : null}
-                          {mapAlloggiatiError(s.lastErrorCod, s.lastErrorDes)}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-2">
-                          {stayIdBySchedina.get(s.id) ? (
-                            <Link href={`/stays/${stayIdBySchedina.get(s.id)}`}>
-                              <Button variant="outline" size="sm">
-                                Correggi
-                              </Button>
-                            </Link>
-                          ) : null}
-                          <ReopenRejectedButton schedinaId={s.id} />
-                        </div>
-                      </div>
-                    )}
-                    {s.status === "UNVERIFIED" && (
-                      <div
-                        className="mt-3 border-t pt-3"
-                        style={{ borderColor: "var(--hairline)" }}
-                      >
-                        <UnverifiedNote />
-                      </div>
-                    )}
-                    {s.status === "NEEDS_REVIEW" && (
-                      <div
-                        className="mt-3 grid gap-1.5 border-t pt-3"
-                        style={{ borderColor: "var(--hairline)" }}
-                      >
-                        <p className="text-xs" style={{ color: "var(--soft)" }}>
-                          Tentativi di invio esauriti: controlla i dati della schedina, poi
-                          rimettila in coda.
-                        </p>
-                        <div className="flex flex-wrap items-center gap-2">
-                          {stayIdBySchedina.get(s.id) ? (
-                            <Link href={`/stays/${stayIdBySchedina.get(s.id)}`}>
-                              <Button variant="outline" size="sm">
-                                Apri soggiorno
-                              </Button>
-                            </Link>
-                          ) : null}
-                          <ReopenNeedsReviewButton schedinaId={s.id} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <SchedineList schedine={schedine} stayIdBySchedina={stayIdBySchedina} now={now} />
       </section>
     </ConciergePage>
   );
