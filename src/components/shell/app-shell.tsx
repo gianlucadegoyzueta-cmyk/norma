@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
 import { AppSidebar } from "./app-sidebar";
+import { MobileSidebarDrawer } from "./mobile-sidebar-drawer";
 import { ShellBreadcrumb } from "./shell-breadcrumb";
 
 type Workspace = { name: string; sub?: string };
 type User = { name: string; email?: string; initials: string };
 
 // Guscio dell'app: sidebar persistente (desktop) + colonna con topbar sticky e contenuto.
+// Su mobile (<lg) la sidebar è sostituita da un hamburger nella topbar che apre il cassetto.
 // La topbar mostra una breadcrumb (default derivata dal pathname) + le `actions`; il <main>
 // è neutro (nessun padding) — la spaziatura interna la decide il contenuto (.cmx-wrap o wrapper proprio).
 export function AppShell({
@@ -34,6 +36,12 @@ export function AppShell({
       <AppSidebar active={active} workspace={workspace} user={user} />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-[var(--brand-hairline)] bg-[var(--brand-avorio)]/80 px-5 backdrop-blur supports-[backdrop-filter]:bg-[var(--brand-avorio)]/70">
+          <MobileSidebarDrawer
+            active={active}
+            workspace={workspace}
+            user={user}
+            className="-ml-1 lg:hidden"
+          />
           <div className="text-muted-foreground flex min-w-0 items-center gap-2 text-[13px]">
             {breadcrumb ?? <ShellBreadcrumb />}
           </div>

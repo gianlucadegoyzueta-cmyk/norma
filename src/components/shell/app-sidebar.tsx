@@ -11,6 +11,8 @@ import { NAV, matchActive } from "./shell-nav";
 // ricerca ⌘K, nav raggruppata con stato attivo, footer utente) vestita "Carta & Inchiostro".
 // Lo stato attivo deriva da usePathname; `active` lo forza (utile nelle anteprime dev).
 // `workspace`/`user` hanno default neutri e veritieri — i dati reali si passano da chi monta lo shell.
+// `variant`: "fixed" = sidebar desktop (hidden lg:flex, INVARIATA); "drawer" = contenuto del
+// cassetto mobile (flex h-full). `onNavigate` chiude il cassetto al tap di una voce (solo drawer).
 type Workspace = { name: string; sub?: string };
 type User = { name: string; email?: string; initials: string };
 
@@ -18,10 +20,14 @@ export function AppSidebar({
   active,
   workspace,
   user,
+  variant = "fixed",
+  onNavigate,
 }: {
   active?: string;
   workspace?: Workspace;
   user?: User;
+  variant?: "fixed" | "drawer";
+  onNavigate?: () => void;
 }) {
   const pathname = usePathname() ?? "";
   const activeKey = active ?? matchActive(pathname)?.key;
@@ -29,7 +35,12 @@ export function AppSidebar({
   const u = user ?? { name: "Il tuo account", initials: "N" };
 
   return (
-    <aside className="hidden w-[264px] shrink-0 flex-col border-r border-[var(--brand-hairline)] bg-[var(--brand-carta)] lg:flex">
+    <aside
+      className={cn(
+        "shrink-0 flex-col border-r border-[var(--brand-hairline)] bg-[var(--brand-carta)]",
+        variant === "drawer" ? "flex h-full w-full" : "hidden w-[264px] lg:flex",
+      )}
+    >
       {/* Marchio */}
       <div className="flex h-16 items-center gap-2.5 border-b border-[var(--brand-hairline)]/70 px-4">
         <SealMark className="text-primary size-7" />
@@ -42,6 +53,7 @@ export function AppSidebar({
       <div className="space-y-2 px-3 pt-3 pb-2">
         <Link
           href="/properties"
+          onClick={onNavigate}
           className="flex w-full items-center gap-2.5 rounded-lg border border-[var(--brand-hairline)] bg-[var(--brand-avorio)]/60 px-2.5 py-2 text-left transition-colors hover:bg-[var(--brand-avorio)]"
         >
           <span className="bg-primary/10 text-primary flex size-7 items-center justify-center rounded-md">
@@ -84,6 +96,7 @@ export function AppSidebar({
                   <li key={it.key}>
                     <Link
                       href={it.href}
+                      onClick={onNavigate}
                       aria-current={isActive ? "page" : undefined}
                       className={cn(
                         "group relative flex h-[34px] items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] transition-colors",
@@ -117,6 +130,7 @@ export function AppSidebar({
       <div className="border-t border-[var(--brand-hairline)]/70 p-3">
         <Link
           href="/account"
+          onClick={onNavigate}
           className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--brand-avorio)]"
         >
           <span className="flex size-8 items-center justify-center rounded-full bg-[var(--brand-salvia-soft)] text-[12px] font-medium text-[var(--brand-salvia)]">
