@@ -50,6 +50,8 @@ export default async function IstatPage({
 
   return (
     <ConciergePage
+      dense
+      active="istat"
       kicker="STATISTICA · MOVIMENTO TURISTICO"
       title="ISTAT"
       intro="Arrivi e presenze del mese per provenienza, pronti da riportare sul portale regionale."

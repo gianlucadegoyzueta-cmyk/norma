@@ -70,9 +70,7 @@ function PlanCard({ plan, configured }: { plan: PlanDefinition; configured: bool
     <Card className={plan.recommended ? "border-primary" : undefined} style={{ borderRadius: 18 }}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="font-display">
-            {plan.interval === "year" ? "Annuale" : "Mensile"}
-          </CardTitle>
+          <CardTitle>{plan.interval === "year" ? "Annuale" : "Mensile"}</CardTitle>
           {plan.recommended && <span className="cmx-badge cmx-badge-go">Consigliato</span>}
         </div>
         <CardDescription>
@@ -111,6 +109,8 @@ export default async function BillingPage() {
 
   return (
     <ConciergePage
+      dense
+      active="billing"
       kicker="ABBONAMENTO · NORMA"
       title="Abbonamento"
       intro="Il piano di Norma e lo stato del tuo abbonamento."

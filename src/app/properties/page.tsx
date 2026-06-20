@@ -38,6 +38,8 @@ export default async function PropertiesPage() {
 
   return (
     <ConciergePage
+      dense
+      active="properties"
       kicker="ANAGRAFICA · IMMOBILI"
       title="Immobili"
       intro={
@@ -112,7 +114,7 @@ export default async function PropertiesPage() {
       <section className="cmx-section">
         <Card style={{ borderRadius: 18 }}>
           <CardHeader>
-            <CardTitle className="font-display">Aggiungi immobile</CardTitle>
+            <CardTitle>Aggiungi immobile</CardTitle>
           </CardHeader>
           <CardContent>
             {credentials.length === 0 ? (
