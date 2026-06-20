@@ -55,7 +55,7 @@ export function SupportChat() {
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      <div className="flex flex-1 flex-col gap-3" aria-live="polite">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto" aria-live="polite">
         {turns.length === 0 && (
           <p className="text-sm text-gray-500">
             Es. &laquo;Devo fare le schedine Alloggiati per un ospite di una notte?&raquo;
