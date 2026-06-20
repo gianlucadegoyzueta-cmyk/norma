@@ -8,6 +8,7 @@ import {
   KeyRound,
   CreditCard,
   Settings,
+  LifeBuoy,
 } from "lucide-react";
 
 // Mappa di navigazione dell'app-shell, condivisa da sidebar e breadcrumb.
@@ -36,6 +37,7 @@ export const NAV: { heading?: string; items: NavItem[] }[] = [
     items: [
       { key: "billing", label: "Abbonamento", href: "/billing", icon: CreditCard },
       { key: "account", label: "Impostazioni", href: "/account", icon: Settings },
+      { key: "support", label: "Assistenza", href: "/support", icon: LifeBuoy },
     ],
   },
 ];

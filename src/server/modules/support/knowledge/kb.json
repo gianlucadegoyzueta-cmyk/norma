@@ -1,0 +1,517 @@
+{
+  "$schema": "./kb.schema.note.md",
+  "meta": {
+    "name": "Norma Marketing KB — seed Fase 1",
+    "purpose": "Unico serbatoio di fatti verificati. Ogni claim nei contenuti DEVE citare un id qui presente (kbRef). Il Compliance Reviewer rigetta i claim senza ref o con ref inesistente.",
+    "sourcingPolicy": "Seed estratto dai docs curati del repo (workforce/docs/*, BRAND.md, AGENTS.md). Confidenza ereditata dal doc fonte. Prima che un claim su scadenze/sanzioni vada in stato PUBBLICATO (non-bozza), il Knowledge Steward DEVE allegare la fonte ufficiale (poliziadistato.it, portale Regione, normattiva) con data. Vedi README.md.",
+    "confidenceScale": "A=fonte ufficiale/alta · M=media (da confermare) · B=bassa (da verificare). In Fase 1 si citano solo voci A.",
+    "lastSeeded": "2026-06-14"
+  },
+  "entries": [
+    {
+      "id": "norma-scope-lancio",
+      "claim": "Norma è un SaaS di compliance per gli affitti brevi in Italia che al lancio copre due adempimenti: le schedine Alloggiati (Polizia di Stato) e il movimento turistico ISTAT (Ross1000), in un'unica app.",
+      "sourceUrl": "workforce/docs/brief.md",
+      "dateVerified": "2026-06-14",
+      "tags": ["prodotto", "scope", "value-prop"],
+      "confidence": "A"
+    },
+    {
+      "id": "tassa-soggiorno-roadmap",
+      "claim": "La tassa di soggiorno è in roadmap (post-lancio) e NON fa parte dell'offerta di lancio: non va comunicata come disponibile.",
+      "sourceUrl": "workforce/docs/brief.md",
+      "dateVerified": "2026-06-14",
+      "tags": ["roadmap", "guardrail", "non-comunicare"],
+      "confidence": "A",
+      "note": "Voce-guardia: usata dal Reviewer per bloccare qualsiasi copy che presenti la tassa di soggiorno come attiva."
+    },
+    {
+      "id": "mov-distinto-da-alloggiati",
+      "claim": "Il movimento turistico ISTAT è un adempimento distinto dalle schedine Alloggiati (Polizia, nazionale) e dalla tassa di soggiorno: stesse anagrafiche ospiti, finalità statistica diversa.",
+      "sourceUrl": "workforce/docs/movimento-turistico-regioni.md",
+      "dateVerified": "2026-06-14",
+      "tags": ["movimento-turistico", "istat", "chiarimento"],
+      "confidence": "A"
+    },
+    {
+      "id": "ross1000-defacto",
+      "claim": "Ross1000 (fornitore GIES S.r.l., indicato dal MITUR come piattaforma di riferimento) è lo standard de-facto per il movimento turistico: adottato da circa 13 regioni italiane.",
+      "sourceUrl": "workforce/docs/movimento-turistico-regioni.md",
+      "dateVerified": "2026-06-14",
+      "tags": ["movimento-turistico", "ross1000", "copertura"],
+      "confidence": "A"
+    },
+    {
+      "id": "istat-c59-modello",
+      "claim": "Sotto i diversi portali regionali il modello logico comune del movimento turistico è l'ISTAT C/59, con rilevazione mensile e giornaliera.",
+      "sourceUrl": "workforce/docs/movimento-turistico-regioni.md",
+      "dateVerified": "2026-06-14",
+      "tags": ["movimento-turistico", "istat", "c59"],
+      "confidence": "A"
+    },
+    {
+      "id": "ross1000-xml-standard",
+      "claim": "Non esiste un formato nazionale imposto per legge (la raccolta è delegata alle Regioni come organi SISTAN), ma il tracciato XML Ross1000 è lo standard di fatto.",
+      "sourceUrl": "workforce/docs/movimento-turistico-regioni.md",
+      "dateVerified": "2026-06-14",
+      "tags": ["movimento-turistico", "ross1000", "formato"],
+      "confidence": "A"
+    },
+    {
+      "id": "lazio-ross1000-2025",
+      "claim": "In Lazio il movimento turistico si trasmette tramite Ross1000, che ha sostituito il precedente sistema RADAR: RADAR è stato dismesso e Ross1000 è l'unico canale dal 21 maggio 2025.",
+      "sourceUrl": "https://www.regione.lazio.it/sites/default/files/documentazione/2025/avvio-applicativo-flussi-Ross1000-maggio-2025.pdf",
+      "dateVerified": "2026-06-14",
+      "region": "Lazio",
+      "tags": ["movimento-turistico", "ross1000", "lazio", "radar"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: avviso Regione Lazio dell'8 maggio 2025 (Determinazione Dirigenziale n. G05446 del 5 maggio 2025) — dal 21 maggio 2025 esclusivamente Ross1000; RADAR dismesso il 19 maggio 2025. Verificata aprendo il PDF il 14 giugno 2026."
+    },
+    {
+      "id": "veneto-ross1000",
+      "claim": "In Veneto il movimento turistico si trasmette tramite Ross1000 (tracciato XML/TXT/web service).",
+      "sourceUrl": "https://www.regione.veneto.it/web/turismo/rilevazione-flussi-turistici-ross1000",
+      "dateVerified": "2026-06-14",
+      "region": "Veneto",
+      "tags": ["movimento-turistico", "ross1000", "veneto"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: portale Turismo della Regione Veneto — i titolari di strutture e i locatori comunicano esclusivamente tramite Ross1000 i dati di arrivi e presenze richiesti dall'ISTAT. Verificata aprendo la pagina il 14 giugno 2026."
+    },
+    {
+      "id": "piemonte-ross1000",
+      "claim": "In Piemonte il movimento turistico si trasmette tramite Piemonte Dati Turismo, la piattaforma regionale basata su Ross1000.",
+      "sourceUrl": "https://servizi.regione.piemonte.it/catalogo/piemonte-dati-turismo",
+      "dateVerified": "2026-06-14",
+      "region": "Piemonte",
+      "tags": ["movimento-turistico", "ross1000", "piemonte"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione Piemonte: 'Piemonte dati turismo è basato sulla piattaforma individuata a livello nazionale ... ROSS 1000' e serve a comunicare i flussi turistici ISTAT. Verificata aprendo la pagina il 14 giugno 2026."
+    },
+    {
+      "id": "lombardia-ross1000",
+      "claim": "In Lombardia il movimento turistico si trasmette tramite il servizio Ross1000 della piattaforma regionale Turismo5.",
+      "sourceUrl": "https://www.flussituristici.servizirl.it/Turismo5/",
+      "dateVerified": "2026-06-14",
+      "region": "Lombardia",
+      "tags": ["movimento-turistico", "ross1000", "lombardia"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione Lombardia (ServiziRL): 'Il servizio Ross1000 è attivo per comunicare i dati delle strutture ricettive'; PoliS-Lombardia, organo intermedio, invia i dati a ISTAT. Verificata aprendo la pagina il 14 giugno 2026."
+    },
+    {
+      "id": "emilia-romagna-ross1000",
+      "claim": "In Emilia-Romagna il movimento turistico si trasmette tramite Ross1000, l'applicazione regionale per le rilevazioni statistiche sul turismo.",
+      "sourceUrl": "https://statistica.regione.emilia-romagna.it/metadati/rilevazioni/turismo",
+      "dateVerified": "2026-06-14",
+      "region": "Emilia-Romagna",
+      "tags": ["movimento-turistico", "ross1000", "emilia-romagna"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione Emilia-Romagna (statistica): 'Ross1000 è l'applicazione che la Regione Emilia-Romagna mette a disposizione delle strutture ricettive coinvolte nelle rilevazioni statistiche sul turismo'. Verificata aprendo la pagina il 14 giugno 2026."
+    },
+    {
+      "id": "marche-ross1000",
+      "claim": "Nelle Marche il movimento turistico si trasmette tramite la piattaforma Istrice-Ross1000.",
+      "sourceUrl": "https://www.regione.marche.it/Entra-in-Regione/Marche-Turismo/Osservatorio-del-turismo/Accesso-piattaforma-Istrice-Ross1000",
+      "dateVerified": "2026-06-14",
+      "region": "Marche",
+      "tags": ["movimento-turistico", "ross1000", "marche"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione Marche: l'art. 43 della l.r. 9/2006 obbliga le strutture ricettive a comunicare arrivi e presenze tramite la piattaforma Istrice-Ross1000. Verificata aprendo la pagina il 14 giugno 2026."
+    },
+    {
+      "id": "basilicata-ross1000",
+      "claim": "In Basilicata il movimento turistico si trasmette tramite il SIST, basato sulla piattaforma Ross1000.",
+      "sourceUrl": "https://www.aptbasilicata.it/sistema-informativo-statistico-turistico/",
+      "dateVerified": "2026-06-14",
+      "region": "Basilicata",
+      "tags": ["movimento-turistico", "ross1000", "basilicata"],
+      "confidence": "A",
+      "note": "Fonte ufficiale APT Basilicata (ente regionale del turismo): 'Il SIST è basato sulla piattaforma individuata a livello nazionale denominata Turismo 5, oggi ROSS 1000'. Verificata aprendo la pagina il 14 giugno 2026."
+    },
+    {
+      "id": "calabria-ross1000",
+      "claim": "In Calabria il movimento turistico si trasmette tramite l'applicativo Ross1000, nell'ambito del sistema regionale SIRDAT.",
+      "sourceUrl": "https://sirdat.regione.calabria.it/",
+      "dateVerified": "2026-06-14",
+      "region": "Calabria",
+      "tags": ["movimento-turistico", "ross1000", "calabria"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione Calabria (Dipartimento Turismo — Osservatorio): il sistema SIRDAT mette a disposizione l'applicativo Ross1000 per la rilevazione IST-00139 'Movimento dei clienti negli esercizi ricettivi'. Verificata il 14 giugno 2026 (portale SIRDAT + modulo credenziali ufficiale)."
+    },
+    {
+      "id": "sardegna-ross1000",
+      "claim": "In Sardegna il movimento turistico si trasmette tramite Ross1000, che dal 3 aprile 2023 ha sostituito il precedente sistema SIRED.",
+      "sourceUrl": "https://www.regione.sardegna.it/notizie/447911",
+      "dateVerified": "2026-06-14",
+      "region": "Sardegna",
+      "tags": ["movimento-turistico", "ross1000", "sardegna", "sired"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione Sardegna: dal 3 aprile 2023 la piattaforma Ross1000 sostituisce SIRED per la trasmissione del movimento turistico ai fini ISTAT. Verificata aprendo la pagina il 14 giugno 2026."
+    },
+    {
+      "id": "abruzzo-ross1000",
+      "claim": "In Abruzzo il movimento turistico si trasmette tramite SITRA, il Sistema Informativo Turistico della Regione Abruzzo, realizzato sulla piattaforma nazionale Ross1000.",
+      "sourceUrl": "https://www.regione.abruzzo.it/new/node/36",
+      "dateVerified": "2026-06-15",
+      "region": "Abruzzo",
+      "tags": ["movimento-turistico", "ross1000", "abruzzo", "sitra"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione Abruzzo: il SITRA è realizzato sulla piattaforma nazionale ROSS1000; l'obbligo di trasmissione di arrivi e partenze è previsto dall'art. 76 della L.R. 15 febbraio 2023, n. 10. Verificata aprendo la pagina il 15 giugno 2026."
+    },
+    {
+      "id": "liguria-ross1000",
+      "claim": "In Liguria, per gli affitti brevi (appartamenti ammobiliati ad uso turistico), il movimento turistico si trasmette tramite la piattaforma regionale Ross1000, obbligatoria dal 1° aprile 2025.",
+      "sourceUrl": "https://www.regione.liguria.it/homepage-turismo/cosa-cerchi/ross-1000.html",
+      "dateVerified": "2026-06-15",
+      "region": "Liguria",
+      "tags": ["movimento-turistico", "ross1000", "liguria", "aaut"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione Liguria: dal 1° aprile 2025 (DGR n. 444 dell'8 maggio 2024) la rilevazione dei flussi turistici per gli appartamenti ammobiliati ad uso turistico (Aaut) avviene tramite la piattaforma Ross1000; le strutture alberghiere ed extra-alberghiere usano il sistema regionale RIMOVCLI. Verificata aprendo la pagina il 15 giugno 2026."
+    },
+    {
+      "id": "umbria-turismatica",
+      "claim": "In Umbria il movimento turistico si trasmette tramite Turismatica, l'applicazione web regionale per la rilevazione del movimento dei clienti negli esercizi ricettivi a fini ISTAT.",
+      "sourceUrl": "https://www.regione.umbria.it/turismo-attivita-sportive/modalita-di-rilevazione-del-movimento-dei-clienti-negli-esercizi-ricettivi1",
+      "dateVerified": "2026-06-15",
+      "region": "Umbria",
+      "tags": ["movimento-turistico", "altro-sistema", "umbria", "turismatica"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione Umbria: la rilevazione del movimento dei clienti avviene esclusivamente tramite l'applicazione Turismatica (art. 36 L.R. 23/2024), con invio mensile entro il quinto giorno del mese successivo, modello ISTAT C/59. Verificata il 15 giugno 2026."
+    },
+    {
+      "id": "campania-sinfonia",
+      "claim": "In Campania il movimento turistico si trasmette tramite Sinfonia Turismo SMART, il portale regionale operativo dal 12 maggio 2025 (in sostituzione di Turismo web).",
+      "sourceUrl": "https://www.regione.campania.it/regione/it/tematiche/strutture-ricettive-e-locazioni-brevi-tx2n/sinfonia-turismo-smart-sistema-monitoraggio-accoglienza-e-ricettivita-turistica",
+      "dateVerified": "2026-06-15",
+      "region": "Campania",
+      "tags": ["movimento-turistico", "altro-sistema", "campania", "sinfonia"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione Campania: Sinfonia Turismo SMART, operativo dal 12 maggio 2025, è lo strumento con cui le strutture ricettive e le locazioni brevi comunicano il movimento turistico (arrivi e presenze) a fini ISTAT (L.R. 16/2019). Verificata il 15 giugno 2026."
+    },
+    {
+      "id": "puglia-spot",
+      "claim": "In Puglia il movimento turistico si trasmette tramite SPOT, il Sistema Puglia per l'Osservatorio Turistico, nell'ambito del sistema informativo regionale SIRTUR.",
+      "sourceUrl": "https://www.innova.puglia.it/home/-/asset_publisher/s92Rnms1OaMO/content/spot-sistema-puglia-per-l%E2%80%99osservatorio-turistico",
+      "dateVerified": "2026-06-15",
+      "region": "Puglia",
+      "tags": ["movimento-turistico", "altro-sistema", "puglia", "spot"],
+      "confidence": "A",
+      "note": "Fonte ufficiale (InnovaPuglia / Regione Puglia): SPOT, componente del Sistema Informativo Turistico Regionale (SIRTUR), gestito con Pugliapromozione, raccoglie i dati di arrivi e presenze che le strutture inviano mensilmente all'ISTAT. Verificata il 15 giugno 2026."
+    },
+    {
+      "id": "sicilia-osservatorio",
+      "claim": "In Sicilia il movimento turistico si comunica tramite il sistema dell'Osservatorio Turistico della Regione Siciliana, per la rilevazione ISTAT del movimento dei clienti nelle strutture ricettive.",
+      "sourceUrl": "https://osservatorioturistico.regione.sicilia.it/public/",
+      "dateVerified": "2026-06-15",
+      "region": "Sicilia",
+      "tags": ["movimento-turistico", "altro-sistema", "sicilia", "osservatorio"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione Siciliana: sistema web dell'Osservatorio Turistico (attivo dal 2014) per l'acquisizione e l'elaborazione dei dati sul movimento dei clienti nelle strutture ricettive, obbligatorio ai sensi del D.Lgs. 322/89 (Reg. CE 692/2011). Verificata il 15 giugno 2026."
+    },
+    {
+      "id": "friuli-webtur",
+      "claim": "In Friuli-Venezia Giulia il movimento turistico si trasmette tramite WebTur, il servizio telematico regionale con cui le strutture ricettive comunicano i dati per le rilevazioni statistiche ISTAT.",
+      "sourceUrl": "https://servizistatistici.regione.fvg.it/webtur/",
+      "dateVerified": "2026-06-15",
+      "region": "Friuli-Venezia Giulia",
+      "tags": ["movimento-turistico", "altro-sistema", "friuli-venezia-giulia", "webtur"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione FVG (Servizi statistici on-line): WebTur è il servizio con cui le strutture ricettive comunicano il movimento degli ospiti secondo i modelli di rilevazione statistica; i dati confluiscono nelle statistiche ufficiali ISTAT. Accesso SPID/CIE/CNS dal 16 giugno 2025. Verificata il 15 giugno 2026."
+    },
+    {
+      "id": "trento-stu",
+      "claim": "Nella Provincia autonoma di Trento il movimento turistico si comunica al Sistema informativo turistico provinciale (STU), che trasmette i dati all'istituto provinciale di statistica (ISPAT) e quindi a ISTAT.",
+      "sourceUrl": "https://www.provincia.tn.it/en/Services/Movement-of-tourists-in-licensed-accommodation-Istat-declaration",
+      "dateVerified": "2026-06-15",
+      "region": "Trento",
+      "tags": ["movimento-turistico", "altro-sistema", "trento", "stu"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Provincia autonoma di Trento: la rilevazione del movimento turistico (modello ISTAT C/59) avviene tramite il Sistema informativo turistico provinciale (STU) verso ISPAT, obbligatoria ai sensi della L. 217/1983 (Reg. UE 692/2011). Verificata il 15 giugno 2026."
+    },
+    {
+      "id": "toscana-comuni",
+      "claim": "In Toscana il movimento turistico si comunica, a fini statistici ISTAT, ai Comuni capoluogo di provincia o alla Città Metropolitana di Firenze, con registrazione giornaliera di arrivi e partenze.",
+      "sourceUrl": "https://www.regione.toscana.it/-/comunicazione-locazioni-turistiche",
+      "dateVerified": "2026-06-15",
+      "region": "Toscana",
+      "tags": ["movimento-turistico", "altro-sistema", "toscana"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione Toscana: la L.R. 86/2016 (art. 84 bis) obbliga chi gestisce strutture ricettive e locazioni turistiche a comunicare i flussi a fini statistici ai Comuni capoluogo di provincia o alla Città Metropolitana di Firenze; credenziali tramite SUAP. Il portale varia per provincia. Verificata il 15 giugno 2026."
+    },
+    {
+      "id": "vda-vit",
+      "claim": "In Valle d'Aosta il movimento turistico si comunica tramite il portale regionale VIT, con cui le strutture ricettive trasmettono i dati di arrivi e presenze a fini statistici ISTAT.",
+      "sourceUrl": "https://www.regione.vda.it/asstur/statistiche/default_i.asp",
+      "dateVerified": "2026-06-15",
+      "region": "Valle d'Aosta",
+      "tags": ["movimento-turistico", "altro-sistema", "valle-d-aosta", "vit"],
+      "confidence": "A",
+      "note": "Fonte ufficiale Regione autonoma Valle d'Aosta: il portale VIT (vitalbergatori.regione.vda.it, accesso SPID/CIE/TS-CNS) è il sistema regionale per la comunicazione del movimento dei clienti a fini ISTAT; è ammessa la delega a un operatore terzo. Verificata il 15 giugno 2026."
+    },
+    {
+      "id": "lazio-scadenza-sanzione",
+      "claim": "In Lazio il movimento turistico va comunicato entro il giorno 5 del mese successivo a quello di rilevazione; la mancata comunicazione comporta una sanzione amministrativa da 1.000 a 2.000 euro.",
+      "sourceUrl": "https://www.regione.lazio.it/sites/default/files/2025-09/Linee-guida-iscrizione-strutture-ricettive.pdf",
+      "dateVerified": "2026-06-16",
+      "region": "Lazio",
+      "tags": ["movimento-turistico", "scadenza", "sanzione", "lazio"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: Linee guida per l'iscrizione alla Banca Dati Regionale (Regione Lazio, sett. 2025). Termine 'entro e non oltre il giorno 5 del mese successivo a quello della rilevazione' (L.R. 13/2007 art. 28). Sanzione: 'La mancata comunicazione del movimento degli ospiti … comporta la sanzione amministrativa da 1.000 a 2.000 euro' (art. 31 comma 11, che include esplicitamente gli alloggi per uso turistico). Verificata aprendo il PDF il 16 giugno 2026."
+    },
+    {
+      "id": "veneto-scadenza-sanzione",
+      "claim": "In Veneto i locatori turistici comunicano gli arrivi e le presenze, o l'assenza di movimento, entro la prima decade del mese successivo tramite Ross1000; l'omessa o incompleta comunicazione comporta una sanzione amministrativa da 1.000 a 2.000 euro.",
+      "sourceUrl": "https://www.regione.veneto.it/web/turismo/rilevazione-flussi-turistici-ross1000",
+      "dateVerified": "2026-06-16",
+      "region": "Veneto",
+      "tags": ["movimento-turistico", "scadenza", "sanzione", "veneto"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: FAQ Regione Veneto per i locatori turistici (aggiornate al 5 maggio 2025). 'I dati degli arrivi e presenze … entro la prima decade del mese successivo'; obbligo di comunicare anche lo zero movimento. Sanzione: 'soggetto a sanzione amministrativa da euro 1.000,00 ad euro 2.000,00 … applicata dal Comune nella misura massima in caso dell'offerta dell'alloggio su piattaforme digitali' (L.R. 11/2013 art. 27 bis). Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "piemonte-scadenza-sanzione",
+      "claim": "In Piemonte il movimento turistico va comunicato entro il giorno 10 del mese successivo; per i locatori privati per finalità turistiche la sanzione per omessa trasmissione va da 150 a 450 euro (da 300 a 900 euro per le strutture ricettive).",
+      "sourceUrl": "https://www.regione.piemonte.it/web/temi/cultura-turismo-sport/turismo/offerta-ricettiva/faq-locazioni-turistiche-non-imprenditoriali-brevi-per-finalita-turistica",
+      "dateVerified": "2026-06-16",
+      "region": "Piemonte",
+      "tags": ["movimento-turistico", "scadenza", "sanzione", "piemonte"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: FAQ Regione Piemonte. 'La comunicazione deve avvenire entro il giorno 10 del mese successivo a quello di riferimento, come previsto dalla L.R. n. 12 del 5 marzo 1987'. Sanzione (L.R. 12/1987 art. 5 bis c. 4, banca dati Arianna del Consiglio regionale): strutture 300–900 euro, soggetti privati locatori 150–450 euro. La legge fissa la cadenza mensile e rinvia a DGR per il giorno esatto. Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "lombardia-scadenza-sanzione",
+      "claim": "In Lombardia la registrazione degli ospiti per l'intero mese va effettuata entro il giorno 5 del mese successivo; la legge prevede una sanzione amministrativa da 250 a 2.500 euro per ciascun mese di omessa o incompleta comunicazione.",
+      "sourceUrl": "https://normelombardia.consiglio.regione.lombardia.it/NormeLombardia/Accessibile/main.aspx?view=showpart&idparte=lr002015100100027ar0040a",
+      "dateVerified": "2026-06-16",
+      "region": "Lombardia",
+      "tags": ["movimento-turistico", "scadenza", "sanzione", "lombardia"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: FAQ portale Turismo5/Ross1000 (flussituristici.servizirl.it) — 'la registrazione degli ospiti per l'intero mese deve essere effettuata entro il 5° giorno del mese successivo'. Sanzione (L.R. 27/2015 art. 40 c. 9, banca dati NormeLombardia): 'sanzione amministrativa pecuniaria da euro 250 a euro 2.500 per ciascun mese di omessa o incompleta comunicazione', applicabile anche al proprietario dell'alloggio locato per finalità turistiche. Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "emilia-romagna-scadenza",
+      "claim": "In Emilia-Romagna la registrazione degli ospiti per l'intero mese va effettuata entro il giorno 5 del mese successivo, con preferenza per la registrazione giornaliera.",
+      "sourceUrl": "https://statistica.regione.emilia-romagna.it/metadati/rilevazioni/turismo/allegati-rilevazioni-turismo/manuali-e-tracciati-rilevazioni-turismo/faq-rilevazioni-turismo",
+      "dateVerified": "2026-06-16",
+      "region": "Emilia-Romagna",
+      "tags": ["movimento-turistico", "scadenza", "emilia-romagna"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: FAQ portale Statistica Regione Emilia-Romagna — 'la registrazione degli ospiti per l'intero mese deve essere effettuata entro il quinto giorno del mese successivo'. L'obbligo di risposta poggia sull'art. 7 d.lgs. 322/1989. La fonte regionale NON indica un importo di sanzione per questa comunicazione: l'importo resta omesso (la sanzione per omessa risposta statistica è di fonte nazionale, art. 11 d.lgs. 322/1989). Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "marche-scadenza-sanzione",
+      "claim": "Nelle Marche gli arrivi e le presenze vanno comunicati entro i primi cinque giorni del mese successivo; chi omette la comunicazione è soggetto a una sanzione amministrativa da 300 a 600 euro.",
+      "sourceUrl": "https://www.consiglio.marche.it/banche_dati_e_documentazione/leggi/dettaglio.php?arc=vig&idl=1512",
+      "dateVerified": "2026-06-16",
+      "region": "Marche",
+      "tags": ["movimento-turistico", "scadenza", "sanzione", "marche"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: testo vigente L.R. 9/2006 (Consiglio regionale Marche). Termine 'entro i primi cinque giorni del mese successivo' (art. 43 c. 1, come modificato dalla l.r. 28/2020 — il precedente termine settimanale è abrogato). Sanzione: 'sanzione amministrativa da euro 300,00 a euro 600,00 il titolare o il gestore … che … omette di comunicare l'arrivo e le presenze dei clienti ai sensi dell'articolo 43' (art. 45 c. 2 lett. b). Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "basilicata-scadenza-sanzione",
+      "claim": "In Basilicata il movimento degli ospiti va comunicato entro il giorno 10 del mese successivo; la mancata comunicazione è soggetta a una sanzione amministrativa da 250 a 1.500 euro.",
+      "sourceUrl": "http://www.consiglio.basilicata.it/consiglionew/site/consiglio/detail.jsp?anno=2008&id=173667&otype=1150&sec=107173",
+      "dateVerified": "2026-06-16",
+      "region": "Basilicata",
+      "tags": ["movimento-turistico", "scadenza", "sanzione", "basilicata"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: L.R. Basilicata 6/2008 (Consiglio regionale). 'i titolari o i gestori … sono tenuti a comunicare … il movimento degli ospiti entro il giorno 10 del mese successivo a quello di riferimento' (art. 22 c. 1). Sanzione: 'mancata comunicazione del movimento degli ospiti ai fini statistici … sanzione amministrativa da euro 250,00 a euro 1.500,00' (art. 21 c. 1 lett. l). La cifra 'fino a 2.500 euro' che circola sui blog non è nel testo di legge. Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "calabria-scadenza",
+      "claim": "In Calabria le strutture ricettive, incluse quelle extralberghiere, sono tenute a comunicare giornalmente i flussi turistici (arrivi e partenze degli ospiti).",
+      "sourceUrl": "https://www.regione.calabria.it/cultura-turismo-ed-eventi/strutture-ricettive/informazioni-servizi-e-modulistica/documenti/",
+      "dateVerified": "2026-06-16",
+      "region": "Calabria",
+      "tags": ["movimento-turistico", "scadenza", "calabria"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: pagina del Dipartimento Turismo della Regione Calabria — 'Comunicare giornalmente i flussi turistici (arrivi e partenze degli ospiti)' tramite Ross1000/SIRDAT, rilevazione IST-00139 ISTAT. La L.R. 8/2008 non prevede un importo di sanzione a carico delle strutture per questa comunicazione: l'importo resta omesso. Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "sardegna-scadenza",
+      "claim": "In Sardegna la comunicazione dei dati statistici del movimento turistico deve avvenire entro le 24 ore.",
+      "sourceUrl": "https://operatori.sardegnaturismo.it/it/sired-ross-1000",
+      "dateVerified": "2026-06-16",
+      "region": "Sardegna",
+      "tags": ["movimento-turistico", "scadenza", "sardegna"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: portale operatori del turismo Regione Sardegna (SIRED/Ross1000) — 'dal 1° Dicembre 2015 la comunicazione dei dati statistici deve avvenire entro le 24 ore' (DGR 10/20 del 17 marzo 2015). La pagina non indica un importo di sanzione per questa comunicazione: l'importo resta omesso. Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "abruzzo-scadenza",
+      "claim": "In Abruzzo i locatori trasmettono i dati del movimento turistico, nell'ambito della rilevazione ISTAT, entro il giorno 10 del mese successivo a quello di riferimento.",
+      "sourceUrl": "https://www2.regione.abruzzo.it/system/files/turismo/sitra/modulistica-locazioni-turistiche.pdf",
+      "dateVerified": "2026-06-16",
+      "region": "Abruzzo",
+      "tags": ["movimento-turistico", "scadenza", "abruzzo"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: modulistica SITRA Regione Abruzzo — 'I locatori sono tenuti a trasmettere i dati dei movimenti turistici … entro il giorno 10 del mese successivo a quello di riferimento' (art. 76 L.R. 10/2023). L'omessa comunicazione è sanzionata (art. 119 c. 1 lett. g-bis L.R. 10/2023, introdotta dalla L.R. 21/2024), ma l'importo esatto NON è stato verificato su fonte ufficiale leggibile: l'importo resta omesso, da completare in review umana sul testo dell'art. 119. Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "liguria-scadenza-sanzione",
+      "claim": "In Liguria, per gli appartamenti ammobiliati a uso turistico, i dati di arrivi e partenze vanno inseriti su Ross1000 entro il giorno 4 del mese successivo; chi omette la comunicazione è soggetto a una sanzione amministrativa da 10 a 90 euro.",
+      "sourceUrl": "https://www.regione.liguria.it/components/com_publiccompetitions/includes/download.php?id=67226:lr-1-2024.pdf",
+      "dateVerified": "2026-06-16",
+      "region": "Liguria",
+      "tags": ["movimento-turistico", "scadenza", "sanzione", "liguria"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: DGR Liguria 444/2024 — per gli AAUT le registrazioni vanno inserite su Ross1000 'entro il 4° giorno del mese successivo a quello di riferimento' (le strutture su RIMOVCLI hanno termine al 7° giorno). Sanzione (art. 69 L.R. 1/2024, Testo unico): 'sanzione amministrativa pecuniaria da 10,00 euro a 90,00 euro … che omette la comunicazione dei dati relativi a ogni arrivo e partenza'. La cifra '250–2.500 euro' che circola online non è nel testo ufficiale. Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "umbria-scadenza-sanzione",
+      "claim": "In Umbria la comunicazione telematica dei dati, obbligatoria anche in assenza di movimento, va effettuata con cadenza mensile entro i primi cinque giorni del mese successivo; chi non la effettua nel termine è soggetto a una sanzione amministrativa da 500 a 2.000 euro.",
+      "sourceUrl": "https://www.regione.umbria.it/turismo-attivita-sportive/modalita-di-rilevazione-del-movimento-dei-clienti-negli-esercizi-ricettivi1",
+      "dateVerified": "2026-06-16",
+      "region": "Umbria",
+      "tags": ["movimento-turistico", "scadenza", "sanzione", "umbria"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: pagina Regione Umbria. 'La comunicazione telematica dei dati, obbligatoria anche in assenza di movimento, deve essere effettuata con cadenza mensile entro i primi cinque giorni del mese successivo' (art. 39 c. 5 L.R. 23/2024). Sanzione: 'Chiunque non effettua nel termine stabilito la comunicazione mensile … è soggetto alla sanzione amministrativa da euro 500,00 a euro 2.000,00' (art. 46 c. 15). Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "campania-scadenza",
+      "claim": "In Campania le strutture ricettive danno comunicazione mensile, con specifica giornaliera, dei movimenti turistici tramite l'applicazione web regionale.",
+      "sourceUrl": "https://www.regione.campania.it/normativa/userFile/documents/attachments/1845_16_2019Storico.pdf",
+      "dateVerified": "2026-06-16",
+      "region": "Campania",
+      "tags": ["movimento-turistico", "scadenza", "campania"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: L.R. Campania 16/2019 (BURC n. 47 del 7 agosto 2019), art. 13 c. 5 — 'sono tenute a dare comunicazione mensile, con specifica giornaliera, dei movimenti turistici mediante l'applicazione web regionale' (oggi Sinfonia Turismo SMART). L'art. 13 non prevede un importo di sanzione per l'omessa comunicazione del movimento: l'importo resta omesso. Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "puglia-scadenza-sanzione",
+      "claim": "In Puglia la rilevazione del movimento turistico è giornaliera e la trasmissione avviene inderogabilmente entro il giorno 5 di ogni mese per i giorni del mese precedente; l'inadempienza comporta una sanzione di 200 euro per le inadempienze parziali e 1.200 euro per quelle totali, applicabile fino a tre volte l'anno.",
+      "sourceUrl": "https://burp.regione.puglia.it/documents/20135/1113088/LR49.pdf",
+      "dateVerified": "2026-06-16",
+      "region": "Puglia",
+      "tags": ["movimento-turistico", "scadenza", "sanzione", "puglia"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: L.R. Puglia 49/2017 (BURP n. 136 del 4-12-2017). 'La trasmissione avviene, inderogabilmente, entro il giorno 5 di ogni mese per la movimentazione relativa ai giorni del mese precedente' (art. 9 c. 2). Sanzione: 'euro 200,00 per le inadempienze parziali ed euro 1.200,00 per le inadempienze totali, applicabile per un massimo di tre volte per ciascun anno' (art. 10 c. 1, sistema SPOT). La cifra '250–2.500 euro' che circola online è errata. Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "sicilia-scadenza",
+      "claim": "In Sicilia la trasmissione dei dati del movimento turistico è giornaliera, con consolidamento entro il giorno 5 del mese successivo a quello di riferimento.",
+      "sourceUrl": "https://osservatorioturistico.regione.sicilia.it/public/info",
+      "dateVerified": "2026-06-16",
+      "region": "Sicilia",
+      "tags": ["movimento-turistico", "scadenza", "sicilia"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: portale Osservatorio Turistico Regione Siciliana — 'la trasmissione dei dati è GIORNALIERA' con consolidamento 'entro il giorno 5 del mese successivo a quello di riferimento' (base: d.lgs. 322/1989, Reg. CE 692/2011, Decreto Assessore Regionale del Turismo 25 luglio 2014). La pagina non indica un importo di sanzione: l'importo resta omesso. Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "trento-scadenza",
+      "claim": "Nella Provincia autonoma di Trento il movimento turistico si dichiara al sistema provinciale (STU) per i soli giorni con arrivi o partenze, il giorno successivo a quello in cui il movimento è avvenuto.",
+      "sourceUrl": "https://www.provincia.tn.it/Servizi/Movimento-turisti-nelle-strutture-ricettive-dichiarazione-Istat",
+      "dateVerified": "2026-06-16",
+      "region": "Trento",
+      "tags": ["movimento-turistico", "scadenza", "trento"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: pagina di servizio Provincia autonoma di Trento — la dichiarazione si effettua per i soli giorni con arrivi o partenze, 'il giorno successivo a quello in cui il movimento turistico degli ospiti è avvenuto' (L.P. 7/2002 e regolamento D.P.P. 28-149/Leg. 2003). La pagina del servizio non riporta un importo di sanzione per la comunicazione ISTAT del movimento: l'importo resta omesso. Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "toscana-scadenza-sanzione",
+      "claim": "In Toscana la comunicazione dei dati del movimento, obbligatoria anche in assenza di movimento, è mensile, con registrazione giornaliera e completamento entro il giorno 5 del mese successivo; chi nell'anno solare omette la comunicazione per più di tre volte è soggetto a una sanzione amministrativa da 100 a 600 euro (dimezzata per la locazione turistica non imprenditoriale).",
+      "sourceUrl": "https://www.cittametropolitana.fi.it/wp-content/uploads/Testo-coordinato-legge-regionale-86-del-2016.pdf",
+      "dateVerified": "2026-06-16",
+      "region": "Toscana",
+      "tags": ["movimento-turistico", "scadenza", "sanzione", "toscana"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: L.R. Toscana 86/2016, testo coordinato (Città Metropolitana di Firenze). 'La comunicazione telematica dei dati, obbligatoria anche in assenza di movimento, è effettuata con cadenza mensile' (art. 84 bis c. 2); il completamento del calendario mensile entro il giorno 5 del mese successivo è confermato dalle attuazioni comunali ufficiali. Sanzione (art. 86): 'per più di tre volte … sanzione amministrativa pecuniaria da euro 100,00 a euro 600,00'; importi dimezzati per la locazione turistica non imprenditoriale (c. 3), raddoppiati in caso di reiterazione (c. 5). La comunicazione va ai Comuni capoluogo / Città Metropolitana di Firenze. Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "valle-d-aosta-scadenza",
+      "claim": "In Valle d'Aosta il locatore per finalità turistiche comunica, in forma anonima e aggregata, entro il giorno 5 di ogni mese, gli eventuali arrivi e presenze del mese precedente, tramite la piattaforma regionale.",
+      "sourceUrl": "https://www.regione.vda.it/asstur/locazioni_turistiche/default_i.aspx",
+      "dateVerified": "2026-06-16",
+      "region": "Valle d'Aosta",
+      "tags": ["movimento-turistico", "scadenza", "valle-d-aosta"],
+      "confidence": "A",
+      "note": "Fonte ufficiale: L.R. Valle d'Aosta 11/2023, art. 4 c. 7 lett. b) — il locatore è tenuto a 'comunicare, in forma anonima e aggregata, entro il giorno 5 di ogni mese, gli eventuali arrivi e presenze del mese precedente, per scopi statistici, per il solo tramite della piattaforma online resa disponibile dalla Regione'. L'art. 9 (Sanzioni) non richiama questa comunicazione (comma 7 lett. b): nessun importo di sanzione previsto da questa legge per le locazioni turistiche → l'importo resta omesso. Verificata il 16 giugno 2026."
+    },
+    {
+      "id": "alloggiati-quando",
+      "claim": "Su Alloggiati Web la comunicazione degli ospiti va fatta entro 24 ore dall'arrivo; se il soggiorno dura meno di 24 ore, all'arrivo (art. 109 TULPS).",
+      "sourceUrl": "https://alloggiatiweb.poliziadistato.it/",
+      "dateVerified": "2026-06-15",
+      "tags": ["alloggiati", "scadenza", "tulps"],
+      "confidence": "A",
+      "note": "Fonte: Polizia di Stato — portale Alloggiati Web. Termine: entro 24 ore dall'arrivo (all'arrivo se permanenza < 24h). Dettaglio e sanzioni nella guida del sito."
+    },
+    {
+      "id": "alloggiati-identificazione",
+      "claim": "L'identificazione dell'ospite deve avvenire di persona o con verifica dell'identità da remoto in tempo reale: lasciare le chiavi in un key box senza verificare chi entra non è ammesso.",
+      "sourceUrl": "https://www.idealista.it/news/immobiliare/residenziale/2024/12/03/184656-affitti-brevi-il-self-check-in-e-illegale-la-circolare-del-ministero",
+      "dateVerified": "2026-06-15",
+      "tags": ["alloggiati", "identificazione", "self-checkin"],
+      "confidence": "A",
+      "note": "Circolare Min. Interno 18 novembre 2024, confermata dal Consiglio di Stato (sez. III, sent. n. 9101/2025). Il link è una ripresa giornalistica; nella guida del sito la fonte è citata con la sentenza. Materia in evoluzione: rimandare alla guida."
+    },
+    {
+      "id": "tassa-roma",
+      "claim": "A Roma il contributo di soggiorno per gli affitti brevi è 6 euro a persona a notte, fino a un massimo di 10 pernottamenti consecutivi.",
+      "sourceUrl": "https://www.comune.roma.it/web/it/scheda-servizi.page?contentId=INF41430",
+      "dateVerified": "2026-06-15",
+      "tags": ["tassa-soggiorno", "roma", "tributo"],
+      "confidence": "A",
+      "note": "Fonte: Roma Capitale (Del. G.C. 255/2023). Tariffa affitti brevi 6,00 €/persona/notte, max 10 pernottamenti. ⚠️ La tassa di soggiorno è in ROADMAP per Norma: comunicarla solo come obbligo informativo, MAI come funzione attiva di Norma."
+    },
+    {
+      "id": "norma-mov-file-mode",
+      "claim": "Per le regioni Ross1000 (Cluster A) Norma prepara il file XML Ross1000 pronto da caricare sul portale regionale (modalità FILE: l'operatore effettua il caricamento); dove il formato non è coperto, Norma fornisce i numeri pronti da inserire (modalità ASSISTITO). Norma non invia in automatico dove non lo fa.",
+      "sourceUrl": "workforce/docs/movimento-turistico-regioni.md",
+      "dateVerified": "2026-06-14",
+      "tags": ["movimento-turistico", "norma", "file-export", "onesta"],
+      "confidence": "A",
+      "note": "Vincolo: per il movimento turistico NON si scrive 'inviamo noi'/'invio automatico'. Lo stato reale è FILE o ASSISTITO."
+    },
+    {
+      "id": "alloggiati-prepara-conferma",
+      "claim": "Per le schedine Alloggiati, oggi Norma le prepara e l'host le conferma con un click; l'invio completamente automatico non è attivo.",
+      "sourceUrl": "AGENTS.md",
+      "dateVerified": "2026-06-14",
+      "tags": ["alloggiati", "verita-editoriale", "guardrail"],
+      "confidence": "A",
+      "note": "Verità editoriale del repo: 'mai scrivere il contrario'."
+    },
+    {
+      "id": "prezzo-12-struttura",
+      "claim": "Il prezzo di Norma è 12 euro al mese a struttura.",
+      "sourceUrl": "AGENTS.md",
+      "dateVerified": "2026-06-14",
+      "tags": ["prezzo"],
+      "confidence": "A"
+    },
+    {
+      "id": "due-pilastri-un-app",
+      "claim": "Differenziatore: due adempimenti in un'unica app — Alloggiati e movimento turistico ISTAT al lancio — con una vista unica e le scadenze in chiaro.",
+      "sourceUrl": "workforce/docs/brief.md",
+      "dateVerified": "2026-06-14",
+      "tags": ["differenziatore", "value-prop"],
+      "confidence": "A"
+    },
+    {
+      "id": "icp-pm-host-plurimo",
+      "claim": "Il cliente ideale è il property manager o l'host con più strutture in Italia; il segmento più caldo oggi sono i gestori nelle circa 13 regioni che usano Ross1000, con il Lazio passato a Ross1000 nel 2025 e quindi con un dolore fresco.",
+      "sourceUrl": "workforce/docs/brief.md",
+      "dateVerified": "2026-06-14",
+      "tags": ["icp", "targeting", "lazio"],
+      "confidence": "A"
+    },
+    {
+      "id": "no-claim-legali-assoluti",
+      "claim": "Norma garantisce il processo (anti-doppione, validazione prima dell'invio), non l'esito legale: non si usano garanzie assolute come 'a prova di sanzione', '100% al sicuro', 'mai un errore', 'al riparo dalle multe'.",
+      "sourceUrl": "BRAND.md",
+      "dateVerified": "2026-06-14",
+      "tags": ["tono", "guardrail", "legale"],
+      "confidence": "A",
+      "note": "Voce-guardia per il lint del Reviewer sui claim legali assoluti."
+    },
+    {
+      "id": "tono-concierge",
+      "claim": "La voce di Norma è 'Carta & Inchiostro / Concierge': prima persona, calma, precisa, onesta, mai allarmista, per l'host e non per lo sviluppatore; niente punti esclamativi, niente CAPS, niente gergo tecnico in copy rivolta all'host.",
+      "sourceUrl": "BRAND.md",
+      "dateVerified": "2026-06-14",
+      "tags": ["tono", "voce", "stile"],
+      "confidence": "A"
+    }
+  ]
+}

@@ -726,3 +726,16 @@ model ProcessedStripeEvent {
   type        String
   processedAt DateTime @default(now())
 }
+
+/// Ticket di supporto: aperto quando l'assistente AI ESCALA (non sa rispondere con certezza o
+/// l'host chiede una persona). Conserva domanda e conversazione per il follow-up umano del founder.
+/// `organizationId` è un campo semplice (nessuna relation) per non toccare il modello centrale.
+model SupportTicket {
+  id             String   @id @default(cuid())
+  organizationId String?
+  question       String
+  conversation   String   // JSON dei messaggi al momento dell'escalation
+  status         String   @default("open") // open | closed
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
