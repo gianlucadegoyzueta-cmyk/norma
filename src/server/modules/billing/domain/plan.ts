@@ -1,8 +1,9 @@
 // Catalogo commerciale di Norma (dominio puro, niente Stripe qui).
 //
-// Decisione di prodotto (Piano Marketing, maggio 2026 — vedi spec corsia B):
-//  - ANNUALE-FIRST: €120/anno per struttura (≈ €10/mese), è il piano consigliato.
-//  - MENSILE €14/mese: rampa di fiducia, volutamente meno conveniente per spingere l'annuale.
+// Decisione di prodotto (aggiornata 2026-06-20 — decisione founder):
+//  - ANNUALE-FIRST: €90/anno per struttura (≈ €7,50/mese), è il piano consigliato.
+//  - MENSILE €9/mese: rampa di fiducia, volutamente meno conveniente per spingere l'annuale.
+//  - Agenzie/property manager: €6/mese a struttura (€72/anno) — gestito come listino sul sito marketing.
 //  - Il TRIAL ("gratis fino al primo ospite") NON è un piano e NON è un trial Stripe a giorni:
 //    è logica applicativa di accesso (vedi ./access.ts).
 //
@@ -28,21 +29,23 @@ export interface PlanDefinition {
   recommended: boolean;
 }
 
+// NB lookup_key bumpati a _v2 col cambio prezzo (2026-06-20): a Stripe-attivo il bootstrap
+// "cerca-prima-di-crea" creerà Price NUOVI a €90/€9, senza riusare i vecchi Price a €120/€14.
 export const ANNUAL_PLAN: PlanDefinition = {
   plan: "ANNUAL",
-  lookupKey: "norma_annual_v1",
-  amountCents: 120_00,
+  lookupKey: "norma_annual_v2",
+  amountCents: 90_00,
   interval: "year",
-  label: "Annuale — €120/anno",
+  label: "Annuale — €90/anno",
   recommended: true,
 };
 
 export const MONTHLY_PLAN: PlanDefinition = {
   plan: "MONTHLY",
-  lookupKey: "norma_monthly_v1",
-  amountCents: 14_00,
+  lookupKey: "norma_monthly_v2",
+  amountCents: 9_00,
   interval: "month",
-  label: "Mensile — €14/mese",
+  label: "Mensile — €9/mese",
   recommended: false,
 };
 
@@ -59,7 +62,7 @@ export function planByKind(plan: BillingPlan): PlanDefinition {
   return def;
 }
 
-/** Formatta centesimi EUR in stringa leggibile (es. 12000 → "120,00 €"). */
+/** Formatta centesimi EUR in stringa leggibile (es. 9000 → "90,00 €"). */
 export function formatEuroCents(cents: number): string {
   const euros = (cents / 100).toLocaleString("it-IT", {
     minimumFractionDigits: 2,

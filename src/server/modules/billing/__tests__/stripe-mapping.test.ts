@@ -32,15 +32,15 @@ describe("planForLookupKey", () => {
 
 describe("catalogo piani", () => {
   it("prezzi e intervalli da Piano Marketing", () => {
-    expect(ANNUAL_PLAN.amountCents).toBe(12000);
+    expect(ANNUAL_PLAN.amountCents).toBe(9000);
     expect(ANNUAL_PLAN.interval).toBe("year");
     expect(ANNUAL_PLAN.recommended).toBe(true);
-    expect(MONTHLY_PLAN.amountCents).toBe(1400);
+    expect(MONTHLY_PLAN.amountCents).toBe(900);
     expect(MONTHLY_PLAN.interval).toBe("month");
   });
 
   it("planByLookupKey ritrova il piano", () => {
-    expect(planByLookupKey("norma_annual_v1")).toBe(ANNUAL_PLAN);
+    expect(planByLookupKey("norma_annual_v2")).toBe(ANNUAL_PLAN);
     expect(planByLookupKey("inesistente")).toBeNull();
   });
 
