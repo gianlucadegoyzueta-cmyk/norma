@@ -73,7 +73,7 @@ describe("StripeBillingGateway.parseWebhookEvent — firma", () => {
             price: {
               id: "price_annual",
               object: "price",
-              lookup_key: "norma_annual_v1",
+              lookup_key: "norma_annual_v2",
             },
           },
         ],
