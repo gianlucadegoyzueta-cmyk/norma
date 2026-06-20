@@ -8,6 +8,11 @@
   margin-bottom: 40px;
   max-width: 760px;
 }
+
+/* Variante "strumento" (pagine operative dense): testata sobria, meno aria in alto. */
+.cmx-wrap-dense {
+  padding-top: 18px;
+}
 .cmx-pagetitle {
   font-family: var(--font-display);
   font-weight: 500;

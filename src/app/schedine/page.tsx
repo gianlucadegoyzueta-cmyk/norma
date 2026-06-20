@@ -71,6 +71,8 @@ export default async function SchedinePage() {
 
   return (
     <ConciergePage
+      dense
+      active="schedine"
       kicker="OUTBOX · ALLOGGIATI WEB"
       title="Schedine"
       intro={
@@ -105,7 +107,7 @@ export default async function SchedinePage() {
         <section className="cmx-section">
           <Card style={{ borderRadius: 18 }}>
             <CardHeader>
-              <CardTitle className="font-display">Da inviare ad Alloggiati</CardTitle>
+              <CardTitle>Da inviare ad Alloggiati</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <p className="text-muted-foreground text-sm">
@@ -133,7 +135,7 @@ export default async function SchedinePage() {
         <section className="cmx-section">
           <Card style={{ borderRadius: 18 }}>
             <CardHeader>
-              <CardTitle className="font-display">Da verificare (esito ignoto)</CardTitle>
+              <CardTitle>Da verificare (esito ignoto)</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <p className="text-muted-foreground text-sm">
@@ -163,7 +165,7 @@ export default async function SchedinePage() {
         <section className="cmx-section">
           <Card style={{ borderRadius: 18 }}>
             <CardHeader>
-              <CardTitle className="font-display">Auto-invio programmato</CardTitle>
+              <CardTitle>Auto-invio programmato</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <p className="text-muted-foreground text-sm">
