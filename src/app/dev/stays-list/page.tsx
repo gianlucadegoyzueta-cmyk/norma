@@ -60,6 +60,8 @@ export default function StaysListPreviewPage() {
   if (process.env.NODE_ENV === "production") notFound();
   return (
     <ConciergePage
+      dense
+      active="stays"
       kicker="REGISTRO · SOGGIORNI"
       title="Soggiorni"
       intro="Anteprima dev della lista densa con dati di esempio."
