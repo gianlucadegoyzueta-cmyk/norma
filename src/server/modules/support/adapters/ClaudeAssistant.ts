@@ -41,7 +41,11 @@ export class ClaudeAssistant implements SupportAssistant {
         body: JSON.stringify({
           model: process.env.SUPPORT_MODEL ?? "claude-sonnet-4-6",
           max_tokens: 1024,
-          system,
+          // La KB (~4k token) è identica a ogni richiesta → cache del prefisso system:
+          // dopo il primo hit l'input della KB costa ~0.1x (≈ -64% sul costo per domanda).
+          // I contenuti volatili (domanda + history) stanno in `messages`, dopo il system,
+          // quindi non invalidano la cache.
+          system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
           messages,
         }),
       });
