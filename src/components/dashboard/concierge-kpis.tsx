@@ -32,7 +32,7 @@ export interface KpiSpec {
 }
 
 /** Altezza di una riga dell'odometro (deve combaciare con `.cmx-odo`/`.cmx-digit` nel CSS). */
-const ROW = 52;
+const ROW = 44;
 
 function prefersReducedMotion(): boolean {
   return (
