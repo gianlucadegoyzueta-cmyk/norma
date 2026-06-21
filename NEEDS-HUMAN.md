@@ -99,3 +99,9 @@ migrate.yml già presente, che gira al merge su main).
   - **Attivazione (tuo ordine):** backup DB (guardrail 2) → genera/applica la migrazione → UI per far inserire al cliente le sue credenziali regionali + opt-in `autoTransmit`.
 - **Attivazione invio reale Sicilia (CRITICAL — guardrail #1):** solo dopo credenziali UTENTE PMS reali del cliente, conferma codifica **Gender 1/2** con l'ente, e tua decisione esplicita sul primo invio. Il gate `SICILIA_TRANSMIT_ENABLED` resta OFF finché non lo accendi tu.
 - **Adapter futuri (stesso stampo, quando arriva la spec):** Campania (API), VdA, FVG, Trento — si innestano implementando un client + un provider credenziali, riusando `transmit.ts`/`credentials.ts`.
+
+#### 9c. Assunzioni note (dalla review avversariale — low, da decidere consapevolmente)
+
+- **`occupazionepostoletto` = "si" per tutti (SPOT):** Norma non raccoglie il dato → default conservativo. Gonfia leggermente l'occupazione posti letto per famiglie con bambini co-dormienti. Se serve precisione, raccogliere il dato; altrimenti è uno scostamento noto dalla disciplina "mai inventare" (qui un default, non un INCOMPLETE).
+- **Giorno-calendario in UTC (ISTAT) vs Europe/Rome (Alloggiati/CSV):** i moduli ISTAT (ross1000/spot/umbria) bucketizzano i giorni in UTC; assumono `arrivalDate/departureDate` a mezzanotte UTC. Un soggiorno importato da iCal con orario vicino a mezzanotte UTC può finire nel giorno/mese sbagliato. Fix futuro: derivare il giorno in Europe/Rome (come `stays/domain/generation.ts`).
+- **`closedDays` non cablato:** il dominio (ross1000/spot/umbria) sa azzerare l'occupazione nei giorni di chiusura, ma i loader non passano i giorni di chiusura (Norma non li traccia). Capacità pronta, inerte finché non c'è una sorgente di chiusura/disponibilità.

@@ -41,6 +41,10 @@ export interface UmbriaAggregateResult {
   presenze: number;
 }
 
+// ASSUNZIONE: arrivalDate/departureDate sono salvati a mezzanotte UTC (data pura). Il giorno-calendario
+// è quindi derivato in UTC (coerente con i moduli ross1000/spot). Se in futuro i timestamp portassero
+// un wall-clock locale (es. iCal con DTSTART orario vicino a mezzanotte), andrebbe derivato in
+// Europe/Rome come in stays/domain/generation.ts per evitare off-by-one a cavallo di mese. Vedi NEEDS-HUMAN §9.
 function isoDay(d: Date): string {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
     .toISOString()
