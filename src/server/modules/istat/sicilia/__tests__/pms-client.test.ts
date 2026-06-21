@@ -91,6 +91,7 @@ describe("SiciliaPmsClient — addStays / endDay", () => {
     expect(req.method).toBe("POST");
     expect(req.url).toContain("/api/stay/addfrompms");
     expect(req.headers.Authorization).toBe("Bearer t");
+    expect(req.headers["Content-Type"]).toBe("text/xml"); // come l'esempio POST del protocollo
     expect(req.body).toContain("<StaysPmsDTO>");
   });
 

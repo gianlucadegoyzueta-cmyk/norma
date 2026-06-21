@@ -140,7 +140,9 @@ export class SiciliaPmsClient {
     const res = await this.transport.send({
       method: "POST",
       url: `${this.baseUrl}${path}`,
-      headers: { Authorization: token, "Content-Type": "application/xml" },
+      // text/xml come nell'unico esempio POST normativo del protocollo (sez. 6.2); un binding
+      // .NET stretto può rifiutare application/xml con 415.
+      headers: { Authorization: token, "Content-Type": "text/xml" },
       body: xmlBody,
     });
     const messages = parseValidationResponse(res.body);

@@ -70,11 +70,16 @@ export async function loadSpotReport(
 
   const { start, end } = periodBounds(input.period);
 
+  // Soggiorni che SI SOVRAPPONGONO al periodo (incl. quelli iniziati prima e ancora in corso o
+  // a cavallo dell'intero mese): l'aggregato calcola l'occupazione notte-per-notte e ha bisogno di
+  // tutti i soggiorni attivi nel periodo, non solo di quelli che vi arrivano/partono. Gli arrivi/
+  // partenze restano comunque conteggiati solo se cadono nel periodo (vedi computeSpotMovimenti).
   const stays = await prisma.stay.findMany({
     where: {
       organizationId: input.organizationId,
       propertyId: input.propertyId,
-      OR: [{ arrivalDate: { gte: start, lt: end } }, { departureDate: { gte: start, lt: end } }],
+      arrivalDate: { lt: end },
+      OR: [{ departureDate: { gte: start } }, { departureDate: null }],
     },
     select: {
       id: true,

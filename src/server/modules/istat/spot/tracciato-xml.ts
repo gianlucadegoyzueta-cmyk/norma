@@ -126,9 +126,16 @@ function requireIsoDate(iso: string, name: string): string {
   if (!m) {
     throw new SpotXmlError(`Campo "${name}" non valido: atteso ISO YYYY-MM-DD, ricevuto "${iso}".`);
   }
-  const [, , mm, dd] = m;
-  if (Number(mm) < 1 || Number(mm) > 12 || Number(dd) < 1 || Number(dd) > 31) {
-    throw new SpotXmlError(`Campo "${name}" non è una data valida: "${iso}".`);
+  const [, y, mm, dd] = m;
+  // Validità reale di calendario: ricostruisco la data e verifico che i componenti coincidano
+  // (scarta es. 2026-02-30, 2026-04-31, 29 feb non bisestile).
+  const d = new Date(Date.UTC(Number(y), Number(mm) - 1, Number(dd)));
+  if (
+    d.getUTCFullYear() !== Number(y) ||
+    d.getUTCMonth() !== Number(mm) - 1 ||
+    d.getUTCDate() !== Number(dd)
+  ) {
+    throw new SpotXmlError(`Campo "${name}" non è una data di calendario valida: "${iso}".`);
   }
   return iso;
 }

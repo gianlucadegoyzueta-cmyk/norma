@@ -7,8 +7,9 @@
 // Codici: tabelle AlloggiatiWeb/Polizia, 9 cifre (NationalityCode/BirthPlaceCode/ResidencePlaceCode).
 // Ordine elementi: come da XSD (Stay = HotelCode, StayId, Guests), non come negli esempi prosa.
 //
-// ASSUNZIONE (da confermare con l'ente prima del primo invio): Gender numerico 1/2 (1=M, 2=F);
-// il PDF è incoerente tra prosa/XSD ma gli esempi usano valori numerici.
+// Gender numerico 1/2 (1=M, 2=F): l'XSD normativo (Numeric1-2, minInclusive=1, maxInclusive=2) e la
+// descrizione testuale concordano; l'unica difformità è un refuso "Numeric0-1" nello screenshot del
+// class diagram, contraddetto da XSD ed esempi. Nessuna ambiguità reale.
 
 export class SiciliaXmlError extends Error {
   constructor(message: string) {
@@ -63,6 +64,9 @@ function escapeXml(value: string): string {
 
 const UTC_DATETIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const CODE9 = /^[0-9]{9}$/;
+// EMail è opzionale: se presente ma malformata il portale rifiuta l'intero Stay (Error), quindi
+// la omettiamo invece di trasmetterla.
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function requireNonEmpty(value: string | undefined, name: string): string {
   if (!value || value.trim() === "")
@@ -127,7 +131,8 @@ function buildGuest(g: SiciliaGuest): string {
     throw new SiciliaXmlError(`Guest "${g.guestId}": Gender non valido (atteso 1 o 2).`);
   }
 
-  const email = g.email && g.email.trim() !== "" ? tag("EMail", g.email) : "";
+  const emailTrimmed = g.email?.trim() ?? "";
+  const email = EMAIL.test(emailTrimmed) ? tag("EMail", emailTrimmed) : "";
 
   return (
     "<Guest>" +

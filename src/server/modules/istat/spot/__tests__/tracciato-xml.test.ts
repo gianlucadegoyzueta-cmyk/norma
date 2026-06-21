@@ -51,6 +51,12 @@ describe("buildSpotXml — radice e struttura", () => {
       buildSpotXml({ vendor: "NORMA", giorni: [giornoMP({ data: "2026-13-40" })] }),
     ).toThrow(SpotXmlError);
   });
+
+  it("data di calendario inesistente (2026-02-30) → errore", () => {
+    expect(() =>
+      buildSpotXml({ vendor: "NORMA", giorni: [giornoMP({ data: "2026-02-30" })] }),
+    ).toThrow(/calendario/);
+  });
 });
 
 describe("buildSpotXml — stati MP/NM/EC", () => {

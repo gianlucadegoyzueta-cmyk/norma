@@ -182,11 +182,12 @@ export function computeSpotMovimenti(input: SpotAggregateInput): SpotAggregateRe
   let presenze = 0;
   const giorni: SpotGiorno[] = allDays.map((dayIso): SpotGiorno => {
     const { rooms, persons } = activeOn(dayIso);
-    presenze += persons;
 
     if (closed.has(dayIso)) {
+      // Giorno chiuso (EC): nessuna presenza dichiarata, niente datistruttura.
       return { data: dayIso, stato: "EC" };
     }
+    presenze += persons;
 
     const arrivalStays = arrivalsByDay.get(dayIso) ?? [];
     const departureStays = departuresByDay.get(dayIso) ?? [];

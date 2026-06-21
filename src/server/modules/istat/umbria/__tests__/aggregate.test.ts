@@ -16,11 +16,12 @@ function stay(over: Partial<UmbriaAggregateStay> = {}): UmbriaAggregateStay {
   };
 }
 
-function run(stays: UmbriaAggregateStay[]) {
+function run(stays: UmbriaAggregateStay[], closedDays?: string[]) {
   return computeUmbriaC59({
     period: PERIOD,
     denominazione: "Casa Test",
     capacity: { camereDisponibili: 1 },
+    closedDays,
     stays,
   });
 }
@@ -75,6 +76,13 @@ describe("computeUmbriaC59 — presenze e provenienze", () => {
     const res = run([stay({ guests: [guest("RM", "ROMA"), guest("D", "GERMANIA")] })]);
     const rows = fileFor(res, "2026-05-10").provenienze;
     expect(rows.map((r) => r.code)).toEqual(["D", "RM"]); // ordine per codice
+  });
+
+  it("giorno chiuso non conta nelle presenze", () => {
+    // soggiorno 05-10→05-12 (notti 10,11); 05-11 chiuso → presenze = solo notte 10
+    const res = run([stay()], ["2026-05-11"]);
+    expect(fileFor(res, "2026-05-11").camereOccupate).toBe(0);
+    expect(res.presenze).toBe(1);
   });
 
   it("soggiorno che attraversa l'inizio periodo → presente la prima notte", () => {

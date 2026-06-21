@@ -135,6 +135,13 @@ describe("computeSpotMovimenti — gruppi e componenti", () => {
 });
 
 describe("computeSpotMovimenti — dayuse e chiusura", () => {
+  it("giorno chiuso non conta nelle presenze", () => {
+    // soggiorno 05-10→05-12 (notti 10,11); 05-11 chiuso → presenze = solo notte 10
+    const res = compute([stay()], ["2026-05-11"]);
+    expect(byDay(res, "2026-05-11").stato).toBe("EC");
+    expect(res.presenze).toBe(1);
+  });
+
   it("arrivo e partenza lo stesso giorno → MP con dayuse, non occupa la notte", () => {
     const res = compute([
       stay({

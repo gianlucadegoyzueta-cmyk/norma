@@ -73,6 +73,11 @@ describe("buildStaysPmsXml — addfrompms", () => {
     expect(xml).not.toContain("<EMail>");
   });
 
+  it("EMail malformata → omessa (evita rigetto 400 dell'intero Stay)", () => {
+    const xml = buildStaysPmsXml([stay({ guests: [guest({ email: "non-una-email" })] })]);
+    expect(xml).not.toContain("<EMail>");
+  });
+
   it("codici non a 9 cifre → errore", () => {
     expect(() => buildStaysPmsXml([stay({ guests: [guest({ nationalityCode: "123" })] })])).toThrow(
       /NationalityCode/,

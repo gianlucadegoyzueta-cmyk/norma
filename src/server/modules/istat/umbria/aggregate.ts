@@ -116,8 +116,9 @@ export function computeUmbriaC59(input: UmbriaAggregateInput): UmbriaAggregateRe
   let presenze = 0;
   const files: UmbriaGiornoFile[] = allDays.map((dayIso): UmbriaGiornoFile => {
     const night = nightOf(dayIso);
-    presenze += night.persons;
     const aperta = !closed.has(dayIso);
+    // I giorni chiusi non contano presenze (camereOccupate già azzerate sotto).
+    if (aperta) presenze += night.persons;
     const arrivati = (arrivalsByDay.get(dayIso) ?? []).length;
     const partiti = (departuresByDay.get(dayIso) ?? []).length;
     return {
