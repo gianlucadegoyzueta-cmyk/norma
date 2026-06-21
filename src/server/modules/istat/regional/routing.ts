@@ -158,8 +158,8 @@ export const REGION_MOVEMENT: Record<string, RegionMovement> = {
   sicilia: assistito(
     "sicilia",
     "Sicilia",
-    "Osservatorio Turistico Regionale",
-    "Tracciato record (WebAPI): serializer futuro.",
+    "Osservatorio Turistico Regionale (WebAPI PMS)",
+    "Serializer body XML pronto (sicilia/tracciato-xml.ts); trasmissione AUTO gated su credenziali UTENTE PMS + ok invio reale.",
   ),
 };
 
