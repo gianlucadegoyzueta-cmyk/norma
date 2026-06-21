@@ -1,63 +1,60 @@
-# Compliance — SaaS Affitti Brevi (Italia)
+# Norma — SaaS Compliance Affitti Brevi (Italia)
 
-SaaS multi-tenant per la compliance degli affitti brevi. Il percorso critico
-è l'integrazione con **Alloggiati Web** (Polizia di Stato, SOAP).
+€12/mese. Schedine Alloggiati, tassa di soggiorno, ISTAT, CIN, check-in ospiti.
+Stack: Next.js 15 + TypeScript strict + PostgreSQL (Supabase) + Prisma. Deploy Vercel.
 
-## Stack
+## Moduli attivi in prod
 
-- Next.js 15 (App Router) + React 19 + TypeScript (strict)
-- PostgreSQL + Prisma (`prisma/schema.prisma`)
-- NextAuth v5 (beta) per l'autenticazione
-- Tailwind CSS v4 (token semantici in `src/app/globals.css`, dark mode via `.dark`)
-- Vitest per i test, ESLint flat config + Prettier (plugin Tailwind)
-- Node.js 20+ (vedi `.nvmrc`)
+| Modulo | Percorso | Stato |
+|---|---|---|
+| Alloggiati (outbox SOAP) | `src/server/modules/alloggiati/` | ✅ invio CONGELATO per decisione |
+| Check-in ospite | `src/server/modules/checkin/` | ✅ |
+| Tassa di soggiorno | `src/server/modules/tourist-tax/` | ✅ |
+| ISTAT | `src/server/modules/istat/` | ✅ tracking in prod |
+| CIN | `src/server/modules/cin/` | ✅ |
+| iCal import (Airbnb/Booking) | `src/server/modules/stays/` | ✅ |
+| Billing Stripe | `src/server/modules/billing/` | ✅ codice in prod, attivazione pending |
+| Email transazionali (Resend) | `src/server/modules/notifications/` | 🟡 in costruzione |
+| Onboarding concierge | `src/server/modules/onboarding/` | ✅ |
 
-## Struttura
+## Architettura
 
-- `src/app/` — UI e route (App Router)
-- `src/components/` — design system: primitive in `ui/`, header, brand, theme toggle
-- `src/lib/` — utility condivise (`utils.ts` con `cn()`, `env.ts`)
-- `src/server/` — logica server: `db.ts` (client Prisma), `secrets/` (SecretsVault), `modules/` (domini)
-- `prisma/` — schema dati e migrazioni
-- `docs/` — analisi tecnica di Alloggiati Web (fattibilità + architettura)
+- `src/app/` — UI e route (App Router). Server Components di default.
+- `src/components/ui/` — primitivi design system. Riusali, non reinventare.
+- `src/server/modules/` — domini: ogni modulo ha `*.service.ts`, `*.repository.ts`, `*.types.ts`
+- Pattern **ports & adapters**: dominio → interfacce → adapter (Prisma / InMemory per test)
+- `src/server/secrets/` — `SecretsVault`: unico punto di accesso a credenziali ospiti/partner
 
-## Architettura a moduli
+## Guardrail NON NEGOZIABILI
 
-- Ogni cartella in `src/server/modules/` è un **modulo di dominio** che incapsula
-  servizi, regole di business e accesso ai dati.
-- La UI (`src/app`) e le route API chiamano i moduli, **mai il contrario**.
-- Convenzione file per modulo:
-  - `*.service.ts` — logica e orchestrazione
-  - `*.repository.ts` — query Prisma (quando conviene isolarle)
-  - `*.types.ts` — tipi del modulo
-- Pattern **ports & adapters**: il dominio dipende da interfacce; gli adapter
-  (es. `PrismaAuthRepository`, `InMemoryAuthRepository`) le implementano.
-  Per i test usa l'adapter in-memory, non mockare Prisma a mano.
-
-## Principi non negoziabili
-
-- **Segreti**: le credenziali Alloggiati non sono MAI salvate in chiaro.
-  Passano sempre dal `SecretsVault` (`src/server/secrets/`).
-- **Outbox**: gli invii ad Alloggiati seguono il pattern outbox. `Send` è
-  irreversibile e non idempotente — non ritentare invii senza dedup.
-- Validare gli input al confine (form, route API); fidarsi del codice interno.
+1. **MAI un invio reale alla Questura come prova.** Solo metodi `Test` del WS. Il primo invio reale è decisione esplicita di Gianluca.
+2. **Migrazioni prod solo con backup fresco** (`~/bin/norma-backup.sh` → `~/backups/norma/`). Poi `prisma migrate deploy`.
+3. **PII fuori dal repo**: dati ospiti reali → `tmp/` (gitignored). Fixture test sempre anonimizzate.
+4. **Branch + PR, mai push su main.** CI verde prima del merge. Commit: `feat(scope): …` in italiano.
+5. **Outbox** `MAX_SEND_ATTEMPTS=5` — non ritentare invii senza dedup. `Send` è irreversibile.
 
 ## Stile
 
-- Lingua: italiano per testo di dominio, UI, commenti e messaggi. Codice/identificatori in inglese.
-- Commenti solo quando il "perché" non è ovvio. Niente commenti che ripetono il "cosa".
-- TypeScript strict: niente `any` non giustificato, preferire tipi espliciti ai confini.
-- Componenti UI: riusare le primitive in `src/components/ui/` invece di reinventarle.
+- Lingua: italiano per testo UI/dominio/commenti. Inglese per codice/identificatori.
+- TypeScript strict: niente `any` non giustificato. Tipi espliciti ai confini.
+- Componenti UI: riusa primitive `src/components/ui/`. Brand: terracotta/avorio/Fraunces.
+- Commenti solo per invarianti non ovvie. Niente commenti che ripetono il "cosa".
 
 ## Comandi
 
-- `npm run dev` — dev server su http://localhost:3000
-- `npm run typecheck` — `tsc --noEmit`
-- `npm run lint` / `npm run format`
-- `npm test` — Vitest (`npm run test:coverage` per la copertura)
-- `npm run db:migrate` — `prisma migrate dev`
+```
+npm run dev              # localhost:3000
+env NODE_ENV= npm run typecheck
+env NODE_ENV= npm run lint
+env NODE_ENV= npm test
+npm run db:migrate       # prisma migrate dev (solo locale)
+```
+
+CI completa locale: `format && lint && typecheck && test && build` — tutto verde prima di ogni PR.
 
 ## Prima di considerare un task completo
 
-- `npm run typecheck` e `npm test` devono passare.
-- I test sui SOAP "live" girano solo con le env flag dedicate (`alloggiati:*`); non lanciarli per default.
+- `env NODE_ENV= npm run typecheck` verde
+- `env NODE_ENV= npm test` verde
+- Nessun `any` introdotto senza giustificazione
+- Se tocchi billing/auth/outbox → classe di rischio HIGH: backup + rollback descritto
