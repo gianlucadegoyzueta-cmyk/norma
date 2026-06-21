@@ -106,6 +106,9 @@ export default async function BillingPage() {
   );
   const headline = access ? stateHeadline(access) : null;
   const hasCustomer = Boolean(subscription?.stripeCustomerId);
+  // Risparmio annuale reale, derivato dai prezzi: niente claim a mano che può mentire.
+  const annualSaving = MONTHLY_PLAN.amountCents * 12 - ANNUAL_PLAN.amountCents;
+  const monthsFree = Math.round(annualSaving / MONTHLY_PLAN.amountCents);
 
   return (
     <ConciergePage
@@ -179,7 +182,9 @@ export default async function BillingPage() {
         <section className="space-y-3">
           <h2 className="text-lg font-medium">Scegli il piano</h2>
           <p className="text-muted-foreground text-sm">
-            L&apos;annuale conviene: due mesi in regalo rispetto al mensile.
+            {annualSaving > 0
+              ? `Con l'annuale risparmi ${formatEuroCents(annualSaving)} l'anno rispetto al mensile — circa ${monthsFree} ${monthsFree === 1 ? "mese" : "mesi"} gratis.`
+              : "Scegli la cadenza che preferisci: cambi quando vuoi."}
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <PlanCard plan={ANNUAL_PLAN} configured={configured} />
