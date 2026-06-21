@@ -8,6 +8,9 @@ const valid: PersonInput = {
   birthDate: "1990-01-15",
   birthCountryId: "c1",
   citizenshipId: "c1",
+  documentTypeId: "d1",
+  documentNumber: "AB123",
+  documentPlaceId: "p1",
 };
 
 describe("validatePerson", () => {
@@ -15,7 +18,17 @@ describe("validatePerson", () => {
     const { data, errors } = validatePerson({}, true);
     expect(data).toBeNull();
     expect(Object.keys(errors).sort()).toEqual(
-      ["birthCountryId", "birthDate", "citizenshipId", "firstName", "lastName", "sex"].sort(),
+      [
+        "birthCountryId",
+        "birthDate",
+        "citizenshipId",
+        "firstName",
+        "lastName",
+        "sex",
+        "documentTypeId",
+        "documentNumber",
+        "documentPlaceId",
+      ].sort(),
     );
   });
 
@@ -45,7 +58,7 @@ describe("validatePerson", () => {
     expect(data?.documentTypeId).toBeNull();
   });
 
-  it("con documento i campi documento passano (restano opzionali a questo livello)", () => {
+  it("con documento completo i campi passano", () => {
     const { data } = validatePerson(
       { ...valid, documentTypeId: "d1", documentNumber: "AB123", documentPlaceId: "p1" },
       true,
@@ -53,5 +66,21 @@ describe("validatePerson", () => {
     expect(data?.documentTypeId).toBe("d1");
     expect(data?.documentNumber).toBe("AB123");
     expect(data?.documentPlaceId).toBe("p1");
+  });
+
+  it("withDocument=true ma documento mancante → errori sui campi documento", () => {
+    const senzaDoc: PersonInput = {
+      firstName: "Mario",
+      lastName: "Rossi",
+      sex: "M",
+      birthDate: "1990-01-15",
+      birthCountryId: "c1",
+      citizenshipId: "c1",
+    };
+    const { data, errors } = validatePerson(senzaDoc, true);
+    expect(data).toBeNull();
+    expect(errors).toHaveProperty("documentTypeId");
+    expect(errors).toHaveProperty("documentNumber");
+    expect(errors).toHaveProperty("documentPlaceId");
   });
 });
