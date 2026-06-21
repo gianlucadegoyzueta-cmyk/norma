@@ -32,7 +32,8 @@
   inset: 0;
   pointer-events: none;
   z-index: 50;
-  opacity: 0.5;
+  /* "Concierge sobrio": grana ridotta a un sussurro, non più velo a tutto schermo sui dati. */
+  opacity: 0.22;
   mix-blend-mode: multiply;
 }
 
@@ -45,13 +46,14 @@
   width: 680px;
   height: 680px;
   pointer-events: none;
-  opacity: 0.1;
+  opacity: 0.06;
   mask-image: radial-gradient(circle, black 30%, transparent 68%);
 }
 .cmx-seal-bg svg {
   width: 100%;
   height: 100%;
-  animation: cmx-slowspin 240s linear infinite;
+  /* Sigillo STATICO: il teatro che gira distrae dai dati (dual-judge: ridurre, non eliminare). */
+  animation: none;
 }
 @keyframes cmx-slowspin {
   to {
@@ -187,8 +189,8 @@
 .cmx-hero h1 {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(34px, 4.6vw, 52px);
-  line-height: 1.16;
+  font-size: clamp(26px, 3.1vw, 37px);
+  line-height: 1.12;
   letter-spacing: -0.022em;
 }
 .cmx-hero h1 .cmx-w {
@@ -272,8 +274,8 @@
 .cmx-kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
-  margin: 36px 0 40px;
+  gap: 12px;
+  margin: 24px 0 28px;
   perspective: 1100px;
   position: relative;
   z-index: 2;
@@ -292,8 +294,8 @@
 
   background: var(--carta);
   border: 1px solid var(--hairline);
-  border-radius: 18px;
-  padding: 26px 26px 22px;
+  border-radius: 14px;
+  padding: 15px 17px 13px;
   position: relative;
   overflow: hidden;
   transform-style: preserve-3d;
@@ -340,7 +342,7 @@
   margin-top: 4px;
 }
 .cmx-kpi .cmx-trend {
-  margin-top: 8px;
+  margin-top: 5px;
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
@@ -349,18 +351,22 @@
 .cmx-kpi .cmx-trend.cmx-due {
   color: var(--terracotta);
 }
+/* KPI urgente (due=true): enfasi terracotta sul VALORE, non solo sul trend minuscolo. */
+.cmx-kpi-urgent .cmx-odo {
+  color: var(--terracotta);
+}
 /* Affordance di click: discreta, si accende e scorre all'hover */
 .cmx-kpi-cta {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  margin-top: 14px;
+  margin-top: 9px;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--terracotta);
-  opacity: 0.55;
+  opacity: 0;
   transition: opacity 0.25s;
 }
 .cmx-kpi:hover .cmx-kpi-cta {
@@ -377,9 +383,9 @@
   align-items: baseline;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 48px;
+  font-size: 40px;
   letter-spacing: -0.025em;
-  height: 52px;
+  height: 44px;
   overflow: hidden;
 }
 .cmx-odo small {
@@ -395,7 +401,7 @@
 .cmx-digit {
   position: relative;
   width: 0.62em;
-  height: 52px;
+  height: 44px;
   overflow: hidden;
 }
 .cmx-digit .cmx-col {
@@ -407,8 +413,8 @@
   transition: transform 1.6s var(--ease);
 }
 .cmx-digit .cmx-col span {
-  height: 52px;
-  line-height: 52px;
+  height: 44px;
+  line-height: 44px;
   text-align: center;
 }
 
@@ -524,6 +530,37 @@
   align-items: start;
   position: relative;
   z-index: 2;
+}
+
+/* ===== RIDISEGNO dashboard (dual-judge): decisioni = hero, KPI = striscia, resto secondario ===== */
+.cmx-decisions {
+  position: relative;
+  z-index: 2;
+  margin-top: 22px;
+}
+.cmx-decision-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.cmx-decision-grid .cmx-prop {
+  margin-bottom: 0;
+}
+.cmx-secondary {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 22px;
+  align-items: start;
+  position: relative;
+  z-index: 2;
+  margin-top: 10px;
+}
+@media (max-width: 880px) {
+  .cmx-decision-grid,
+  .cmx-secondary {
+    grid-template-columns: 1fr;
+  }
 }
 .cmx-col-h {
   font-size: 12px;

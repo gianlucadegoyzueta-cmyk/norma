@@ -92,8 +92,12 @@ export function ConciergeScene({
           </div>
 
           <ConciergeHero kicker={kicker} lines={lines} sub={sub} />
-          <ConciergeKpis kpis={kpis} />
-          <ConciergeBoard proposals={proposals} agenda={agenda} diary={diary} />
+          <ConciergeBoard
+            proposals={proposals}
+            agenda={agenda}
+            diary={diary}
+            kpisSlot={<ConciergeKpis kpis={kpis} />}
+          />
         </div>
       </div>
     </AppShell>

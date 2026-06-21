@@ -11,6 +11,8 @@ export default function PagesPreview() {
 
   return (
     <ConciergePage
+      dense
+      active="schedine"
       kicker="OUTBOX · ALLOGGIATI WEB"
       title="Schedine"
       intro={

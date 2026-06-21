@@ -93,6 +93,8 @@ export default function SchedineListPreviewPage() {
   if (process.env.NODE_ENV === "production") notFound();
   return (
     <ConciergePage
+      dense
+      active="schedine"
       kicker="OUTBOX · ALLOGGIATI WEB"
       title="Schedine"
       intro="Anteprima dev della lista densa con tutti gli stati."

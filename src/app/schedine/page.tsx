@@ -17,6 +17,16 @@ import { SchedineList, SCHEDINA_STATUS } from "./schedine-list";
 export const metadata: Metadata = { title: "Schedine" };
 export const dynamic = "force-dynamic";
 
+// Priorità d'azione: ciò che richiede l'host in cima, l'acquisito (fatto) in fondo.
+const STATUS_PRIORITY: SchedinaStatus[] = [
+  "REJECTED",
+  "NEEDS_REVIEW",
+  "PENDING",
+  "UNVERIFIED",
+  "SENDING",
+  "ACQUIRED",
+];
+
 export default async function SchedinePage() {
   const ctx = await getCurrentContext();
   if (!ctx) redirect("/login");
@@ -58,6 +68,17 @@ export default async function SchedinePage() {
   }, {});
   const overdueCount = schedine.filter((s) => isOverdue(s, now)).length;
 
+  // Ordine d'azione della lista: stato per priorità, poi overdue, poi scadenza (l'intro lo promette).
+  const sortedSchedine = [...schedine].sort((a, b) => {
+    const ra = STATUS_PRIORITY.indexOf(a.status);
+    const rb = STATUS_PRIORITY.indexOf(b.status);
+    if (ra !== rb) return ra - rb;
+    const oa = isOverdue(a, now) ? 0 : 1;
+    const ob = isOverdue(b, now) ? 0 : 1;
+    if (oa !== ob) return oa - ob;
+    return a.deadlineAt.getTime() - b.deadlineAt.getTime();
+  });
+
   // Mappa schedina REJECTED → stayId per il link "Correggi" (query di pagina, nessun cambio al dominio).
   const rejectedIds = schedine.filter((s) => s.status === "REJECTED").map((s) => s.id);
   const stayIdBySchedina = new Map<string, string>();
@@ -71,6 +92,8 @@ export default async function SchedinePage() {
 
   return (
     <ConciergePage
+      dense
+      active="schedine"
       kicker="OUTBOX · ALLOGGIATI WEB"
       title="Schedine"
       intro={
@@ -85,19 +108,17 @@ export default async function SchedinePage() {
     >
       {schedine.length > 0 && (
         <div className="cmx-section flex flex-wrap gap-2" style={{ marginTop: 0 }}>
-          {(Object.keys(SCHEDINA_STATUS) as SchedinaStatus[])
-            .filter((st) => counts[st])
-            .map((st) => (
-              <span key={st} className={cn("cmx-badge", SCHEDINA_STATUS[st].cmx)}>
-                {counts[st]} {SCHEDINA_STATUS[st].text.toLowerCase()}
-              </span>
-            ))}
           {overdueCount > 0 && (
             <span className="cmx-badge cmx-badge-err inline-flex items-center gap-1">
               <AlertTriangle className="size-3" />
               {overdueCount} oltre scadenza
             </span>
           )}
+          {STATUS_PRIORITY.filter((st) => counts[st]).map((st) => (
+            <span key={st} className={cn("cmx-badge", SCHEDINA_STATUS[st].cmx)}>
+              {counts[st]} {SCHEDINA_STATUS[st].text.toLowerCase()}
+            </span>
+          ))}
         </div>
       )}
 
@@ -105,7 +126,7 @@ export default async function SchedinePage() {
         <section className="cmx-section">
           <Card style={{ borderRadius: 18 }}>
             <CardHeader>
-              <CardTitle className="font-display">Da inviare ad Alloggiati</CardTitle>
+              <CardTitle>Da inviare ad Alloggiati</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <p className="text-muted-foreground text-sm">
@@ -133,7 +154,7 @@ export default async function SchedinePage() {
         <section className="cmx-section">
           <Card style={{ borderRadius: 18 }}>
             <CardHeader>
-              <CardTitle className="font-display">Da verificare (esito ignoto)</CardTitle>
+              <CardTitle>Da verificare (esito ignoto)</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <p className="text-muted-foreground text-sm">
@@ -163,7 +184,7 @@ export default async function SchedinePage() {
         <section className="cmx-section">
           <Card style={{ borderRadius: 18 }}>
             <CardHeader>
-              <CardTitle className="font-display">Auto-invio programmato</CardTitle>
+              <CardTitle>Auto-invio programmato</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <p className="text-muted-foreground text-sm">
@@ -197,7 +218,7 @@ export default async function SchedinePage() {
       )}
 
       <section className="cmx-section">
-        <SchedineList schedine={schedine} stayIdBySchedina={stayIdBySchedina} now={now} />
+        <SchedineList schedine={sortedSchedine} stayIdBySchedina={stayIdBySchedina} now={now} />
       </section>
     </ConciergePage>
   );

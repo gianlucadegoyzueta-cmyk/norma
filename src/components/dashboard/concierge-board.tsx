@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { generateCheckinLinkAction } from "@/app/stays/[id]/checkin-actions";
 import type {
@@ -161,10 +161,12 @@ export function ConciergeBoard({
   proposals,
   agenda,
   diary,
+  kpisSlot,
 }: {
   proposals: DashboardProposal[];
   agenda: DashboardAgendaItem[];
   diary: DashboardDiaryRow[];
+  kpisSlot?: ReactNode;
 }) {
   const agendaRef = useRef<HTMLDivElement>(null);
   const [extraRows, setExtraRows] = useState<{ time: string; text: string }[]>([]);
@@ -189,48 +191,61 @@ export function ConciergeBoard({
   }
 
   return (
-    <div className="cmx-main">
-      <div>
-        <div className="cmx-col-h">Norma propone — tu approvi</div>
+    <>
+      {/* DECISIONI — il vero hero della pagina: a tutta larghezza, prima di tutto. */}
+      <section className="cmx-decisions">
+        <div className="cmx-col-h">
+          {proposals.length > 0
+            ? `Aspettano il tuo via libera (${proposals.length})`
+            : "Aspettano il tuo via libera"}
+        </div>
         {proposals.length === 0 ? (
           <div className="cmx-empty">
             <b>Tutto in ordine.</b> Nessuna proposta in sospeso: quando ci sarà qualcosa da decidere
             — un check-in da mandare, schedine da confermare, un export pronto — lo trovi qui.
           </div>
         ) : (
-          proposals.map((p, i) => (
-            <ProposalCard key={p.id} proposal={p} i={i} onApproved={onApproved} />
-          ))
+          <div className="cmx-decision-grid">
+            {proposals.map((p, i) => (
+              <ProposalCard key={p.id} proposal={p} i={i} onApproved={onApproved} />
+            ))}
+          </div>
         )}
-      </div>
+      </section>
 
-      <div>
-        <div className="cmx-col-h">Agenda della settimana</div>
-        <div className="cmx-agenda" ref={agendaRef}>
-          <div className="cmx-tl" />
-          {agenda.map((ev, idx) => (
-            <div className="cmx-ev" key={idx}>
-              <div className="cmx-when">{ev.when}</div>
-              <div className="cmx-node" />
-              <div>
-                <div className="cmx-t">{ev.title}</div>
-                <div className="cmx-d">
-                  {ev.detail}
-                  {ev.norma && (
-                    <>
-                      {" "}
-                      <span className="cmx-norma">Norma:</span> {ev.norma}
-                    </>
-                  )}
+      {/* KPI come striscia di contesto (sotto le decisioni, non protagonisti). */}
+      {kpisSlot}
+
+      {/* SECONDARIO, leggero: cosa arriva · cosa ho fatto stanotte. */}
+      <div className="cmx-secondary">
+        <div>
+          <div className="cmx-col-h">In arrivo</div>
+          <div className="cmx-agenda" ref={agendaRef}>
+            <div className="cmx-tl" />
+            {agenda.map((ev, idx) => (
+              <div className="cmx-ev" key={idx}>
+                <div className="cmx-when">{ev.when}</div>
+                <div className="cmx-node" />
+                <div>
+                  <div className="cmx-t">{ev.title}</div>
+                  <div className="cmx-d">
+                    {ev.detail}
+                    {ev.norma && (
+                      <>
+                        {" "}
+                        <span className="cmx-norma">Norma:</span> {ev.norma}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         <div className="cmx-diary">
           <div className="cmx-col-h" style={{ marginTop: 0 }}>
-            Fatto da Norma — oggi
+            Fatto stanotte
           </div>
           {diary.length === 0 && extraRows.length === 0 ? (
             <div className="cmx-muted">
@@ -261,6 +276,6 @@ export function ConciergeBoard({
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }

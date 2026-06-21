@@ -42,6 +42,8 @@ export default async function StaysPage() {
 
   return (
     <ConciergePage
+      dense
+      active="stays"
       kicker="REGISTRO · SOGGIORNI"
       title="Soggiorni"
       intro={
@@ -62,7 +64,7 @@ export default async function StaysPage() {
       <section className="cmx-section">
         <Card style={{ borderRadius: 18 }}>
           <CardHeader>
-            <CardTitle className="font-display">Nuovo soggiorno</CardTitle>
+            <CardTitle>Nuovo soggiorno</CardTitle>
           </CardHeader>
           <CardContent>
             {formProperties.length === 0 ? (

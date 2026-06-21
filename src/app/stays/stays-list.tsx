@@ -42,7 +42,7 @@ function SchedineBadges({ s }: { s: StayRow["schedine"] }) {
   return (
     <>
       {s.acquired > 0 && <span className="cmx-badge cmx-badge-ok">{s.acquired} acquisite</span>}
-      {s.pending > 0 && <span className="cmx-badge cmx-badge-wait">{s.pending} da inviare</span>}
+      {s.pending > 0 && <span className="cmx-badge cmx-badge-go">{s.pending} da inviare</span>}
       {s.sending > 0 && <span className="cmx-badge cmx-badge-wait">{s.sending} in invio</span>}
       {s.rejected > 0 && <span className="cmx-badge cmx-badge-err">{s.rejected} respinte</span>}
       {s.unverified > 0 && (

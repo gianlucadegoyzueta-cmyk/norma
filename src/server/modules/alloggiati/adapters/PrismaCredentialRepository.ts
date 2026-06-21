@@ -66,7 +66,11 @@ export class PrismaCredentialRepository {
   }
 
   async listByOrganization(organizationId: string): Promise<CredentialMetadata[]> {
-    return this.prisma.alloggiatiCredential.findMany({ where: { organizationId }, select: SELECT });
+    return this.prisma.alloggiatiCredential.findMany({
+      where: { organizationId },
+      orderBy: { createdAt: "desc" },
+      select: SELECT,
+    });
   }
 
   /**

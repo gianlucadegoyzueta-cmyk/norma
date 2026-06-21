@@ -70,6 +70,8 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
   return (
     <ConciergePage
+      dense
+      active="properties"
       backHref="/properties"
       backLabel="Immobili"
       kicker="DETTAGLIO · IMMOBILE"
