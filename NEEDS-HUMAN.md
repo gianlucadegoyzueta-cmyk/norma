@@ -74,3 +74,18 @@ migrate.yml già presente, che gira al merge su main).
 ### 7. Tassa di soggiorno — export PDF
 
 - **Perché è qui:** NON ha schema, è additivo (libreria PDF). **Spedibile**, ma lo lascio come PR per revisione visiva (il layout del PDF è estetica che non posso vedere). Se lo trovi in PR aperta, è questo.
+
+### 9. Movimento turistico — copertura nazionale (nuove regioni)
+
+- **Stato codice (branch `feat/movimento-turistico-nuove-regioni`, CI verde):** copertura portata da 13 a **15 regioni FILE + serializer Sicilia pronto**.
+  - ✅ **Puglia** (SPOT, XML) — FILE end-to-end (serializer + loader + dispatch reminder).
+  - ✅ **Umbria** (Turismatica C59, .txt fixed-width, 1 file/giorno) — FILE end-to-end. Tabella codici provenienze trascritta dal PDF ufficiale.
+  - ✅ **Sicilia** (WebAPI PMS) — body XML serializzato e testato; **trasmissione NON attiva** (è un'API: client + invio reale gated).
+- **Cosa serve da te — azioni di sblocco (bozze pronte in `tmp/outreach/email-sblocco-regioni.md`):**
+  1. **Campania** (Web API Sinfonia): email a giuseppe.pezone@regione.campania.it → Swagger + utenze test. Senza spec non scrivo il client.
+  2. **Sicilia** (attivazione): PEC a servizioturistico.ct@certmail.regione.sicilia.it → credenziali UTENTE PMS. Poi: conferma codifica **Gender 1/2** con l'ente (il PDF è incoerente), e **primo invio reale solo con tua decisione** (guardrail #1).
+  3. **Valle d'Aosta** (VIT): accreditamento fornitore PMS presso RAVDA/INVA → spec server-to-server.
+  4. **Friuli-VG** (WebTur): richiesta tracciato file a Insiel.
+  5. **PA Trento** (STU/DTU): PEC ISPAT per modulo Software House + tracciato C59 (canale file importabile; per affitti brevi serve DTU/CIPAT).
+- **Decisione tua — Bolzano (PA):** TIC-Web/LTS richiede **certificazione software** obbligatoria (barriera vera, spec non pubblica). Vale per una sola provincia? Se sì, primo passo: contatto LTS (info@lts.it). Altrimenti resta ASSISTITO.
+- **Follow-up minore:** verificare le regioni Ross1000 a confidenza media nel routing (Toscana, Lombardia web-service, Abruzzo) — già FILE, solo conferma sul campo.

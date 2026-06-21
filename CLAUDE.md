@@ -61,6 +61,10 @@ click" — mai "invia da sola".
   per-struttura + routing regionale (#98) — in prod. Invio regionale reale (Lazio) = prossimo gate.
 - ✅ Infra: billing €120/anno in prod ma **DORMIENTE** (mancano chiavi test + SDI) · Sentry EU PII-safe (#93)
   · import iCal (#65) · design system unico "carta", no dark mode (#97).
+- 🔜 **Copertura turismo nazionale + automazione funnel** (branch `feat/movimento-turistico-nuove-regioni`):
+  Puglia (SPOT) e Umbria (Turismatica C59) a FILE end-to-end; serializer + client Sicilia (WebAPI PMS) con
+  trasmissione gated; check-in → schedine automatiche; re-sync iCal (cron gated). Cancelli umani + adapter
+  futuri (Campania/VdA/FVG/Trento/Bolzano) e vault credenziali parcheggiato: NEEDS-HUMAN §9.
 - ⛔ **Primo invio reale (Alloggiati e ISTAT) = decisione esplicita di Gianluca su ospite vero**
   (guardrail #1). L'auto-send esiste ma è spento: non accenderlo in autonomia, non riproporlo.
 - 🔜 Focus: chiudere il redesign app (in volo, `feat/app-redesign`) + **GTM** (KPI: 3 conversazioni host/giorno).
