@@ -22,13 +22,14 @@ describe("routing regionale movimento turistico", () => {
     }
   });
 
-  it("14 FILE (13 Ross1000 + 1 SPOT) e 7 ASSISTITO, nessuna AUTO ancora", () => {
+  it("15 FILE (13 Ross1000 + 1 SPOT + 1 Turismatica) e 6 ASSISTITO, nessuna AUTO ancora", () => {
     const all = Object.values(REGION_MOVEMENT);
-    expect(all.filter((r) => r.status === "FILE")).toHaveLength(14);
-    expect(all.filter((r) => r.status === "ASSISTITO")).toHaveLength(7);
+    expect(all.filter((r) => r.status === "FILE")).toHaveLength(15);
+    expect(all.filter((r) => r.status === "ASSISTITO")).toHaveLength(6);
     expect(all.filter((r) => r.status === "AUTO")).toHaveLength(0);
     expect(all.filter((r) => r.serializerId === "ross1000-xml")).toHaveLength(13);
     expect(all.filter((r) => r.serializerId === "spot-xml")).toHaveLength(1);
+    expect(all.filter((r) => r.serializerId === "turismatica-c59")).toHaveLength(1);
   });
 
   it("spot-check di routing per sigla", () => {
@@ -39,6 +40,8 @@ describe("routing regionale movimento turistico", () => {
     expect(regionMovementForProvincia("BA")?.regionId).toBe("puglia");
     expect(regionMovementForProvincia("BA")?.status).toBe("FILE");
     expect(regionMovementForProvincia("BA")?.serializerId).toBe("spot-xml");
+    expect(regionMovementForProvincia("PG")?.regionId).toBe("umbria");
+    expect(regionMovementForProvincia("PG")?.serializerId).toBe("turismatica-c59");
     expect(regionMovementForProvincia("NA")?.status).toBe("ASSISTITO");
     expect(regionMovementForProvincia("BZ")?.regionId).toBe("bolzano");
     expect(regionMovementForProvincia("TN")?.regionId).toBe("trento");

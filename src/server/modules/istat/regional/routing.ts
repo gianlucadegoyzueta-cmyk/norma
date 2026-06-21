@@ -14,7 +14,7 @@
 export type RegionalStatus = "AUTO" | "FILE" | "ASSISTITO";
 
 /** Serializer di formato implementati in Norma. Aggiungere qui ogni nuovo tracciato regionale. */
-export type RegionSerializerId = "ross1000-xml" | "spot-xml";
+export type RegionSerializerId = "ross1000-xml" | "spot-xml" | "turismatica-c59";
 
 export interface RegionMovement {
   /** Id interno regione / provincia autonoma. */
@@ -53,6 +53,20 @@ const spotXml = (
   label,
   system,
   serializerId: "spot-xml",
+  status: "FILE",
+  note,
+});
+
+const turismaticaC59 = (
+  regionId: string,
+  label: string,
+  system: string,
+  note?: string,
+): RegionMovement => ({
+  regionId,
+  label,
+  system,
+  serializerId: "turismatica-c59",
   status: "FILE",
   note,
 });
@@ -103,6 +117,12 @@ export const REGION_MOVEMENT: Record<string, RegionMovement> = {
     "SPOT (InnovaPuglia)",
     "File XML SPOT generato da Norma; upload manuale dell'host sul portale.",
   ),
+  umbria: turismaticaC59(
+    "umbria",
+    "Umbria",
+    "Turismatica / TOLM",
+    "File .txt C/59 (uno per giorno) generato da Norma; upload manuale via SPID sul portale.",
+  ),
 
   // --- Cluster B/C: formato non ancora integrato → ASSISTITO (numeri pronti dal report CSV) ---
   "valle-aosta": assistito(
@@ -129,7 +149,6 @@ export const REGION_MOVEMENT: Record<string, RegionMovement> = {
     "Rilevazione ASTAT (ecosistema LTS)",
     "Possibile certificazione software richiesta. Da verificare.",
   ),
-  umbria: assistito("umbria", "Umbria", "Turismatica / TOLM", "File .txt C/59: serializer futuro."),
   campania: assistito(
     "campania",
     "Campania",
