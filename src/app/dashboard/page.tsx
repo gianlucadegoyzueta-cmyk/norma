@@ -19,7 +19,7 @@ export default async function DashboardPage() {
   const orgId = ctx.current.organizationId;
   const now = new Date();
   const [data, onboarding] = await Promise.all([
-    getDashboardData(prisma, orgId),
+    getDashboardData(prisma, orgId, now),
     getOnboardingState(prisma, orgId),
   ]);
 

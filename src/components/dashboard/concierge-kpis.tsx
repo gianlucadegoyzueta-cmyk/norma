@@ -167,7 +167,7 @@ function Kpi({ kpi, i }: { kpi: KpiSpec; i: number }) {
       <button
         type="button"
         ref={tilt.ref}
-        className="cmx-kpi"
+        className={kpi.due ? "cmx-kpi cmx-kpi-urgent" : "cmx-kpi"}
         style={{ "--i": i } as React.CSSProperties}
         onMouseMove={tilt.onMove}
         onMouseLeave={tilt.onLeave}

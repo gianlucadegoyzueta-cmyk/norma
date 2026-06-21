@@ -37,3 +37,4 @@ supabase/.temp/
 
 # Anteprime/scratch locali (screenshot, script di verifica): mai in CI.
 /tmp/
+.playwright-mcp/
