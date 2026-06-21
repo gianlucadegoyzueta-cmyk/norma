@@ -349,6 +349,10 @@
 .cmx-kpi .cmx-trend.cmx-due {
   color: var(--terracotta);
 }
+/* KPI urgente (due=true): enfasi terracotta sul VALORE, non solo sul trend minuscolo. */
+.cmx-kpi-urgent .cmx-odo {
+  color: var(--terracotta);
+}
 /* Affordance di click: discreta, si accende e scorre all'hover */
 .cmx-kpi-cta {
   display: inline-flex;

@@ -95,9 +95,22 @@ export default async function PropertiesPage() {
                             {p.credential.label}
                           </span>
                         ) : (
-                          <span className="cmx-badge cmx-badge-err">Senza credenziale</span>
+                          <span className="inline-flex items-center gap-2">
+                            <span className="cmx-badge cmx-badge-err">Senza credenziale</span>
+                            <Link
+                              href={`/properties/${p.id}`}
+                              className="text-xs font-medium"
+                              style={{ color: "var(--terracotta)" }}
+                            >
+                              collega
+                            </Link>
+                          </span>
                         )}
-                        {needsCin && <span className="cmx-badge cmx-badge-err">Senza CIN</span>}
+                        {needsCin ? (
+                          <span className="cmx-badge cmx-badge-err">Senza CIN</span>
+                        ) : (
+                          <span className="cmx-badge cmx-badge-ok">CIN ottenuto</span>
+                        )}
                       </div>
                     </div>
                     {cin && (
