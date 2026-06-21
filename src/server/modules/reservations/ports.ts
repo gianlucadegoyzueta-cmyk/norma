@@ -68,6 +68,8 @@ export interface ReservationImportRepository {
   listByProperty(propertyId: string, organizationId: string): Promise<ReservationImportView[]>;
   /** Un feed per id (isolamento per organizationId); null se non esiste/altra org. */
   getById(importId: string, organizationId: string): Promise<ReservationImportView | null>;
+  /** TUTTI i feed (cross-org), per il re-sync automatico schedulato. Solo id + organizationId. */
+  listAll(): Promise<{ id: string; organizationId: string }[]>;
   /** Soggiorni già importati da un feed, con conteggio ospiti (per la riconciliazione). */
   listImportedStays(importId: string): Promise<ExistingImportedStay[]>;
   /** Prenotazioni importate da mostrare nell'immobile (tutti i feed dell'immobile). */

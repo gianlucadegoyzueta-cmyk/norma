@@ -189,4 +189,34 @@ export class ReservationImportService {
     }
     return { results: agg, errors };
   }
+
+  /**
+   * Re-sync di TUTTI i feed (cross-org), per il cron schedulato. Isola gli errori per feed
+   * (uno rotto non ferma gli altri). NON invia nulla agli enti: aggiorna solo i soggiorni in bozza.
+   */
+  async syncAllFeeds(): Promise<{
+    feeds: number;
+    ok: number;
+    failed: number;
+    results: SyncResult;
+  }> {
+    const all = await this.repo.listAll();
+    const agg: SyncResult = { created: 0, updated: 0, cancelled: 0, flaggedForReview: 0, seen: 0 };
+    let ok = 0;
+    let failed = 0;
+    for (const f of all) {
+      try {
+        const r = await this.syncImport(f.id, f.organizationId);
+        agg.created += r.created;
+        agg.updated += r.updated;
+        agg.cancelled += r.cancelled;
+        agg.flaggedForReview += r.flaggedForReview;
+        agg.seen += r.seen;
+        ok += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    return { feeds: all.length, ok, failed, results: agg };
+  }
 }

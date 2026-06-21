@@ -58,6 +58,18 @@ export function validatePerson(input: PersonInput, withDocument: boolean): Perso
   const citizenshipId = clean(input.citizenshipId);
   if (!citizenshipId) errors.citizenshipId = "La cittadinanza è obbligatoria.";
 
+  // Documento OBBLIGATORIO quando richiesto (ospite con documento: 16/17/18). Senza, la schedina
+  // Alloggiati sarebbe invalida e la dedup-key (basata sul n° documento) diventerebbe fragile:
+  // due ospiti distinti senza documento collasserebbero in una sola schedina. Va imposto lato server.
+  if (withDocument) {
+    if (!clean(input.documentTypeId))
+      errors.documentTypeId = "Il tipo di documento è obbligatorio.";
+    if (!clean(input.documentNumber))
+      errors.documentNumber = "Il numero del documento è obbligatorio.";
+    if (!clean(input.documentPlaceId))
+      errors.documentPlaceId = "Il luogo di rilascio del documento è obbligatorio.";
+  }
+
   if (Object.keys(errors).length > 0) return { data: null, errors };
 
   return {

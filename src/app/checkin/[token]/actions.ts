@@ -14,9 +14,13 @@ export type CheckinSubmitState = {
 };
 
 /**
- * Submit PUBBLICO del check-in ospite. Risolve il token, valida i dati (documento OBBLIGATORIO,
- * ospite singolo), crea l'ospite sul soggiorno e CHIUDE il token. NON genera schedine: restano una
- * scelta dell'host dopo la revisione (un invio sbagliato ad Alloggiati è irreversibile).
+ * Submit PUBBLICO del check-in ospite. Risolve il token, valida i dati (documento OBBLIGATORIO),
+ * aggiunge l'ospite al soggiorno. Il token resta valido (più ospiti per lo stesso soggiorno), scade a 30gg.
+ *
+ * AUTOMAZIONE: appena i dati del soggiorno sono completi, genera le schedine PENDING (best-effort).
+ * Generare ≠ inviare: gli intenti restano in outbox e sono REVERSIBILI; l'invio reale alla Questura
+ * resta gated (ALLOGGIATI_CRON_ENABLED + autoSend per-credenziale, guardrail #1). Dati incompleti o
+ * arrivo fuori finestra → tryGenerateSchedine non lancia, il check-in va comunque a buon fine.
  */
 export async function submitCheckinAction(
   _prev: CheckinSubmitState,
@@ -58,8 +62,12 @@ export async function submitCheckinAction(
       new PrismaReferenceTablesLoader(prisma),
     );
     await service.addGuests(ctx.stayId, ctx.organizationId, [{ tipo: "SINGOLO", ospite: data }]);
-    // NB: il token NON viene chiuso, così lo stesso link serve per più ospiti dello stesso
-    // soggiorno (l'ospite aggiunge sé stesso e i compagni). Scade comunque dopo 30 giorni.
+    // Il token NON viene chiuso: lo stesso link serve per più ospiti dello stesso soggiorno
+    // (l'ospite aggiunge sé stesso e i compagni). Scade comunque dopo 30 giorni.
+    //
+    // Chiude il loop dati→schedina: genera gli intenti PENDING appena il soggiorno è completo.
+    // best-effort (non lancia) e PRE-INVIO (l'invio reale resta gated): non altera l'esito del check-in.
+    await service.tryGenerateSchedine(ctx.stayId);
   } catch {
     return { error: "generic" };
   }
