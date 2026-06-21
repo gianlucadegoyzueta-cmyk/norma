@@ -89,3 +89,13 @@ migrate.yml già presente, che gira al merge su main).
   5. **PA Trento** (STU/DTU): PEC ISPAT per modulo Software House + tracciato C59 (canale file importabile; per affitti brevi serve DTU/CIPAT).
 - **Decisione tua — Bolzano (PA):** TIC-Web/LTS richiede **certificazione software** obbligatoria (barriera vera, spec non pubblica). Vale per una sola provincia? Se sì, primo passo: contatto LTS (info@lts.it). Altrimenti resta ASSISTITO.
 - **Follow-up minore:** verificare le regioni Ross1000 a confidenza media nel routing (Toscana, Lombardia web-service, Abruzzo) — già FILE, solo conferma sul campo.
+
+#### 9b. Trasmissione AUTO (Sicilia) — infrastruttura pronta, vault credenziali da attivare
+
+- **Stato codice (CI verde):** la catena AUTO Sicilia è completa e testata: `sicilia/report.ts` (dati→payload), `sicilia/tracciato-xml.ts` (body), `sicilia/pms-client.ts` (HTTP, transport iniettabile), `sicilia/transport.ts` (fetch reale), `sicilia/transmit.ts` (orchestrazione con **gate a tripla barriera**: flag globale + opt-in struttura + conferma esplicita; default CHIUSO). L'astrazione credenziali è in `regional/credentials.ts` (porta + provider in-memory).
+- **PARCHEGGIATO — schema vault credenziali regionali (HIGH, serve tuo backup):** manca il modello DB per custodire le credenziali del CLIENTE per-struttura. Da aggiungere a `prisma/schema.prisma` (sul modello di `AlloggiatiCredential`):
+  - `model RegionalCredential { id, organizationId, propertyId?, serializerId (es. "turistat-xml"), label, status (ACTIVE|PENDING|DISABLED), autoTransmit Boolean @default(false), secretRef @unique (→ SecretsVault, mai in chiaro), config Json? (dati non segreti, es. hotelCode Sicilia), lastVerifiedAt, createdAt, updatedAt }` + back-relation su Organization e Property + enum `RegionalCredentialStatus`.
+  - Estendere `SecretsVault` con metodi generici (storeRaw/retrieveRaw) per segreti non-Alloggiati, + provider Prisma `PrismaRegionalCredentialProvider` (legge `RegionalCredential` + vault, degrada con grazia su P2021 se la tabella non esiste).
+  - **Attivazione (tuo ordine):** backup DB (guardrail 2) → genera/applica la migrazione → UI per far inserire al cliente le sue credenziali regionali + opt-in `autoTransmit`.
+- **Attivazione invio reale Sicilia (CRITICAL — guardrail #1):** solo dopo credenziali UTENTE PMS reali del cliente, conferma codifica **Gender 1/2** con l'ente, e tua decisione esplicita sul primo invio. Il gate `SICILIA_TRANSMIT_ENABLED` resta OFF finché non lo accendi tu.
+- **Adapter futuri (stesso stampo, quando arriva la spec):** Campania (API), VdA, FVG, Trento — si innestano implementando un client + un provider credenziali, riusando `transmit.ts`/`credentials.ts`.
