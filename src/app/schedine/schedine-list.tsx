@@ -25,7 +25,7 @@ type SchedinaRow = {
 
 // Etichetta + classe badge Concierge per ogni stato (condivisa con la pagina Schedine).
 export const SCHEDINA_STATUS: Record<SchedinaStatus, { text: string; cmx: string }> = {
-  PENDING: { text: "Da inviare", cmx: "cmx-badge-wait" },
+  PENDING: { text: "Da inviare", cmx: "cmx-badge-go" },
   SENDING: { text: "In invio", cmx: "cmx-badge-wait" },
   ACQUIRED: { text: "Acquisita", cmx: "cmx-badge-ok" },
   REJECTED: { text: "Respinta", cmx: "cmx-badge-err" },
