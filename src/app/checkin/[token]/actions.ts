@@ -3,6 +3,7 @@
 import { type PersonInput, validatePerson } from "@/app/stays/guest-validation";
 import { prisma } from "@/server/db";
 import { PrismaReferenceTablesLoader, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
+import { DEFAULT_LOCALE, isLocale, MESSAGES } from "@/server/modules/checkin/messages";
 import { resolveCheckinToken } from "@/server/modules/checkin/token";
 import { PrismaStaysRepository, StaysService } from "@/server/modules/stays";
 
@@ -27,6 +28,9 @@ export async function submitCheckinAction(
   formData: FormData,
 ): Promise<CheckinSubmitState> {
   const token = String(formData.get("token") ?? "");
+  // Lingua scelta dall'ospite: serve a localizzare gli errori per-campo nelle 5 lingue.
+  const langRaw = String(formData.get("lang") ?? "");
+  const locale = isLocale(langRaw) ? langRaw : DEFAULT_LOCALE;
   const ctx = await resolveCheckinToken(token);
   if (!ctx) return { error: "invalid" };
 
@@ -52,8 +56,14 @@ export async function submitCheckinAction(
     documentPlaceId: v("documentPlaceId"),
   };
 
-  const { data, errors } = validatePerson(input, true);
-  if (!data) return { fieldErrors: errors };
+  const { data, errorCodes } = validatePerson(input, true);
+  if (!data) {
+    // Traduce i codici di errore neutri nelle stringhe della lingua dell'ospite.
+    const labels = MESSAGES[locale].fieldErrors;
+    const fieldErrors: Record<string, string> = {};
+    for (const [field, code] of Object.entries(errorCodes)) fieldErrors[field] = labels[code];
+    return { fieldErrors };
+  }
 
   try {
     const service = new StaysService(

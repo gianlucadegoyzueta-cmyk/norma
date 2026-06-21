@@ -6,6 +6,7 @@ import {
   DEFAULT_LOCALE,
   isLocale,
   LANG_NAMES,
+  type Locale,
   LOCALES,
   MESSAGES,
 } from "@/server/modules/checkin/messages";
@@ -50,7 +51,8 @@ export default async function CheckinPage({
   const ctx = await resolveCheckinToken(token);
 
   return (
-    <div className="bg-background relative min-h-dvh">
+    // lang sul sottoalbero: screen reader, sillabazione e correttore usano la lingua scelta dall'ospite.
+    <div lang={locale} className="bg-background relative min-h-dvh">
       {/* Grana di carta appena percettibile, coerente con la superficie auth (theme-safe). */}
       <svg
         aria-hidden
@@ -86,7 +88,7 @@ export default async function CheckinPage({
             </CardContent>
           </Card>
         ) : (
-          <CheckinContent token={token} m={m} />
+          <CheckinContent token={token} locale={locale} m={m} />
         )}
       </div>
     </div>
@@ -95,9 +97,11 @@ export default async function CheckinPage({
 
 async function CheckinContent({
   token,
+  locale,
   m,
 }: {
   token: string;
+  locale: Locale;
   m: (typeof MESSAGES)[keyof typeof MESSAGES];
 }) {
   const [countries, comuniRows, documentTypes] = await Promise.all([
@@ -119,6 +123,7 @@ async function CheckinContent({
       </div>
       <CheckinForm
         token={token}
+        locale={locale}
         m={m}
         countries={countries}
         comuni={comuni}
