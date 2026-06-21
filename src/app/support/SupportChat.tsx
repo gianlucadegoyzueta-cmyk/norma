@@ -29,14 +29,30 @@ export function SupportChat() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ question, history }),
       });
+      if (!res.ok) {
+        setTurns((t) => [
+          ...t,
+          {
+            role: "assistant",
+            content:
+              "Qualcosa non ha funzionato dalla mia parte. Riprova tra poco, o ti faccio ricontattare da una persona.",
+            escalate: true,
+          },
+        ]);
+        return;
+      }
       const reply = (await res.json()) as AssistantReply;
+      const answer =
+        typeof reply.answer === "string" && reply.answer.trim()
+          ? reply.answer
+          : "Non riesco a risponderti con certezza. Ti metto in contatto con una persona del team.";
       setTurns((t) => [
         ...t,
         {
           role: "assistant",
-          content: reply.answer,
-          sources: reply.sources,
-          escalate: reply.escalate,
+          content: answer,
+          sources: reply.sources ?? [],
+          escalate: reply.escalate || !reply.answer,
         },
       ]);
     } catch {

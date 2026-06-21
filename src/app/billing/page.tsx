@@ -97,10 +97,15 @@ function PlanCard({ plan, configured }: { plan: PlanDefinition; configured: bool
   );
 }
 
-export default async function BillingPage() {
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ checkout?: string }>;
+}) {
   const ctx = await getCurrentContext();
   if (!ctx) redirect("/login");
 
+  const { checkout } = await searchParams;
   const { access, subscription, ready, configured } = await loadBillingView(
     ctx.current.organizationId,
   );
@@ -119,6 +124,28 @@ export default async function BillingPage() {
       intro="Il piano di Norma e lo stato del tuo abbonamento."
     >
       <div className="cmx-section space-y-6" style={{ marginTop: 0 }}>
+        {checkout === "success" && (
+          <Card className="border-success/40 bg-success/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CheckCircle2 className="text-success" />
+                Pagamento ricevuto
+              </CardTitle>
+              <CardDescription>
+                Sto attivando il tuo abbonamento. Se qui sotto lo stato non è ancora «Attivo», si
+                aggiorna entro pochi istanti.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+        {checkout === "cancel" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Pagamento annullato</CardTitle>
+              <CardDescription>Nessun addebito. Puoi riprovare quando vuoi.</CardDescription>
+            </CardHeader>
+          </Card>
+        )}
         {!configured && (
           <Card className="border-warning/40 bg-warning/5">
             <CardHeader>

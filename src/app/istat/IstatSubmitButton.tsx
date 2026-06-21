@@ -5,14 +5,20 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { markIstatSubmittedAction } from "./actions";
 
-/** Segna (o aggiorna) l'avvenuto invio ISTAT del mese; mostra la data se già inviato. */
+/**
+ * Registra (o aggiorna) un invio ISTAT già fatto a mano sul portale: è un audit-trail personale,
+ * Norma NON trasmette. Se i numeri del report sono cambiati dopo la registrazione (`stale`),
+ * lo segnala invece di mostrare un falso "tutto a posto".
+ */
 export function IstatSubmitButton({
   period,
   submittedLabel,
+  stale,
   disabled,
 }: {
   period: string;
   submittedLabel: string | null;
+  stale?: boolean;
   disabled?: boolean;
 }) {
   const router = useRouter();
@@ -30,17 +36,25 @@ export function IstatSubmitButton({
 
   return (
     <div className="flex items-center gap-2">
-      {submittedLabel && (
-        <span className="text-success text-xs font-medium">Inviata il {submittedLabel}</span>
-      )}
+      {submittedLabel &&
+        (stale ? (
+          <span className="text-warning-foreground dark:text-warning text-xs font-medium">
+            Invio registrato il {submittedLabel} · numeri cambiati dopo
+          </span>
+        ) : (
+          <span className="text-success text-xs font-medium">
+            Invio registrato il {submittedLabel}
+          </span>
+        ))}
       <Button
         type="button"
         size="sm"
         variant={submittedLabel ? "outline" : "default"}
         onClick={onClick}
         disabled={disabled || pending}
+        title="Promemoria personale: Norma non trasmette al portale regionale, l'invio lo fai tu."
       >
-        {submittedLabel ? "Aggiorna invio" : "Segna come inviata"}
+        {submittedLabel ? "Aggiorna registrazione" : "Registra l'invio fatto"}
       </Button>
       {error && (
         <span className="text-destructive text-xs" role="alert">

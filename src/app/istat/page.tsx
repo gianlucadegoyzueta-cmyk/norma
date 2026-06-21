@@ -35,11 +35,16 @@ export default async function IstatPage({
   );
   const submission = await prisma.istatSubmission.findUnique({
     where: { organizationId_period: { organizationId: ctx.current.organizationId, period } },
-    select: { submittedAt: true },
+    select: { submittedAt: true, arriviTotal: true, presenzeTotal: true },
   });
   const submittedLabel = submission
     ? new Intl.DateTimeFormat("it-IT", { dateStyle: "medium" }).format(submission.submittedAt)
     : null;
+  // Staleness: il report live diverge dallo snapshot salvato all'invio? (ospite cambiato dopo)
+  const submissionStale = submission
+    ? submission.arriviTotal !== report.totals.arrivi ||
+      submission.presenzeTotal !== report.totals.presenze
+    : false;
 
   // Ross1000 è per-struttura (a differenza del CSV per-provenienza, che è per-organizzazione).
   const properties = await prisma.property.findMany({
@@ -82,6 +87,7 @@ export default async function IstatPage({
           <IstatSubmitButton
             period={period}
             submittedLabel={submittedLabel}
+            stale={submissionStale}
             disabled={report.rows.length === 0}
           />
         </div>
