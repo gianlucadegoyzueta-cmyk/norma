@@ -13,6 +13,9 @@
 
 export type RegionalStatus = "AUTO" | "FILE" | "ASSISTITO";
 
+/** Serializer di formato implementati in Norma. Aggiungere qui ogni nuovo tracciato regionale. */
+export type RegionSerializerId = "ross1000-xml" | "spot-xml";
+
 export interface RegionMovement {
   /** Id interno regione / provincia autonoma. */
   regionId: string;
@@ -21,7 +24,7 @@ export interface RegionMovement {
   /** Sistema regionale di rilevazione. */
   system: string;
   /** Serializer di formato implementato; null = nessuno → ASSISTITO. */
-  serializerId: "ross1000-xml" | null;
+  serializerId: RegionSerializerId | null;
   status: RegionalStatus;
   note?: string;
 }
@@ -36,6 +39,20 @@ const ross1000 = (
   label,
   system,
   serializerId: "ross1000-xml",
+  status: "FILE",
+  note,
+});
+
+const spotXml = (
+  regionId: string,
+  label: string,
+  system: string,
+  note?: string,
+): RegionMovement => ({
+  regionId,
+  label,
+  system,
+  serializerId: "spot-xml",
   status: "FILE",
   note,
 });
@@ -79,7 +96,15 @@ export const REGION_MOVEMENT: Record<string, RegionMovement> = {
   calabria: ross1000("calabria", "Calabria", "Ross1000 (SIRDAT)"),
   sardegna: ross1000("sardegna", "Sardegna", "Ross1000 (ex SIRED)"),
 
-  // --- Cluster B/C: formato non integrato → ASSISTITO (numeri pronti dal report CSV) ---
+  // --- Cluster B: formato file proprietario implementato → FILE ---
+  puglia: spotXml(
+    "puglia",
+    "Puglia",
+    "SPOT (InnovaPuglia)",
+    "File XML SPOT generato da Norma; upload manuale dell'host sul portale.",
+  ),
+
+  // --- Cluster B/C: formato non ancora integrato → ASSISTITO (numeri pronti dal report CSV) ---
   "valle-aosta": assistito(
     "valle-aosta",
     "Valle d'Aosta",
@@ -111,12 +136,11 @@ export const REGION_MOVEMENT: Record<string, RegionMovement> = {
     "Sinfonia Turismo SMART",
     "Web API: candidata a canale AUTO futuro.",
   ),
-  puglia: assistito("puglia", "Puglia", "SPOT (InnovaPuglia)", "Upload XML: serializer futuro."),
   sicilia: assistito(
     "sicilia",
     "Sicilia",
     "Osservatorio Turistico Regionale",
-    "Tracciato record: serializer futuro.",
+    "Tracciato record (WebAPI): serializer futuro.",
   ),
 };
 

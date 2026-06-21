@@ -16,8 +16,8 @@ function fakeDeps(
     sent,
     deps: {
       listProperties: async () => properties,
-      loadRoss1000: async (_org, propertyId) =>
-        outcomes[propertyId] ?? {
+      loadReport: async (_serializerId, ids) =>
+        outcomes[ids.propertyId] ?? {
           kind: "INCOMPLETE",
           missing: [{ field: "codice", scope: "STRUTTURA" }],
         },
@@ -122,7 +122,7 @@ describe("runMonthlyIstatReminders", () => {
           ownerEmail: "e@z.it",
         },
       ],
-      loadRoss1000: async () => {
+      loadReport: async () => {
         loaded += 1;
         return OK;
       },
@@ -134,7 +134,7 @@ describe("runMonthlyIstatReminders", () => {
     expect(res.ready + res.incomplete + res.assistito).toBe(0);
   });
 
-  it("loadRoss1000 che LANCIA su una struttura → errored, le altre proseguono (batch non abortisce)", async () => {
+  it("loadReport che LANCIA su una struttura → errored, le altre proseguono (batch non abortisce)", async () => {
     const sent: EmailMessage[] = [];
     const deps: IstatReminderDeps = {
       listProperties: async () => [
@@ -153,8 +153,8 @@ describe("runMonthlyIstatReminders", () => {
           ownerEmail: "a@x.it",
         },
       ],
-      loadRoss1000: async (_o, propertyId) => {
-        if (propertyId === "boom") throw new Error("tracciato: luogoresidenza troppo lungo");
+      loadReport: async (_s, ids) => {
+        if (ids.propertyId === "boom") throw new Error("tracciato: luogoresidenza troppo lungo");
         return OK;
       },
       email: { send: async (m) => void sent.push(m) },
@@ -187,7 +187,7 @@ describe("runMonthlyIstatReminders", () => {
           ownerEmail: "good@x.it",
         },
       ],
-      loadRoss1000: async () => OK,
+      loadReport: async () => OK,
       email: {
         send: async (m) => {
           if (m.to === "bad@x.it") throw new Error("smtp down");
