@@ -56,16 +56,39 @@ function parseICalDate(value: string): Date | null {
   const dateOnly = /^(\d{4})(\d{2})(\d{2})$/.exec(v);
   if (dateOnly) {
     const [, y, m, d] = dateOnly;
-    return new Date(Date.UTC(Number(y), Number(m) - 1, Number(d)));
+    return makeUtc(Number(y), Number(m), Number(d), 0, 0, 0);
   }
+  // DATE-TIME `YYYYMMDDTHHMMSS` (+ eventuale `Z`). Un eventuale TZID è nei parametri della
+  // proprietà (già rimossi da splitProperty): per le prenotazioni conta il giorno civile,
+  // quindi l'istante viene trattato come UTC (approssimazione voluta, vedi testata file).
   const dateTime = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)$/.exec(v);
   if (dateTime) {
     const [, y, m, d, hh, mm, ss] = dateTime;
-    return new Date(
-      Date.UTC(Number(y), Number(m) - 1, Number(d), Number(hh), Number(mm), Number(ss)),
-    );
+    return makeUtc(Number(y), Number(m), Number(d), Number(hh), Number(mm), Number(ss));
   }
   return null;
+}
+
+/**
+ * Costruisce una Date UTC validando i campi: rifiuta date impossibili (mese 13, giorno 32,
+ * 30 febbraio…) che `Date.UTC` accetterebbe silenziosamente con un roll-over, producendo un
+ * arrivo sbagliato da un feed corrotto. Ritorna null se i componenti non sono coerenti.
+ */
+function makeUtc(y: number, m: number, d: number, hh: number, mm: number, ss: number): Date | null {
+  if (m < 1 || m > 12 || d < 1 || d > 31 || hh > 23 || mm > 59 || ss > 59) return null;
+  const date = new Date(Date.UTC(y, m - 1, d, hh, mm, ss));
+  // Round-trip: se il roll-over ha cambiato i componenti, l'input era invalido.
+  if (
+    date.getUTCFullYear() !== y ||
+    date.getUTCMonth() !== m - 1 ||
+    date.getUTCDate() !== d ||
+    date.getUTCHours() !== hh ||
+    date.getUTCMinutes() !== mm ||
+    date.getUTCSeconds() !== ss
+  ) {
+    return null;
+  }
+  return date;
 }
 
 /** Spezza una riga "NAME;param=x:value" in nome (maiuscolo) e valore grezzo. */
@@ -80,31 +103,58 @@ function splitProperty(line: string): { name: string; value: string } | null {
 
 /**
  * Estrae i VEVENT da un testo iCal e li riduce a `ParsedReservation`.
- * Scarta gli eventi senza UID o senza DTSTART valido (non utilizzabili come soggiorno).
+ * RESILIENTE per costruzione (i feed reali sono spesso malformati):
+ *  - scarta gli eventi senza UID o senza DTSTART valido (non utilizzabili come soggiorno);
+ *  - scarta gli eventi `STATUS:CANCELLED` (cancellazioni esplicite RFC 5545): non sono
+ *    soggiorni attivi e la riconciliazione li tratta come "spariti dal feed";
+ *  - tollera proprietà sconosciute, righe senza ":", `BEGIN:VEVENT` ripetuti senza END e
+ *    `END:VEVENT` orfani senza propagare errori (un evento rotto non fa fallire l'import);
+ *  - DEDUP per UID: a parità di UID vince l'ultimo evento valido letto (allineato a `reconcile`),
+ *    così `total`/`blocked` dell'anteprima non vengono gonfiati dai duplicati.
  * NON applica filtri di dominio (es. "non disponibile"): vedi `isReservationLike`.
  */
 export function parseICal(raw: string): ParsedReservation[] {
+  // Guard difensiva: input non-stringa o vuoto → nessun evento (niente throw).
+  if (typeof raw !== "string" || raw.length === 0) return [];
+
   const lines = unfoldLines(raw);
-  const out: ParsedReservation[] = [];
+  // Dedup per UID. Map preserva l'ordine; per "vince l'ultimo" cancelliamo e re-inseriamo.
+  const byUid = new Map<string, ParsedReservation>();
 
   let inEvent = false;
   let uid: string | null = null;
   let dtStart: Date | null = null;
   let dtEnd: Date | null = null;
   let summary: string | null = null;
+  let cancelled = false;
+
+  const reset = (): void => {
+    uid = dtStart = dtEnd = summary = null;
+    cancelled = false;
+  };
 
   for (const line of lines) {
     const trimmed = line.trim();
     if (trimmed === "BEGIN:VEVENT") {
+      // BEGIN ripetuto senza END: ricomincia l'evento (scarta lo stato parziale).
       inEvent = true;
-      uid = dtStart = dtEnd = summary = null;
+      reset();
       continue;
     }
     if (trimmed === "END:VEVENT") {
-      if (uid && dtStart) {
-        out.push({ uid, arrivalDate: dtStart, departureDate: dtEnd, summary });
+      // END orfano (senza BEGIN) → inEvent è false: ignora.
+      if (inEvent && uid && dtStart) {
+        if (cancelled) {
+          // "Vince l'ultimo": una cancellazione esplicita rimuove un eventuale duplicato attivo.
+          byUid.delete(uid);
+        } else {
+          // Rimuovi l'eventuale precedente con stesso UID e re-inserisci in coda.
+          byUid.delete(uid);
+          byUid.set(uid, { uid, arrivalDate: dtStart, departureDate: dtEnd, summary });
+        }
       }
       inEvent = false;
+      reset();
       continue;
     }
     if (!inEvent) continue;
@@ -124,12 +174,16 @@ export function parseICal(raw: string): ParsedReservation[] {
       case "SUMMARY":
         summary = unescapeText(prop.value.trim()) || null;
         break;
+      case "STATUS":
+        // RFC 5545: STATUS:CANCELLED → evento annullato, non è un soggiorno attivo.
+        if (prop.value.trim().toUpperCase() === "CANCELLED") cancelled = true;
+        break;
       default:
         break;
     }
   }
 
-  return out;
+  return Array.from(byUid.values());
 }
 
 /**

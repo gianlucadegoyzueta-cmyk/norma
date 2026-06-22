@@ -100,6 +100,137 @@ describe("parseICal", () => {
   });
 });
 
+describe("parseICal — resilienza e sicurezza del parsing", () => {
+  it("scarta gli eventi STATUS:CANCELLED (cancellazione esplicita RFC 5545)", () => {
+    const feed = [
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT",
+      "UID:live@x",
+      "DTSTART;VALUE=DATE:20260601",
+      "SUMMARY:Reserved",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:dead@x",
+      "DTSTART;VALUE=DATE:20260605",
+      "STATUS:CANCELLED",
+      "SUMMARY:Reserved",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n");
+    const events = parseICal(feed);
+    expect(events).toHaveLength(1);
+    expect(events[0].uid).toBe("live@x");
+  });
+
+  it("dedup per UID: a parità di UID vince l'ultimo evento valido letto", () => {
+    const feed = [
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT",
+      "UID:dup@x",
+      "DTSTART;VALUE=DATE:20260601",
+      "DTEND;VALUE=DATE:20260603",
+      "SUMMARY:Vecchia",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:dup@x",
+      "DTSTART;VALUE=DATE:20260610",
+      "DTEND;VALUE=DATE:20260612",
+      "SUMMARY:Aggiornata",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n");
+    const events = parseICal(feed);
+    expect(events).toHaveLength(1);
+    expect(events[0].summary).toBe("Aggiornata");
+    expect(events[0].arrivalDate.toISOString()).toBe("2026-06-10T00:00:00.000Z");
+  });
+
+  it("una cancellazione successiva rimuove un duplicato attivo con lo stesso UID", () => {
+    const feed = [
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT",
+      "UID:flip@x",
+      "DTSTART;VALUE=DATE:20260601",
+      "SUMMARY:Reserved",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:flip@x",
+      "DTSTART;VALUE=DATE:20260601",
+      "STATUS:CANCELLED",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n");
+    expect(parseICal(feed)).toHaveLength(0);
+  });
+
+  it("non lancia su ICS malformato e salta gli eventi invalidi (END orfano, BEGIN annidato)", () => {
+    const feed = [
+      "spazzatura senza due punti",
+      "END:VEVENT", // END orfano: ignorato
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT",
+      "UID:a@x",
+      "DTSTART;VALUE=DATE:20260601",
+      "BEGIN:VEVENT", // BEGIN annidato: ricomincia, scarta lo stato parziale precedente
+      "UID:b@x",
+      "DTSTART;VALUE=DATE:20260701",
+      "SUMMARY:Reserved",
+      "END:VEVENT",
+      "riga: con due punti ma fuori da un evento",
+      "END:VCALENDAR",
+    ].join("\n");
+    let events: ReturnType<typeof parseICal> = [];
+    expect(() => {
+      events = parseICal(feed);
+    }).not.toThrow();
+    // L'evento "a@x" è stato troncato dal BEGIN annidato; resta solo "b@x".
+    expect(events.map((e) => e.uid)).toEqual(["b@x"]);
+  });
+
+  it("rifiuta date impossibili (mese 13, giorno 32) invece di farle rollare", () => {
+    const feed = [
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT",
+      "UID:bad-month@x",
+      "DTSTART;VALUE=DATE:20261301",
+      "SUMMARY:Reserved",
+      "END:VEVENT",
+      "BEGIN:VEVENT",
+      "UID:bad-day@x",
+      "DTSTART;VALUE=DATE:20260632",
+      "SUMMARY:Reserved",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n");
+    // DTSTART non parsabile → evento scartato (niente data sbagliata in DB).
+    expect(parseICal(feed)).toHaveLength(0);
+  });
+
+  it("non lancia su input vuoto o non-stringa", () => {
+    expect(parseICal("")).toEqual([]);
+    // @ts-expect-error verifica difensiva runtime su input non valido
+    expect(parseICal(undefined)).toEqual([]);
+    // @ts-expect-error verifica difensiva runtime su input non valido
+    expect(parseICal(null)).toEqual([]);
+  });
+
+  it("tollera DTSTART con TZID (lo tratta come istante UTC, approssimazione voluta)", () => {
+    const feed = [
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT",
+      "UID:tz@x",
+      "DTSTART;TZID=Europe/Rome:20260601T140000",
+      "DTEND;TZID=Europe/Rome:20260603T100000",
+      "SUMMARY:Reserved",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n");
+    const [e] = parseICal(feed);
+    expect(e.arrivalDate.toISOString()).toBe("2026-06-01T14:00:00.000Z");
+    expect(e.departureDate?.toISOString()).toBe("2026-06-03T10:00:00.000Z");
+  });
+});
+
 describe("isReservationLike", () => {
   it("riconosce i blocchi 'non disponibile' come NON prenotazioni", () => {
     expect(isReservationLike("Airbnb (Not available)")).toBe(false);
