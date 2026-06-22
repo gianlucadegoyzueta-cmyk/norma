@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
  * esiste per rendere visibile la capacità in arrivo e spiegare, in chiaro, perché oggi non parte.
  *
  * `ready` decide solo il TONO del messaggio (pronto-ma-gated vs completa-prima-i-dati): in nessun caso
- * il click invia qualcosa. Presentazionale → server component. A11y: il bottone è realmente disabilitato
- * (aria-disabled) e l'hint è collegato via aria-describedby così lo screen reader spiega il perché.
+ * il click invia qualcosa. Presentazionale → server component. A11y: il bottone usa `disabled` nativo, quindi
+ * è fuori dal tab order — su un elemento non focusabile `aria-describedby`/`title` non verrebbero annunciati,
+ * perciò il perché vive nel `<p id={hintId}>` visibile, leggibile dallo screen reader in scorrimento lineare.
  */
 export function IstatAutoSubmitButton({ ready, hintId }: { ready: boolean; hintId: string }) {
   const hint = ready
@@ -16,15 +17,7 @@ export function IstatAutoSubmitButton({ ready, hintId }: { ready: boolean; hintI
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        disabled
-        aria-disabled="true"
-        aria-describedby={hintId}
-        title={hint}
-      >
+      <Button type="button" size="sm" variant="outline" disabled>
         Invia al portale
       </Button>
       <p id={hintId} className="text-muted-foreground max-w-[18rem] text-right text-xs">
