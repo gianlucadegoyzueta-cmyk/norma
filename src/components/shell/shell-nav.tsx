@@ -1,10 +1,12 @@
 import type { LucideIcon } from "lucide-react";
 import {
   LayoutGrid,
+  LayoutDashboard,
   CalendarCheck,
   ScrollText,
   BarChart3,
   Building2,
+  Coins,
   KeyRound,
   CreditCard,
   Settings,
@@ -16,13 +18,22 @@ import {
 export type NavItem = { key: string; label: string; href: string; icon: LucideIcon };
 
 export const NAV: { heading?: string; items: NavItem[] }[] = [
-  { items: [{ key: "dashboard", label: "Dashboard", href: "/dashboard", icon: LayoutGrid }] },
+  {
+    items: [
+      { key: "dashboard", label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
+      // Vista agenzia multi-immobile per i PM (#117). Resta raggiungibile dalla sidebar
+      // ora che la quicknav del vecchio layout è stata rimossa.
+      { key: "agency", label: "Strutture", href: "/agency", icon: LayoutDashboard },
+    ],
+  },
   {
     heading: "Adempimenti",
     items: [
       { key: "stays", label: "Soggiorni", href: "/stays", icon: CalendarCheck },
       { key: "schedine", label: "Schedine", href: "/schedine", icon: ScrollText },
       { key: "istat", label: "Movimento ISTAT", href: "/istat", icon: BarChart3 },
+      // Tassa di soggiorno: pilastro Turismo, raggiungibile dalla sidebar (era nella quicknav).
+      { key: "tourist-tax", label: "Tassa di soggiorno", href: "/tourist-tax", icon: Coins },
     ],
   },
   {

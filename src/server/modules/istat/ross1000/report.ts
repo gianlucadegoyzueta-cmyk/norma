@@ -80,11 +80,15 @@ export async function loadRoss1000Report(
     missing.push({ field: "lettidisponibili", scope: "STRUTTURA" });
   if (!property.ross1000Code) missing.push({ field: "codice", scope: "STRUTTURA" });
 
+  // Soggiorni che SI SOVRAPPONGONO al periodo (incl. quelli a cavallo dell'intero mese o ancora
+  // aperti, iniziati prima): l'aggregato calcola l'occupazione notte-per-notte e li richiede tutti.
+  // Gli arrivi/partenze restano conteggiati solo se cadono nel periodo (vedi computeMovimenti).
   const stays = await prisma.stay.findMany({
     where: {
       organizationId: input.organizationId,
       propertyId: input.propertyId,
-      OR: [{ arrivalDate: { gte: start, lt: end } }, { departureDate: { gte: start, lt: end } }],
+      arrivalDate: { lt: end },
+      OR: [{ departureDate: { gte: start } }, { departureDate: null }],
     },
     select: {
       id: true,

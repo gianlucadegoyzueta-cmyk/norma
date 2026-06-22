@@ -95,4 +95,28 @@ describe("export CSV", () => {
     expect(rows[5]).toBe('"Attico; centro";;s2;1;6,00'); // CIN vuoto + campo con ";" quotato
     expect(rows[6]).toBe("TOTALE;;;;18,00");
   });
+
+  it("con servizio Norma applicato: aggiunge fee e netto comune in coda", () => {
+    const csv = toDeclarationCsv({
+      comuneName: "Roma",
+      periodLabel: "Maggio 2026",
+      totalCents: 1800,
+      fee: { takeRateBps: 250, normaFeeCents: 45, comuneNetCents: 1755 },
+      lines: [{ propertyName: "Bilocale", stayId: "s1", taxedNights: 3, amountCents: 1800 }],
+    });
+    const rows = csv.split("\r\n");
+    expect(rows).toContain("Servizio Norma (2,5%);0,45");
+    expect(rows).toContain("Netto da versare al comune;17,55");
+  });
+
+  it("senza fee: nessuna riga aggiuntiva (retrocompatibile)", () => {
+    const csv = toDeclarationCsv({
+      comuneName: "Roma",
+      periodLabel: "Maggio 2026",
+      totalCents: 600,
+      lines: [{ propertyName: "Bilocale", stayId: "s1", taxedNights: 1, amountCents: 600 }],
+    });
+    expect(csv).not.toContain("Servizio Norma");
+    expect(csv).not.toContain("Netto da versare");
+  });
 });

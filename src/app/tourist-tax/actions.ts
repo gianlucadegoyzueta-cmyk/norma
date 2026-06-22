@@ -7,6 +7,7 @@ import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { cinForDeclarationExport } from "@/server/modules/cin/domain/cin";
 import { periodLabel } from "@/server/modules/tourist-tax/domain/period";
+import type { DeclarationExport } from "@/server/modules/tourist-tax/domain/export-csv";
 import { toDeclarationPdf } from "@/server/modules/tourist-tax/domain/export-pdf";
 import { PrismaTouristTaxConfigRepository } from "@/server/modules/tourist-tax/adapters/PrismaTouristTaxConfigRepository";
 import { PrismaTouristTaxDeclarationRepository } from "@/server/modules/tourist-tax/adapters/PrismaTouristTaxDeclarationRepository";
@@ -105,10 +106,20 @@ async function loadDeclarationExport(declarationId: string, orgId: string) {
     ]),
   );
 
-  const exportData = {
+  const exportData: DeclarationExport = {
     comuneName: comune?.name ?? decl.comuneId,
     periodLabel: periodLabel(decl.period),
     totalCents: decl.amountCents,
+    // Ripartizione servizio Norma: inclusa solo se una take-rate è stata applicata.
+    ...(decl.normaTakeRateBps > 0
+      ? {
+          fee: {
+            takeRateBps: decl.normaTakeRateBps,
+            normaFeeCents: decl.normaFeeCents,
+            comuneNetCents: decl.comuneNetCents,
+          },
+        }
+      : {}),
     lines: lines.map((l) => ({
       propertyName: l.propertyName,
       cin: cinByStay.get(l.stayId) ?? null,

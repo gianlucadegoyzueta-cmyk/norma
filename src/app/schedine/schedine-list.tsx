@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { SchedinaStatus } from "@prisma/client";
 import { isOverdue } from "@/lib/schedina-status";
+import { schedinaStatusDisplay } from "@/lib/schedina-status-display";
 import { cn } from "@/lib/utils";
 import { ReopenNeedsReviewButton } from "@/components/reopen-needs-review-button";
 import { ReopenRejectedButton } from "@/components/reopen-rejected-button";
@@ -12,6 +13,8 @@ import { mapAlloggiatiError } from "./error-codes";
 // SOLO presentazione: l'invio irreversibile vive in CredentialOutboxControls (altrove, intatto).
 // Qui ci sono solo lo stato, la scadenza e le azioni di RI-APERTURA (reversibili) preservate
 // byte-per-byte dalla versione a card.
+// Lo stato è reso dalla sorgente UNICA `schedinaStatusDisplay` (#111): niente mappa duplicata,
+// così NEEDS_REVIEW resta "Da rivedere" (err) e non torna il bug "No schedina".
 type SchedinaRow = {
   id: string;
   status: SchedinaStatus;
@@ -21,16 +24,6 @@ type SchedinaRow = {
   deadlineAt: Date;
   lastErrorCod: string | null;
   lastErrorDes: string | null;
-};
-
-// Etichetta + classe badge Concierge per ogni stato (condivisa con la pagina Schedine).
-export const SCHEDINA_STATUS: Record<SchedinaStatus, { text: string; cmx: string }> = {
-  PENDING: { text: "Da inviare", cmx: "cmx-badge-go" },
-  SENDING: { text: "In invio", cmx: "cmx-badge-wait" },
-  ACQUIRED: { text: "Acquisita", cmx: "cmx-badge-ok" },
-  REJECTED: { text: "Respinta", cmx: "cmx-badge-err" },
-  UNVERIFIED: { text: "Da verificare", cmx: "cmx-badge-wait" },
-  NEEDS_REVIEW: { text: "Da rivedere", cmx: "cmx-badge-wait" },
 };
 
 const dateTimeFmt = new Intl.DateTimeFormat("it-IT", {
@@ -144,8 +137,8 @@ export function SchedineList({
 
                   {/* Stato */}
                   <div className="w-28 shrink-0">
-                    <span className={cn("cmx-badge", SCHEDINA_STATUS[s.status].cmx)}>
-                      {SCHEDINA_STATUS[s.status].text}
+                    <span className={cn("cmx-badge", schedinaStatusDisplay(s.status).badgeClass)}>
+                      {schedinaStatusDisplay(s.status).label}
                     </span>
                   </div>
 

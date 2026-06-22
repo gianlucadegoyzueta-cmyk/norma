@@ -13,6 +13,9 @@
 
 export type RegionalStatus = "AUTO" | "FILE" | "ASSISTITO";
 
+/** Serializer di formato implementati in Norma. Aggiungere qui ogni nuovo tracciato regionale. */
+export type RegionSerializerId = "ross1000-xml" | "spot-xml" | "turismatica-c59";
+
 export interface RegionMovement {
   /** Id interno regione / provincia autonoma. */
   regionId: string;
@@ -21,7 +24,7 @@ export interface RegionMovement {
   /** Sistema regionale di rilevazione. */
   system: string;
   /** Serializer di formato implementato; null = nessuno → ASSISTITO. */
-  serializerId: "ross1000-xml" | null;
+  serializerId: RegionSerializerId | null;
   status: RegionalStatus;
   note?: string;
 }
@@ -36,6 +39,34 @@ const ross1000 = (
   label,
   system,
   serializerId: "ross1000-xml",
+  status: "FILE",
+  note,
+});
+
+const spotXml = (
+  regionId: string,
+  label: string,
+  system: string,
+  note?: string,
+): RegionMovement => ({
+  regionId,
+  label,
+  system,
+  serializerId: "spot-xml",
+  status: "FILE",
+  note,
+});
+
+const turismaticaC59 = (
+  regionId: string,
+  label: string,
+  system: string,
+  note?: string,
+): RegionMovement => ({
+  regionId,
+  label,
+  system,
+  serializerId: "turismatica-c59",
   status: "FILE",
   note,
 });
@@ -79,7 +110,21 @@ export const REGION_MOVEMENT: Record<string, RegionMovement> = {
   calabria: ross1000("calabria", "Calabria", "Ross1000 (SIRDAT)"),
   sardegna: ross1000("sardegna", "Sardegna", "Ross1000 (ex SIRED)"),
 
-  // --- Cluster B/C: formato non integrato → ASSISTITO (numeri pronti dal report CSV) ---
+  // --- Cluster B: formato file proprietario implementato → FILE ---
+  puglia: spotXml(
+    "puglia",
+    "Puglia",
+    "SPOT (InnovaPuglia)",
+    "File XML SPOT generato da Norma; upload manuale dell'host sul portale.",
+  ),
+  umbria: turismaticaC59(
+    "umbria",
+    "Umbria",
+    "Turismatica / TOLM",
+    "File .txt C/59 (uno per giorno) generato da Norma; upload manuale via SPID sul portale.",
+  ),
+
+  // --- Cluster B/C: formato non ancora integrato → ASSISTITO (numeri pronti dal report CSV) ---
   "valle-aosta": assistito(
     "valle-aosta",
     "Valle d'Aosta",
@@ -104,19 +149,17 @@ export const REGION_MOVEMENT: Record<string, RegionMovement> = {
     "Rilevazione ASTAT (ecosistema LTS)",
     "Possibile certificazione software richiesta. Da verificare.",
   ),
-  umbria: assistito("umbria", "Umbria", "Turismatica / TOLM", "File .txt C/59: serializer futuro."),
   campania: assistito(
     "campania",
     "Campania",
     "Sinfonia Turismo SMART",
     "Web API: candidata a canale AUTO futuro.",
   ),
-  puglia: assistito("puglia", "Puglia", "SPOT (InnovaPuglia)", "Upload XML: serializer futuro."),
   sicilia: assistito(
     "sicilia",
     "Sicilia",
-    "Osservatorio Turistico Regionale",
-    "Tracciato record: serializer futuro.",
+    "Osservatorio Turistico Regionale (WebAPI PMS)",
+    "Serializer body XML pronto (sicilia/tracciato-xml.ts); trasmissione AUTO gated su credenziali UTENTE PMS + ok invio reale.",
   ),
 };
 

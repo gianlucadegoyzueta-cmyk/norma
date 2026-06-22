@@ -6,6 +6,8 @@ import type { TaxDeclarationStatus, TaxRemittanceMode } from "@prisma/client";
 import { computeTouristTax } from "../domain/calculator";
 import { assertValidDeclarationTransition, isDeclarationRecomputable } from "../domain/declaration";
 import { periodBounds } from "../domain/period";
+import { computeNormaFee } from "../domain/take-rate";
+import { resolveTakeRateBps } from "../domain/take-rate-config";
 import type { TouristTaxConfigRepository } from "../ports/TouristTaxConfigRepository";
 import type {
   DeclarationLineInput,
@@ -53,6 +55,8 @@ export class TouristTaxDeclarationService {
     const lines: DeclarationLineInput[] = [];
     let total = 0;
     let skippedNoRule = 0;
+    // Override take-rate del comune: lo prendiamo dalla regola applicata (stabile per versione).
+    let comuneTakeRateBps: number | null = null;
 
     for (const s of stays) {
       const rule = await this.configs.findRuleForDate(s.comuneId, s.arrivalDate);
@@ -60,6 +64,7 @@ export class TouristTaxDeclarationService {
         skippedNoRule += 1;
         continue; // soggiorno senza regola: NON incluso (mai importi inventati)
       }
+      if (rule.normaTakeRateBps !== undefined) comuneTakeRateBps = rule.normaTakeRateBps;
       const result = computeTouristTax(
         {
           arrivalDate: s.arrivalDate,
@@ -88,11 +93,20 @@ export class TouristTaxDeclarationService {
       return { kind: "NO_RULE", comuneId: input.comuneId };
     }
 
+    // Commissione Norma sul LORDO totale. Precedenza: comune → default org → 0 (nessuna commissione).
+    // Snapshot congelato sulla dichiarazione: nessun denaro reale è movimentato (gate del founder).
+    const orgDefaultBps = await this.configs.getOrgTakeRateBps(input.organizationId);
+    const takeRate = resolveTakeRateBps({ comuneBps: comuneTakeRateBps, orgDefaultBps });
+    const fee = computeNormaFee(total, takeRate.bps);
+
     const declaration = await this.declarations.upsertDeclarationWithLines({
       organizationId: input.organizationId,
       comuneId: input.comuneId,
       period: input.period,
       amountCents: total,
+      normaTakeRateBps: fee.takeRateBps,
+      normaFeeCents: fee.normaFeeCents,
+      comuneNetCents: fee.comuneNetCents,
       lines,
     });
     return { kind: "OK", declaration, staysCount: stays.length, skippedNoRule };

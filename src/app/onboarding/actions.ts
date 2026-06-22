@@ -227,7 +227,17 @@ export async function setStepAction(step: number): Promise<void> {
   await upsertProgress(prisma, ctx.current.organizationId, { currentStep: clamped });
 }
 
-/** Step finale: marca l'onboarding concluso e porta alla destinazione scelta. */
+/**
+ * Step finale: marca l'onboarding concluso e porta alla destinazione scelta. Le destinazioni
+ * riflettono il funnel dati-in (il primo immobile esiste già): collegare il calendario iCal,
+ * creare un soggiorno a mano, o entrare in dashboard. Lista bianca di target → niente open-redirect.
+ */
+const FINISH_TARGETS: Record<string, string> = {
+  stays: "/stays",
+  properties: "/properties",
+  dashboard: "/dashboard",
+};
+
 export async function finishOnboardingAction(
   _prev: WizardActionState | null,
   formData: FormData,
@@ -235,10 +245,10 @@ export async function finishOnboardingAction(
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
 
-  const target = String(formData.get("target") ?? "dashboard");
+  const targetKey = String(formData.get("target") ?? "dashboard");
   await upsertProgress(prisma, ctx.current.organizationId, {
     completedAt: new Date(),
     currentStep: 4,
   });
-  redirect(target === "stays" ? "/stays" : "/dashboard");
+  redirect(FINISH_TARGETS[targetKey] ?? "/dashboard");
 }

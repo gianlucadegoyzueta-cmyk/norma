@@ -7,6 +7,8 @@ import { prisma } from "@/server/db";
 import { evaluateCronGate } from "@/server/cron/cron-gate";
 import { ResendEmailSender } from "@/server/modules/notifications";
 import { loadRoss1000Report } from "@/server/modules/istat/ross1000/report";
+import { loadSpotReport } from "@/server/modules/istat/spot/report";
+import { loadUmbriaReport } from "@/server/modules/istat/umbria/report";
 import {
   runMonthlyIstatReminders,
   type ReminderProperty,
@@ -55,8 +57,21 @@ export async function GET(req: Request): Promise<Response> {
             ownerEmail: r.organization.memberships[0]?.user?.email ?? null,
           }));
         },
-        loadRoss1000: (organizationId, propertyId, period) =>
-          loadRoss1000Report(prisma, { organizationId, propertyId, period }),
+        loadReport: (serializerId, ids, period) => {
+          const args = {
+            organizationId: ids.organizationId,
+            propertyId: ids.propertyId,
+            period,
+          };
+          switch (serializerId) {
+            case "ross1000-xml":
+              return loadRoss1000Report(prisma, args);
+            case "spot-xml":
+              return loadSpotReport(prisma, args);
+            case "turismatica-c59":
+              return loadUmbriaReport(prisma, args);
+          }
+        },
         email,
       },
       new Date(),

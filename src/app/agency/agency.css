@@ -1,0 +1,171 @@
+/*
+  Vista AGENZIA (property manager): overview multi-immobile dentro il guscio `.cmx`
+  (ConciergePage). Riusa i token "carta" già definiti in concierge.css (--carta, --inchiostro,
+  --hairline, --terracotta, --salvia…). Stili nuovi SOLO per ciò che la pagina aggiunge: la
+  griglia KPI statica, le righe di drill-down con il puntino di attenzione, lo stato attivo dello
+  switcher. Niente animazioni coreografate: la pagina è informativa, non scenografica.
+  A11y: focus-visible su ogni elemento interattivo, e nessuna transizione con reduced-motion.
+*/
+
+/* --- KPI d'agenzia: griglia statica, 4 colonne, stessa carta dei KPI dashboard --- */
+.agency-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 0 0 8px;
+}
+.agency-kpi {
+  background: var(--carta);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  padding: 20px 22px;
+  box-shadow: 0 6px 22px rgba(33, 28, 21, 0.06);
+}
+.agency-kpi-value {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.05;
+  color: var(--inchiostro);
+}
+.agency-kpi-value[data-tone="alert"] {
+  color: var(--terracotta-dark);
+}
+.agency-kpi-label {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--soft);
+  margin-top: 6px;
+}
+.agency-kpi-hint {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  /* A11y: --soft (#5b5347 ≈ 7.19:1 su carta) invece di --salvia (#6b7a5e ≈ 4.36:1, sotto AA a
+     11.5px). Stesso registro sobrio, contrasto conforme. */
+  color: var(--soft);
+  margin-top: 8px;
+}
+
+/* --- Riga di drill-down per immobile --- */
+.agency-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--carta);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  padding: 16px 20px;
+  transition:
+    transform 0.25s var(--ease),
+    box-shadow 0.25s var(--ease),
+    border-color 0.25s var(--ease);
+}
+.agency-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(33, 28, 21, 0.1);
+}
+.agency-row + .agency-row {
+  margin-top: 10px;
+}
+.agency-row[data-attention="true"] {
+  border-color: rgba(188, 75, 43, 0.3);
+}
+.agency-row-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 8px;
+  margin: -4px;
+  padding: 4px;
+  outline: none;
+}
+.agency-row-link:focus-visible {
+  outline: 2px solid var(--terracotta);
+  outline-offset: 2px;
+}
+.agency-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 99px;
+  flex-shrink: 0;
+  background: var(--salvia);
+}
+.agency-dot[data-attention="true"] {
+  background: var(--terracotta);
+}
+.agency-row-main {
+  min-width: 0;
+}
+.agency-row-title {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--inchiostro);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.agency-row-meta {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--soft);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.agency-row-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+/* A11y: il badge "ISTAT pronta" (cmx-badge-ok) usa --salvia su --salvia-soft (~4.0:1 a 12px,
+   sotto AA). Scuriamo il SOLO testo a un verde-salvia più scuro (≈7.46:1) limitatamente alla vista
+   agenzia: niente modifiche al token condiviso, coerenza visiva preservata altrove. */
+.agency-row-badges .cmx-badge-ok {
+  color: #43503a;
+}
+
+/* --- Stato attivo dello switcher di proprietà (pill `.cmx-sc`) --- */
+.cmx-sc[data-active="true"] {
+  border-color: var(--terracotta);
+  color: var(--terracotta-dark);
+  font-weight: 600;
+}
+.cmx-sc:focus-visible {
+  outline: 2px solid var(--terracotta);
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .agency-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .agency-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .agency-row-badges {
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agency-row {
+    transition: none;
+  }
+  .agency-row:hover {
+    transform: none;
+  }
+}

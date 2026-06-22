@@ -5,6 +5,7 @@
 
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import type { DeclarationExport } from "./export-csv";
+import { formatTakeRateBps } from "./take-rate";
 import { formatEuroCents } from "../services/estimate.service";
 
 const A4 = { w: 595.28, h: 841.89 };
@@ -98,15 +99,39 @@ export async function toDeclarationPdf(d: DeclarationExport): Promise<Uint8Array
     y -= 14;
   }
 
-  // Totale
+  // Totale lordo riscosso
   y -= 6;
-  text("TOTALE", COLS[2].x, y, { size: 11, font: bold, align: "right" });
+  const hasFee = !!d.fee && d.fee.takeRateBps > 0;
+  text(hasFee ? "LORDO RISCOSSO" : "TOTALE", COLS[2].x, y, {
+    size: 11,
+    font: bold,
+    align: "right",
+  });
   text(euro(d.totalCents), COLS[3].x, y, {
     size: 11,
     font: bold,
-    color: TERRACOTTA,
+    color: hasFee ? INK : TERRACOTTA,
     align: "right",
   });
+
+  // Ripartizione servizio Norma (solo se applicata): fee trattenuta + netto al comune
+  if (hasFee && d.fee) {
+    y -= 18;
+    text(`Servizio Norma (${formatTakeRateBps(d.fee.takeRateBps)})`, COLS[2].x, y, {
+      size: 10,
+      color: SOFT,
+      align: "right",
+    });
+    text(`- ${euro(d.fee.normaFeeCents)}`, COLS[3].x, y, { size: 10, color: SOFT, align: "right" });
+    y -= 18;
+    text("NETTO DA VERSARE AL COMUNE", COLS[2].x, y, { size: 11, font: bold, align: "right" });
+    text(euro(d.fee.comuneNetCents), COLS[3].x, y, {
+      size: 11,
+      font: bold,
+      color: TERRACOTTA,
+      align: "right",
+    });
+  }
 
   // Piè di pagina
   text(

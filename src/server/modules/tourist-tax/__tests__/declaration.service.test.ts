@@ -14,13 +14,17 @@ const d = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
 const ORG = "org_1";
 const COMUNE = "c_roma";
 
-function configRepo(rule: TouristTaxRule | null): TouristTaxConfigRepository {
+function configRepo(
+  rule: TouristTaxRule | null,
+  orgTakeRateBps: number | null = null,
+): TouristTaxConfigRepository {
   return {
     findRuleForDate: async () => rule,
     listVersions: async () => [],
     upsertVersion: async () => {
       throw new Error("non usato");
     },
+    getOrgTakeRateBps: async () => orgTakeRateBps,
   };
 }
 
@@ -34,6 +38,9 @@ function declRepo(stays: StayInPeriod[], seed?: Partial<DeclarationRecord>) {
       comuneId: COMUNE,
       period: "2024-05",
       amountCents: 0,
+      normaTakeRateBps: 0,
+      normaFeeCents: 0,
+      comuneNetCents: 0,
       status: "DRAFT",
       remittanceMode: "MANUAL_EXPORT",
       ...seed,
@@ -49,6 +56,9 @@ function declRepo(stays: StayInPeriod[], seed?: Partial<DeclarationRecord>) {
         comuneId: input.comuneId,
         period: input.period,
         amountCents: input.amountCents,
+        normaTakeRateBps: input.normaTakeRateBps,
+        normaFeeCents: input.normaFeeCents,
+        comuneNetCents: input.comuneNetCents,
         status: store.get("d1")?.status ?? "DRAFT",
         remittanceMode: "MANUAL_EXPORT",
       };
@@ -111,6 +121,65 @@ describe("TouristTaxDeclarationService.buildOrRecompute", () => {
       expect(out.staysCount).toBe(2);
     }
     expect(dr.lastUpsert?.lines).toHaveLength(2);
+  });
+
+  it("take-rate org di default applicata sul lordo (250 bps = 2,5% su 2400 → fee 60, netto 2340)", async () => {
+    const stays = [
+      stay("s1", "2024-05-01", "2024-05-03", 1),
+      stay("s2", "2024-05-10", "2024-05-11", 2),
+    ];
+    const dr = declRepo(stays);
+    const svc = new TouristTaxDeclarationService(dr.repo, configRepo(ROMA.rule, 250));
+    const out = await svc.buildOrRecompute({
+      organizationId: ORG,
+      comuneId: COMUNE,
+      period: "2024-05",
+    });
+    expect(out.kind).toBe("OK");
+    if (out.kind === "OK") {
+      expect(out.declaration.amountCents).toBe(2400);
+      expect(out.declaration.normaTakeRateBps).toBe(250);
+      expect(out.declaration.normaFeeCents).toBe(60); // round(2400 × 250 / 10000)
+      expect(out.declaration.comuneNetCents).toBe(2340); // lordo − fee
+      // Invariante: fee + netto = lordo
+      expect(out.declaration.normaFeeCents + out.declaration.comuneNetCents).toBe(
+        out.declaration.amountCents,
+      );
+    }
+  });
+
+  it("override del comune (rule.normaTakeRateBps) vince sul default org", async () => {
+    const dr = declRepo([stay("s1", "2024-05-01", "2024-05-03", 1)]); // 2×600 = 1200
+    const ruleWithFee: TouristTaxRule = { ...ROMA.rule, normaTakeRateBps: 500 }; // 5%
+    const svc = new TouristTaxDeclarationService(dr.repo, configRepo(ruleWithFee, 250));
+    const out = await svc.buildOrRecompute({
+      organizationId: ORG,
+      comuneId: COMUNE,
+      period: "2024-05",
+    });
+    expect(out.kind).toBe("OK");
+    if (out.kind === "OK") {
+      expect(out.declaration.amountCents).toBe(1200);
+      expect(out.declaration.normaTakeRateBps).toBe(500); // comune, non 250
+      expect(out.declaration.normaFeeCents).toBe(60); // round(1200 × 500 / 10000)
+      expect(out.declaration.comuneNetCents).toBe(1140);
+    }
+  });
+
+  it("nessuna take-rate configurata → fee 0, netto = lordo", async () => {
+    const dr = declRepo([stay("s1", "2024-05-01", "2024-05-03", 1)]);
+    const svc = new TouristTaxDeclarationService(dr.repo, configRepo(ROMA.rule));
+    const out = await svc.buildOrRecompute({
+      organizationId: ORG,
+      comuneId: COMUNE,
+      period: "2024-05",
+    });
+    expect(out.kind).toBe("OK");
+    if (out.kind === "OK") {
+      expect(out.declaration.normaTakeRateBps).toBe(0);
+      expect(out.declaration.normaFeeCents).toBe(0);
+      expect(out.declaration.comuneNetCents).toBe(out.declaration.amountCents);
+    }
   });
 
   it("NO_RULE: soggiorni presenti ma nessuna regola → segnala, non inventa importi", async () => {

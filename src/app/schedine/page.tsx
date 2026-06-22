@@ -8,16 +8,17 @@ import { PrismaCredentialRepository, PrismaSchedinaRepository } from "@/server/m
 import { ConciergePage } from "@/components/concierge/concierge-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isOverdue } from "@/lib/schedina-status";
+import { schedinaStatusDisplay } from "@/lib/schedina-status-display";
 import { cn } from "@/lib/utils";
 import { AutoSendToggle } from "./AutoSendToggle";
 import { CredentialOutboxControls } from "./CredentialOutboxControls";
 import { ReconcileControls } from "./ReconcileControls";
-import { SchedineList, SCHEDINA_STATUS } from "./schedine-list";
+import { SchedineList } from "./schedine-list";
 
 export const metadata: Metadata = { title: "Schedine" };
 export const dynamic = "force-dynamic";
 
-// Priorità d'azione: ciò che richiede l'host in cima, l'acquisito (fatto) in fondo.
+// Priorità d'azione della lista: ciò che richiede l'host in cima, l'acquisito (fatto) in fondo.
 const STATUS_PRIORITY: SchedinaStatus[] = [
   "REJECTED",
   "NEEDS_REVIEW",
@@ -25,6 +26,16 @@ const STATUS_PRIORITY: SchedinaStatus[] = [
   "UNVERIFIED",
   "SENDING",
   "ACQUIRED",
+];
+
+// L'ordine dei chip di riepilogo in testa (etichetta + classe badge dal display condiviso #111).
+const SUMMARY_ORDER: SchedinaStatus[] = [
+  "PENDING",
+  "SENDING",
+  "ACQUIRED",
+  "REJECTED",
+  "UNVERIFIED",
+  "NEEDS_REVIEW",
 ];
 
 export default async function SchedinePage() {
@@ -108,17 +119,21 @@ export default async function SchedinePage() {
     >
       {schedine.length > 0 && (
         <div className="cmx-section flex flex-wrap gap-2" style={{ marginTop: 0 }}>
+          {/* Urgenza in testa (#105), poi i conteggi per stato dal display unico (#111). */}
           {overdueCount > 0 && (
             <span className="cmx-badge cmx-badge-err inline-flex items-center gap-1">
               <AlertTriangle className="size-3" />
               {overdueCount} oltre scadenza
             </span>
           )}
-          {STATUS_PRIORITY.filter((st) => counts[st]).map((st) => (
-            <span key={st} className={cn("cmx-badge", SCHEDINA_STATUS[st].cmx)}>
-              {counts[st]} {SCHEDINA_STATUS[st].text.toLowerCase()}
-            </span>
-          ))}
+          {SUMMARY_ORDER.filter((st) => counts[st]).map((st) => {
+            const d = schedinaStatusDisplay(st);
+            return (
+              <span key={st} className={cn("cmx-badge", d.badgeClass)}>
+                {counts[st]} {d.label.toLowerCase()}
+              </span>
+            );
+          })}
         </div>
       )}
 

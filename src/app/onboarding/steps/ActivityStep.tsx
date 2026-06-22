@@ -86,12 +86,19 @@ export function ActivityStep({
           />
         </Field>
 
-        <fieldset className="grid gap-2">
+        <fieldset
+          className="grid gap-2"
+          aria-invalid={fe?.userType ? true : undefined}
+          aria-describedby={fe?.userType ? "ob-usertype-error" : undefined}
+        >
           <legend className="mb-1 text-sm leading-none font-medium">Tipo di attività</legend>
           {USER_TYPES.map((o) => (
             <label
               key={o.value}
-              className="has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:focus-visible]:ring-ring border-border flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors has-[:focus-visible]:ring-2"
+              className={cn(
+                "has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:focus-visible]:ring-ring flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors has-[:focus-visible]:ring-2",
+                fe?.userType ? "border-destructive" : "border-border",
+              )}
             >
               <input
                 type="radio"
@@ -107,7 +114,7 @@ export function ActivityStep({
             </label>
           ))}
           {fe?.userType ? (
-            <p role="alert" className="text-destructive text-xs">
+            <p id="ob-usertype-error" role="alert" className="text-destructive text-xs">
               {fe.userType}
             </p>
           ) : null}

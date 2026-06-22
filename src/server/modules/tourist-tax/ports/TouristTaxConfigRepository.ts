@@ -30,4 +30,9 @@ export interface TouristTaxConfigRepository {
   listVersions(comuneId: string): Promise<TouristTaxConfigVersion[]>;
   /** Upsert idempotente di una versione (chiave logica: comuneId + validFrom). */
   upsertVersion(input: UpsertTouristTaxConfigInput): Promise<TouristTaxConfigVersion>;
+  /**
+   * Take-rate di DEFAULT dell'organizzazione, in punti base (null = non impostata).
+   * Usata come fallback quando la regola del comune non specifica una propria take-rate.
+   */
+  getOrgTakeRateBps(organizationId: string): Promise<number | null>;
 }

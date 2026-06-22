@@ -92,6 +92,9 @@ export function ConciergeScene({
           </div>
 
           <ConciergeHero kicker={kicker} lines={lines} sub={sub} />
+          {/* La navigazione rapida del vecchio layout è sostituita dalla sidebar persistente
+              dell'AppShell (#105): copre Strutture/Agency, Soggiorni, Schedine, ISTAT, Immobili,
+              Credenziali, Tassa di soggiorno. KPI come striscia di contesto dentro il board. */}
           <ConciergeBoard
             proposals={proposals}
             agenda={agenda}

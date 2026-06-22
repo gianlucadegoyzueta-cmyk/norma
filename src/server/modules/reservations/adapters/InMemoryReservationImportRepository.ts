@@ -89,6 +89,10 @@ export class InMemoryReservationImportRepository implements ReservationImportRep
     return toView(r);
   }
 
+  async listAll(): Promise<{ id: string; organizationId: string }[]> {
+    return [...this.imports.values()].map((r) => ({ id: r.id, organizationId: r.organizationId }));
+  }
+
   async listImportedStays(importId: string): Promise<ExistingImportedStay[]> {
     return [...this.stays.values()]
       .filter((s) => s.reservationImportId === importId)

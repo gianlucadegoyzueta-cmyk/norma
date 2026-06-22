@@ -56,6 +56,38 @@ describe("ReservationImportService", () => {
     await expect(service.addImport(ORG, PROP, "non-un-url")).rejects.toThrow(ReservationsError);
   });
 
+  it("syncAllFeeds: re-sync di tutti i feed (cross-org), conta gli esiti", async () => {
+    fetcher.body = feed([{ uid: "A", start: "20260701", end: "20260703" }]);
+    await service.addImport("orgA", "propA", "https://www.airbnb.com/calendar/ical/a.ics");
+    await service.addImport("orgB", "propB", "https://www.booking.com/ical/b.ics");
+    const res = await service.syncAllFeeds();
+    expect(res.feeds).toBe(2);
+    expect(res.ok).toBe(2);
+    expect(res.failed).toBe(0);
+    expect(res.results.created).toBe(2); // un soggiorno per feed
+  });
+
+  it("syncAllFeeds: un feed rotto non blocca gli altri", async () => {
+    const localRepo = new InMemoryReservationImportRepository(
+      () => new Date("2026-06-10T08:00:00Z"),
+    );
+    const okUrl = "https://www.airbnb.com/calendar/ical/ok.ics";
+    const badUrl = "https://www.airbnb.com/calendar/ical/bad.ics";
+    const localFetcher: ICalFetcher = {
+      async fetch(url: string) {
+        if (url === badUrl) throw new ICalFetchError("rete giù");
+        return feed([{ uid: "X", start: "20260701", end: "20260703" }]);
+      },
+    };
+    const localService = new ReservationImportService(localRepo, localFetcher);
+    await localService.addImport("orgA", "propA", okUrl);
+    await localService.addImport("orgA", "propB", badUrl);
+    const res = await localService.syncAllFeeds();
+    expect(res.feeds).toBe(2);
+    expect(res.ok).toBe(1);
+    expect(res.failed).toBe(1);
+  });
+
   it("rifiuta lo stesso URL due volte sullo stesso immobile", async () => {
     const url = "https://www.airbnb.com/calendar/ical/1.ics";
     await service.addImport(ORG, PROP, url);

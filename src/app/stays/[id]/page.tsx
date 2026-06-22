@@ -19,6 +19,7 @@ import { TouristTaxEstimateService } from "@/server/modules/tourist-tax/services
 import { ConciergePage } from "@/components/concierge/concierge-page";
 import { UnverifiedNote } from "@/components/unverified-note";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { NO_SCHEDINA_LABEL, schedinaStatusDisplayOrNull } from "@/lib/schedina-status-display";
 import { StayTimeline } from "./StayTimeline";
 import { CheckinLinkButton } from "./CheckinLinkButton";
 import { SendCheckinEmailButton } from "./SendCheckinEmailButton";
@@ -42,14 +43,6 @@ const TIPO_LABEL: Record<TipoAlloggiato, string> = {
   CAPO_GRUPPO: "Capo gruppo",
   FAMILIARE: "Familiare",
   MEMBRO_GRUPPO: "Membro gruppo",
-};
-
-const SCHEDINA_BADGE: Record<string, { text: string; cmx: string }> = {
-  PENDING: { text: "Da inviare", cmx: "cmx-badge-wait" },
-  SENDING: { text: "In invio", cmx: "cmx-badge-wait" },
-  ACQUIRED: { text: "Acquisita", cmx: "cmx-badge-ok" },
-  REJECTED: { text: "Respinta", cmx: "cmx-badge-err" },
-  UNVERIFIED: { text: "Da verificare", cmx: "cmx-badge-wait" },
 };
 
 export default async function StayDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -355,7 +348,7 @@ function GuestRow({
   nested?: boolean;
   rejected?: { schedinaId: string; message: string };
 }) {
-  const badge = guest.schedinaStatus ? SCHEDINA_BADGE[guest.schedinaStatus] : null;
+  const badge = schedinaStatusDisplayOrNull(guest.schedinaStatus);
   return (
     <div className="grid gap-1">
       <div className="flex items-center justify-between gap-3">
@@ -369,9 +362,9 @@ function GuestRow({
           </span>
         </div>
         {badge ? (
-          <span className={`cmx-badge ${badge.cmx} shrink-0`}>{badge.text}</span>
+          <span className={`cmx-badge ${badge.badgeClass} shrink-0`}>{badge.label}</span>
         ) : (
-          <span className="cmx-badge cmx-badge-wait shrink-0">No schedina</span>
+          <span className="cmx-badge cmx-badge-wait shrink-0">{NO_SCHEDINA_LABEL}</span>
         )}
       </div>
       {guest.schedinaStatus === "UNVERIFIED" && <UnverifiedNote />}

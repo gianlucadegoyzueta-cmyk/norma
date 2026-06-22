@@ -107,8 +107,10 @@ function ProposalCard({
       style={{ "--i": i } as React.CSSProperties}
       onMouseMove={spot.onMove}
     >
-      <span className="cmx-stamp">FATTO ✓</span>
-      <span className="cmx-ring" />
+      <span className="cmx-stamp" aria-hidden>
+        FATTO ✓
+      </span>
+      <span className="cmx-ring" aria-hidden />
       <div className="cmx-who">
         <div className="cmx-dot" aria-hidden>
           {proposal.emoji}
@@ -192,13 +194,14 @@ export function ConciergeBoard({
 
   return (
     <>
-      {/* DECISIONI — il vero hero della pagina: a tutta larghezza, prima di tutto. */}
-      <section className="cmx-decisions">
-        <div className="cmx-col-h">
+      {/* DECISIONI — il vero hero della pagina (#105): a tutta larghezza, prima di tutto.
+          Struttura semantica + heading collegato (#113). */}
+      <section className="cmx-decisions" aria-labelledby="cmx-h-proposte">
+        <h2 className="cmx-col-h" id="cmx-h-proposte">
           {proposals.length > 0
             ? `Aspettano il tuo via libera (${proposals.length})`
             : "Aspettano il tuo via libera"}
-        </div>
+        </h2>
         {proposals.length === 0 ? (
           <div className="cmx-empty">
             <b>Tutto in ordine.</b> Nessuna proposta in sospeso: quando ci sarà qualcosa da decidere
@@ -218,14 +221,16 @@ export function ConciergeBoard({
 
       {/* SECONDARIO, leggero: cosa arriva · cosa ho fatto stanotte. */}
       <div className="cmx-secondary">
-        <div>
-          <div className="cmx-col-h">In arrivo</div>
+        <section aria-labelledby="cmx-h-agenda">
+          <h2 className="cmx-col-h" id="cmx-h-agenda">
+            In arrivo
+          </h2>
           <div className="cmx-agenda" ref={agendaRef}>
-            <div className="cmx-tl" />
+            <div className="cmx-tl" aria-hidden />
             {agenda.map((ev, idx) => (
               <div className="cmx-ev" key={idx}>
                 <div className="cmx-when">{ev.when}</div>
-                <div className="cmx-node" />
+                <div className="cmx-node" aria-hidden />
                 <div>
                   <div className="cmx-t">{ev.title}</div>
                   <div className="cmx-d">
@@ -241,12 +246,12 @@ export function ConciergeBoard({
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        <div className="cmx-diary">
-          <div className="cmx-col-h" style={{ marginTop: 0 }}>
+        <section className="cmx-diary" aria-labelledby="cmx-h-diario">
+          <h2 className="cmx-col-h" id="cmx-h-diario" style={{ marginTop: 0 }}>
             Fatto stanotte
-          </div>
+          </h2>
           {diary.length === 0 && extraRows.length === 0 ? (
             <div className="cmx-muted">
               Ancora niente stanotte. Appena sincronizzo i calendari o verifico una ricevuta, lo
@@ -257,7 +262,9 @@ export function ConciergeBoard({
               {diary.map((row, idx) => (
                 <div className="cmx-row" key={`d-${idx}`}>
                   <span className="cmx-tm">{row.time}</span>
-                  <span className="cmx-check">✓</span>
+                  <span className="cmx-check" aria-hidden>
+                    ✓
+                  </span>
                   <span>
                     {row.text} — <b>{row.highlight}</b>
                   </span>
@@ -266,7 +273,9 @@ export function ConciergeBoard({
               {extraRows.map((row, idx) => (
                 <div className="cmx-row cmx-new" key={`e-${idx}`}>
                   <span className="cmx-tm">{row.time}</span>
-                  <span className="cmx-check">✓</span>
+                  <span className="cmx-check" aria-hidden>
+                    ✓
+                  </span>
                   <span>
                     <b>{row.text}</b>
                   </span>
@@ -274,7 +283,7 @@ export function ConciergeBoard({
               ))}
             </>
           )}
-        </div>
+        </section>
       </div>
     </>
   );

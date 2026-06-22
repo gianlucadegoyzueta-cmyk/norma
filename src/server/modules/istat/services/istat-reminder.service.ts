@@ -8,8 +8,7 @@
 
 import type { EmailSender } from "../../notifications/ports";
 import { periodLabel, periodOf, transmissionDeadline } from "../ross1000/period";
-import type { Ross1000Outcome } from "../ross1000/report";
-import { regionMovementForProvincia } from "../regional/routing";
+import { regionMovementForProvincia, type RegionSerializerId } from "../regional/routing";
 
 /** Etichette leggibili dei campi mancanti del tracciato (per l'email all'host). */
 const FIELD_LABELS: Record<string, string> = {
@@ -23,6 +22,11 @@ const FIELD_LABELS: Record<string, string> = {
   tipoturismo: "tipo turismo",
   mezzotrasporto: "mezzo di trasporto",
   idcapo: "capogruppo",
+  // campi specifici di altri tracciati (es. SPOT-Puglia)
+  comuneresidenza: "comune di residenza ospite",
+  paeseresidenza: "paese di residenza ospite",
+  postilettodisponibili: "posti letto disponibili",
+  leaderId: "capogruppo",
 };
 
 export interface ReminderProperty {
@@ -33,13 +37,19 @@ export interface ReminderProperty {
   ownerEmail: string | null;
 }
 
+/** Esito minimo che il reminder consuma da un loader regionale (Ross1000, SPOT, …). */
+export type RegionalReportResult =
+  | { kind: "OK" }
+  | { kind: "INCOMPLETE"; missing: { field: string }[] };
+
 export interface IstatReminderDeps {
   listProperties(): Promise<ReminderProperty[]>;
-  loadRoss1000(
-    organizationId: string,
-    propertyId: string,
+  /** Carica/prepara il report del periodo per la struttura, dispatchando sul serializer della regione. */
+  loadReport(
+    serializerId: RegionSerializerId,
+    ids: { organizationId: string; propertyId: string },
     period: string,
-  ): Promise<Ross1000Outcome>;
+  ): Promise<RegionalReportResult>;
   email: EmailSender;
 }
 
@@ -90,12 +100,16 @@ export async function runMonthlyIstatReminders(
 
     const bucket = byOrg.get(p.organizationId) ?? { email: p.ownerEmail, lines: [] };
 
-    if (rm.status === "FILE" && rm.serializerId === "ross1000-xml") {
-      // Isolamento per-struttura: loadRoss1000 può LANCIARE (es. campo fuori vincolo nel tracciato).
+    if (rm.status === "FILE" && rm.serializerId) {
+      // Isolamento per-struttura: loadReport può LANCIARE (es. campo fuori vincolo nel tracciato).
       // Una struttura malformata NON deve abortire il run mensile di tutte le altre.
-      let out;
+      let out: RegionalReportResult;
       try {
-        out = await deps.loadRoss1000(p.organizationId, p.propertyId, period);
+        out = await deps.loadReport(
+          rm.serializerId,
+          { organizationId: p.organizationId, propertyId: p.propertyId },
+          period,
+        );
       } catch {
         res.errored += 1;
         bucket.lines.push({
@@ -109,7 +123,7 @@ export async function runMonthlyIstatReminders(
         res.ready += 1;
         bucket.lines.push({
           kind: "ready",
-          text: `✓ ${p.name} (${rm.label}): file Ross1000 pronto da scaricare e caricare sul portale.`,
+          text: `✓ ${p.name} (${rm.label}): file pronto da scaricare e caricare sul portale.`,
         });
       } else {
         res.incomplete += 1;

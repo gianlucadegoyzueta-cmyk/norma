@@ -162,6 +162,31 @@ function Kpi({ kpi, i }: { kpi: KpiSpec; i: number }) {
   const tilt = useTilt();
   const [open, setOpen] = useState(false);
   const clickable = !!kpi.detail;
+
+  // Il corpo della card è identico nei due casi; cambia solo il contenitore.
+  const body = (
+    <>
+      <Odometer value={kpi.value} prefix={kpi.prefix} suffix={kpi.suffix} />
+      <div className="cmx-l">{kpi.label}</div>
+      <div className={kpi.due ? "cmx-trend cmx-due" : "cmx-trend"}>{kpi.trend}</div>
+      {clickable && (
+        <span className="cmx-kpi-cta" aria-hidden>
+          Riepilogo <span className="cmx-kpi-arrow">→</span>
+        </span>
+      )}
+    </>
+  );
+
+  // Senza drill-down la cifra NON deve sparire dall'albero accessibile: invece di un
+  // <button disabled> (che gli screen reader saltano) usiamo un <div> leggibile.
+  if (!clickable) {
+    return (
+      <div className="cmx-kpi" style={{ "--i": i } as React.CSSProperties}>
+        {body}
+      </div>
+    );
+  }
+
   return (
     <>
       <button
@@ -171,18 +196,10 @@ function Kpi({ kpi, i }: { kpi: KpiSpec; i: number }) {
         style={{ "--i": i } as React.CSSProperties}
         onMouseMove={tilt.onMove}
         onMouseLeave={tilt.onLeave}
-        onClick={clickable ? () => setOpen(true) : undefined}
-        aria-haspopup={clickable ? "dialog" : undefined}
-        disabled={!clickable}
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
       >
-        <Odometer value={kpi.value} prefix={kpi.prefix} suffix={kpi.suffix} />
-        <div className="cmx-l">{kpi.label}</div>
-        <div className={kpi.due ? "cmx-trend cmx-due" : "cmx-trend"}>{kpi.trend}</div>
-        {clickable && (
-          <span className="cmx-kpi-cta" aria-hidden>
-            Riepilogo <span className="cmx-kpi-arrow">→</span>
-          </span>
-        )}
+        {body}
       </button>
       {open && kpi.detail && <KpiSheet detail={kpi.detail} onClose={() => setOpen(false)} />}
     </>
@@ -191,7 +208,7 @@ function Kpi({ kpi, i }: { kpi: KpiSpec; i: number }) {
 
 export function ConciergeKpis({ kpis }: { kpis: KpiSpec[] }) {
   return (
-    <div className="cmx-kpis">
+    <div className="cmx-kpis" role="group" aria-label="Indicatori a colpo d'occhio">
       {kpis.map((kpi, i) => (
         <Kpi key={kpi.label} kpi={kpi} i={i} />
       ))}

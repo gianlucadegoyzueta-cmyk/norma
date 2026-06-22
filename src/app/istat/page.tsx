@@ -7,10 +7,25 @@ import { ConciergePage } from "@/components/concierge/concierge-page";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { IstatExportButton } from "./IstatExportButton";
 import { IstatSubmitButton } from "./IstatSubmitButton";
+import { IstatAutoSubmitButton } from "./IstatAutoSubmitButton";
 import { regionMovementForProvincia } from "@/server/modules/istat/regional/routing";
+import { loadIstatSubmissionReadiness } from "@/server/modules/istat/submission-readiness-loader";
+import type { ReadinessStatus } from "@/server/modules/istat/domain/submission-readiness";
 import { Ross1000ExportButton } from "./Ross1000ExportButton";
+
+/** Mappa lo stato di prontezza al variant del Badge + etichetta IT (presentazionale). */
+const READINESS_BADGE: Record<
+  ReadinessStatus,
+  { variant: "success" | "warning" | "secondary"; label: string }
+> = {
+  READY: { variant: "success", label: "Pronta" },
+  INCOMPLETE: { variant: "warning", label: "Dati mancanti" },
+  ASSISTED: { variant: "secondary", label: "Inserimento manuale" },
+  UNROUTED: { variant: "secondary", label: "Regione da verificare" },
+};
 
 export const metadata: Metadata = { title: "ISTAT" };
 export const dynamic = "force-dynamic";
@@ -52,6 +67,15 @@ export default async function IstatPage({
     select: { id: true, name: true, ross1000Code: true, comune: { select: { provincia: true } } },
     orderBy: { name: "asc" },
   });
+
+  // Prontezza all'invio per struttura: prepara il tracciato della regione e dice cosa manca.
+  // L'invio reale resta GATED (canale stub) → l'affordance "Invia" è sempre disabilitata.
+  const readiness = await loadIstatSubmissionReadiness(
+    prisma,
+    ctx.current.organizationId,
+    period,
+    properties.map((p) => ({ id: p.id, name: p.name, provincia: p.comune.provincia })),
+  );
 
   return (
     <ConciergePage
@@ -147,6 +171,71 @@ export default async function IstatPage({
           ? ` ${approximated} con provenienza stimata dalla cittadinanza (residenza non indicata): valorizza la residenza nell'ospite per un dato preciso.`
           : ""}
       </p>
+
+      <div className="cmx-section" style={{ marginTop: 32 }}>
+        <h2 className="text-sm font-medium">Prontezza all&rsquo;invio per struttura</h2>
+        <p className="text-muted-foreground mt-1 mb-3 text-xs">
+          Per ogni struttura: la regione di competenza, se il movimento del mese è completo e cosa
+          eventualmente manca. L&rsquo;invio automatico al portale è in arrivo: oggi prepari qui e
+          carichi tu il file. <strong>Norma prepara, l&rsquo;invio resta una tua decisione.</strong>
+        </p>
+        {readiness.length === 0 ? (
+          <p className="text-muted-foreground text-xs">Nessuna struttura configurata.</p>
+        ) : (
+          <Card style={{ borderRadius: 18 }}>
+            <CardContent className="p-0">
+              <ul className="divide-border/60 divide-y">
+                {readiness.map((pr) => {
+                  const badge = READINESS_BADGE[pr.readiness.status];
+                  const region = pr.readiness.region;
+                  const hintId = `auto-submit-hint-${pr.propertyId}`;
+                  return (
+                    <li
+                      key={pr.propertyId}
+                      className="flex flex-wrap items-start justify-between gap-3 px-4 py-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate text-sm font-medium">{pr.propertyName}</p>
+                          <Badge variant={badge.variant}>{badge.label}</Badge>
+                        </div>
+                        <p className="text-muted-foreground mt-0.5 text-xs">
+                          {region
+                            ? `${region.label} · ${region.system}`
+                            : "Regione non riconosciuta"}
+                        </p>
+                        {pr.readiness.status === "INCOMPLETE" &&
+                        pr.readiness.missingFields.length > 0 ? (
+                          <p className="text-warning-foreground dark:text-warning mt-1 text-xs">
+                            Mancano: {pr.readiness.missingFields.join(", ")}.
+                          </p>
+                        ) : null}
+                        {pr.readiness.status === "ASSISTED" && region ? (
+                          <p className="text-muted-foreground mt-1 text-xs">
+                            Portale {region.system} non ancora integrato: usa i numeri del report e
+                            inseriscili a mano.
+                          </p>
+                        ) : null}
+                        {pr.errored ? (
+                          <p className="text-destructive mt-1 text-xs">
+                            Dati della struttura/ospiti fuori dai vincoli del tracciato: verificali.
+                          </p>
+                        ) : null}
+                      </div>
+                      {pr.readiness.serializerId ? (
+                        <IstatAutoSubmitButton
+                          ready={pr.readiness.status === "READY"}
+                          hintId={hintId}
+                        />
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       <div className="cmx-section" style={{ marginTop: 32 }}>
         <h2 className="text-sm font-medium">Ross1000 — file XML per struttura</h2>

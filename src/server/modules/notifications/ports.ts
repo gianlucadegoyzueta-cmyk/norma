@@ -5,6 +5,8 @@ export interface EmailMessage {
   to: string;
   subject: string;
   text: string;
+  /** Corpo HTML opzionale. Se assente, il canale invia solo `text` (retrocompatibile). */
+  html?: string;
 }
 
 /** Invio di una singola email transazionale. L'implementazione reale riusa il canale Resend. */

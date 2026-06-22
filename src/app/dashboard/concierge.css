@@ -1042,4 +1042,14 @@
   .cmx-agenda .cmx-tl {
     background-size: 100% 100%;
   }
+  /* Decorazioni in loop: ferme su uno stato di riposo sensato (non sul frame finale del
+     keyframe, che lascerebbe la penna invisibile o il sigillo a metà rotazione). */
+  .cmx-seal-bg svg {
+    animation: none;
+  }
+  .cmx-pen path {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
 }
