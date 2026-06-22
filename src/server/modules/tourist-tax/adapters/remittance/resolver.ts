@@ -20,6 +20,12 @@ export function resolveRemittanceChannel(mode: TaxRemittanceMode): RemittanceCha
       return new PagoPaRemittanceStub();
     case "COMUNE_PORTAL":
       return new ComunePortalRemittanceStub();
+    default: {
+      // Exhaustiveness: se l'enum Prisma cresce e questo switch non viene aggiornato,
+      // TypeScript fallisce QUI in compilazione (assegnazione a never), non a runtime.
+      const _exhaustive: never = mode;
+      throw new Error(`Modalità di versamento non gestita: ${String(_exhaustive)}`);
+    }
   }
 }
 

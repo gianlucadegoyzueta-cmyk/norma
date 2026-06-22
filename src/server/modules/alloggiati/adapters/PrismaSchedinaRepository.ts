@@ -82,18 +82,32 @@ export class PrismaSchedinaRepository implements SchedinaRepository {
     return this.prisma.schedina.findFirst({ where: { id, organizationId }, select: SELECT });
   }
 
-  async listPendingByCredential(credentialId: string): Promise<SchedinaRecord[]> {
+  async listPendingByCredential(
+    credentialId: string,
+    organizationId?: string,
+  ): Promise<SchedinaRecord[]> {
     return this.prisma.schedina.findMany({
+      // ISOLAMENTO: se il chiamante conosce l'org la includiamo nel WHERE → una riga di un'altra org
+      // NON è restituibile, indipendentemente dal credentialId (difesa in profondità by query).
       // Esclude le schedine che hanno esaurito i tentativi: oltre MAX_SEND_ATTEMPTS non si
       // ri-rivendicano più automaticamente (niente retry runaway), restano PENDING ma inerti.
-      where: { credentialId, status: "PENDING", attempts: { lt: MAX_SEND_ATTEMPTS } },
+      where: {
+        credentialId,
+        ...(organizationId ? { organizationId } : {}),
+        status: "PENDING",
+        attempts: { lt: MAX_SEND_ATTEMPTS },
+      },
       select: SELECT,
     });
   }
 
-  async listUnverifiedByCredential(credentialId: string): Promise<SchedinaRecord[]> {
+  async listUnverifiedByCredential(
+    credentialId: string,
+    organizationId?: string,
+  ): Promise<SchedinaRecord[]> {
     return this.prisma.schedina.findMany({
-      where: { credentialId, status: "UNVERIFIED" },
+      // ISOLAMENTO: vedi listPendingByCredential — org nel WHERE quando il chiamante la conosce.
+      where: { credentialId, ...(organizationId ? { organizationId } : {}), status: "UNVERIFIED" },
       select: SELECT,
     });
   }

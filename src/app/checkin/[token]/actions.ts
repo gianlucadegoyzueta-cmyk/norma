@@ -4,6 +4,7 @@ import { type PersonInput, validatePerson } from "@/app/stays/guest-validation";
 import { prisma } from "@/server/db";
 import { PrismaReferenceTablesLoader, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
 import { DEFAULT_LOCALE, isLocale, MESSAGES } from "@/server/modules/checkin/messages";
+import { validateReferenceIds } from "@/server/modules/checkin/reference-validation";
 import { resolveCheckinToken } from "@/server/modules/checkin/token";
 import { PrismaStaysRepository, StaysService } from "@/server/modules/stays";
 
@@ -66,6 +67,41 @@ export async function submitCheckinAction(
   }
 
   try {
+    // Difesa in profondità (pagina PUBBLICA: gli ID di select/combobox sono manipolabili): verifica
+    // che gli ID di riferimento ESISTANO a DB e, in caso contrario, torna un errore PER-CAMPO
+    // localizzato invece di un errore FK generico a valle. `documentPlaceId` può essere un Comune O
+    // un Country (luogo di rilascio): lo cerchiamo in entrambe le tabelle.
+    const idsIn = (xs: (string | null | undefined)[]) => ({
+      id: { in: xs.filter((x): x is string => !!x) },
+    });
+    const [countries, comuni, documentTypes] = await Promise.all([
+      prisma.country.findMany({
+        where: idsIn([
+          data.birthCountryId,
+          data.citizenshipId,
+          data.residenceCountryId,
+          data.documentPlaceId,
+        ]),
+        select: { id: true },
+      }),
+      prisma.comune.findMany({
+        where: idsIn([data.birthComuneId, data.residenceComuneId, data.documentPlaceId]),
+        select: { id: true },
+      }),
+      prisma.documentType.findMany({ where: idsIn([data.documentTypeId]), select: { id: true } }),
+    ]);
+    const refErrors = validateReferenceIds(data, {
+      countries: new Set(countries.map((r) => r.id)),
+      comuni: new Set(comuni.map((r) => r.id)),
+      documentTypes: new Set(documentTypes.map((r) => r.id)),
+    });
+    if (Object.keys(refErrors).length > 0) {
+      const labels = MESSAGES[locale].fieldErrors;
+      const fieldErrors: Record<string, string> = {};
+      for (const [field, code] of Object.entries(refErrors)) fieldErrors[field] = labels[code];
+      return { fieldErrors };
+    }
+
     const service = new StaysService(
       new PrismaStaysRepository(prisma),
       new PrismaSchedinaRepository(prisma),

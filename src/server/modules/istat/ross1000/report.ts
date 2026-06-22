@@ -116,53 +116,63 @@ export async function loadRoss1000Report(
     },
   });
 
-  const aggregateStays: AggregateStay[] = stays.map((s) => ({
-    stayId: s.id,
-    arrivalDate: s.arrivalDate,
-    departureDate: s.departureDate,
-    guests: s.guests.map((g): ArrivoInput => {
-      const need = (val: string | null | undefined, field: string): string => {
-        if (val === null || val === undefined || val === "") {
-          missing.push({ field, scope: "GUEST", refId: g.id });
-          return "";
-        }
-        return val;
-      };
+  const aggregateStays: AggregateStay[] = [];
+  for (const s of stays) {
+    // Soggiorno ancora APERTO (nessuna partenza): la durata è ignota. Aggregarlo significherebbe
+    // INVENTARE presenze (notti fino a fine mese). "Mai inventare dati" → segnaliamo e lo escludiamo
+    // PRIMA dell'aggregazione; l'esito resterà INCOMPLETE.
+    if (s.departureDate === null) {
+      missing.push({ field: "departureDate", scope: "STRUTTURA", refId: s.id });
+      continue;
+    }
+    aggregateStays.push({
+      stayId: s.id,
+      arrivalDate: s.arrivalDate,
+      departureDate: s.departureDate,
+      guests: s.guests.map((g): ArrivoInput => {
+        const need = (val: string | null | undefined, field: string): string => {
+          if (val === null || val === undefined || val === "") {
+            missing.push({ field, scope: "GUEST", refId: g.id });
+            return "";
+          }
+          return val;
+        };
 
-      const alSeguito = TIPI_AL_SEGUITO.has(g.tipoAlloggiato);
-      const idCapo = alSeguito
-        ? need(g.leaderId ? shortIdswh(g.leaderId) : undefined, "idcapo")
-        : undefined;
+        const alSeguito = TIPI_AL_SEGUITO.has(g.tipoAlloggiato);
+        const idCapo = alSeguito
+          ? need(g.leaderId ? shortIdswh(g.leaderId) : undefined, "idcapo")
+          : undefined;
 
-      // luogoresidenza: Italia → codice Comune di residenza; estero → residenceForeignLocality
-      // (NUTS/stringa). Se la sorgente del caso manca → missing (mai inventato).
-      const isItalyResidence = g.residenceCountry?.code === ITALIA_CODE;
-      const luogoResidenza = need(
-        isItalyResidence ? g.residenceComune?.code : g.residenceForeignLocality,
-        "luogoresidenza",
-      );
+        // luogoresidenza: Italia → codice Comune di residenza; estero → residenceForeignLocality
+        // (NUTS/stringa). Se la sorgente del caso manca → missing (mai inventato).
+        const isItalyResidence = g.residenceCountry?.code === ITALIA_CODE;
+        const luogoResidenza = need(
+          isItalyResidence ? g.residenceComune?.code : g.residenceForeignLocality,
+          "luogoresidenza",
+        );
 
-      // comunenascita solo se nascita in Italia (regola del tracciato), altrimenti omesso.
-      const nascitaItalia = g.birthCountry?.code === ITALIA_CODE;
+        // comunenascita solo se nascita in Italia (regola del tracciato), altrimenti omesso.
+        const nascitaItalia = g.birthCountry?.code === ITALIA_CODE;
 
-      return {
-        idswh: shortIdswh(g.id),
-        tipoAlloggiato: g.tipoAlloggiato,
-        idCapo: idCapo || undefined,
-        cognome: g.lastName,
-        nome: g.firstName,
-        sesso: g.sex,
-        cittadinanzaCode: need(g.citizenship?.code, "cittadinanza"),
-        statoResidenzaCode: need(g.residenceCountry?.code, "statoresidenza"),
-        luogoResidenza,
-        dataNascita: isoDate(g.birthDate),
-        statoNascitaCode: g.birthCountry?.code,
-        comuneNascitaCode: nascitaItalia ? (g.birthComune?.code ?? undefined) : undefined,
-        tipoTurismo: need(g.tourismType, "tipoturismo"),
-        mezzoTrasporto: need(g.transportMeans, "mezzotrasporto"),
-      };
-    }),
-  }));
+        return {
+          idswh: shortIdswh(g.id),
+          tipoAlloggiato: g.tipoAlloggiato,
+          idCapo: idCapo || undefined,
+          cognome: g.lastName,
+          nome: g.firstName,
+          sesso: g.sex,
+          cittadinanzaCode: need(g.citizenship?.code, "cittadinanza"),
+          statoResidenzaCode: need(g.residenceCountry?.code, "statoresidenza"),
+          luogoResidenza,
+          dataNascita: isoDate(g.birthDate),
+          statoNascitaCode: g.birthCountry?.code,
+          comuneNascitaCode: nascitaItalia ? (g.birthComune?.code ?? undefined) : undefined,
+          tipoTurismo: need(g.tourismType, "tipoturismo"),
+          mezzoTrasporto: need(g.transportMeans, "mezzotrasporto"),
+        };
+      }),
+    });
+  }
 
   if (missing.length > 0) {
     return { kind: "INCOMPLETE", missing };

@@ -214,8 +214,14 @@ function parseDeclaration(v: unknown, path: string): DeclarationConfig {
   if (!isObject(v)) fail(path, "oggetto dichiarazione atteso");
   if (!PERIODS.includes(v.period as DeclarationPeriod))
     fail(`${path}.period`, `uno di ${PERIODS.join("|")}`);
+  const period = v.period as DeclarationPeriod;
   const dueDay = asInt(v.dueDay, `${path}.dueDay`);
-  if (dueDay < 1 || dueDay > 31) fail(`${path}.dueDay`, "1..31");
+  // Il giorno di scadenza è "entro il giorno N del periodo successivo". Per cadenze il cui mese
+  // successivo può avere 28 giorni (mensile/trimestrale → febbraio) il tetto sicuro è 28; per
+  // l'annuale il periodo successivo inizia a gennaio (31 giorni), quindi 1..31.
+  const maxDueDay = period === "ANNUAL" ? 31 : 28;
+  if (dueDay < 1 || dueDay > maxDueDay)
+    fail(`${path}.dueDay`, `1..${maxDueDay} per cadenza ${period}`);
   if (!isObject(v.remittance)) fail(`${path}.remittance`, "oggetto atteso");
   const rem = v.remittance;
   if (!CHANNELS.includes(rem.channel as RemittanceChannelId))

@@ -37,9 +37,23 @@ export interface SchedinaRepository {
   /** Lettura per id SEMPRE filtrata per organizationId: un record di un'altra org NON è
    *  restituibile, indipendentemente dal chiamante (isolamento garantito dal repository). */
   findById(id: string, organizationId: string): Promise<SchedinaRecord | null>;
-  listPendingByCredential(credentialId: string): Promise<SchedinaRecord[]>;
-  /** Schedine UNVERIFIED di una credenziale: esito ignoto, da chiarire con la riconciliazione T+1. */
-  listUnverifiedByCredential(credentialId: string): Promise<SchedinaRecord[]>;
+  /**
+   * Schedine PENDING (sotto il cap tentativi) di una credenziale.
+   * `organizationId` è il filtro di ISOLAMENTO multi-tenant: quando il chiamante lo conosce
+   * (percorso UI, sempre dietro auth) DEVE passarlo, così la query non può MAI restituire righe di
+   * un'altra org anche in caso di credentialId errato o anomalia d'integrità (difesa in profondità).
+   * È opzionale solo per il percorso cron mono-credenziale (una credenziale = una sola org per FK),
+   * dove l'org non è disponibile e il filtro per credentialId è già di per sé org-safe.
+   */
+  listPendingByCredential(credentialId: string, organizationId?: string): Promise<SchedinaRecord[]>;
+  /**
+   * Schedine UNVERIFIED di una credenziale: esito ignoto, da chiarire con la riconciliazione T+1.
+   * `organizationId`: stesso filtro di isolamento di `listPendingByCredential` (vedi sopra).
+   */
+  listUnverifiedByCredential(
+    credentialId: string,
+    organizationId?: string,
+  ): Promise<SchedinaRecord[]>;
   /** Porta una schedina in SENDING (validando la transizione). */
   markSending(id: string): Promise<void>;
   /**

@@ -221,4 +221,27 @@ describe("TouristTaxDeclarationService.changeStatus", () => {
     const svc = new TouristTaxDeclarationService(dr.repo, configRepo(ROMA.rule));
     await expect(svc.changeStatus("d1", "org_altra", "READY")).rejects.toThrow();
   });
+
+  // A8: non far avanzare di stato uno snapshot contabilmente incoerente (fee + netto ≠ lordo).
+  it("rifiuta la transizione se lo snapshot fee è incoerente", async () => {
+    const dr = declRepo([], {
+      status: "DRAFT",
+      amountCents: 2400,
+      normaFeeCents: 60,
+      comuneNetCents: 9999, // 60 + 9999 ≠ 2400
+    });
+    const svc = new TouristTaxDeclarationService(dr.repo, configRepo(ROMA.rule));
+    await expect(svc.changeStatus("d1", ORG, "READY")).rejects.toThrow();
+  });
+
+  it("ammette la transizione su snapshot coerente (60 + 2340 == 2400)", async () => {
+    const dr = declRepo([], {
+      status: "DRAFT",
+      amountCents: 2400,
+      normaFeeCents: 60,
+      comuneNetCents: 2340,
+    });
+    const svc = new TouristTaxDeclarationService(dr.repo, configRepo(ROMA.rule));
+    await expect(svc.changeStatus("d1", ORG, "READY")).resolves.toBeDefined();
+  });
 });

@@ -39,7 +39,18 @@ export type PersonErrorCode =
   | "citizenshipRequired"
   | "documentTypeRequired"
   | "documentNumberRequired"
-  | "documentPlaceRequired";
+  | "documentPlaceRequired"
+  // Difesa in profondità: l'ID di una tabella di riferimento (Stato/Comune/Documento) inviato dal
+  // form non esiste a DB (valore manomesso o tabella aggiornata fra il render e il submit). La
+  // validazione PURA impone la PRESENZA; l'ESISTENZA va verificata dove c'è il DB
+  // (submitCheckinAction, vedi reference-validation.ts). Errore per-campo, localizzato come gli altri.
+  | "birthCountryUnknown"
+  | "citizenshipUnknown"
+  | "birthComuneUnknown"
+  | "residenceCountryUnknown"
+  | "residenceComuneUnknown"
+  | "documentTypeUnknown"
+  | "documentPlaceUnknown";
 
 /** Etichette IT di default (flusso autenticato + retro-compatibilità test). */
 const IT_ERROR_LABELS: Record<PersonErrorCode, string> = {
@@ -52,6 +63,13 @@ const IT_ERROR_LABELS: Record<PersonErrorCode, string> = {
   documentTypeRequired: "Il tipo di documento è obbligatorio.",
   documentNumberRequired: "Il numero del documento è obbligatorio.",
   documentPlaceRequired: "Il luogo di rilascio del documento è obbligatorio.",
+  birthCountryUnknown: "Lo stato di nascita selezionato non è valido.",
+  citizenshipUnknown: "La cittadinanza selezionata non è valida.",
+  birthComuneUnknown: "Il comune di nascita selezionato non è valido.",
+  residenceCountryUnknown: "Lo stato di residenza selezionato non è valido.",
+  residenceComuneUnknown: "Il comune di residenza selezionato non è valido.",
+  documentTypeUnknown: "Il tipo di documento selezionato non è valido.",
+  documentPlaceUnknown: "Il luogo di rilascio selezionato non è valido.",
 };
 
 export interface PersonValidation {

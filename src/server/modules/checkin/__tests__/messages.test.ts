@@ -3,18 +3,9 @@ import type { PersonErrorCode } from "@/app/stays/guest-validation";
 import { DEFAULT_LOCALE, isLocale, LOCALES, MESSAGES } from "../messages";
 
 // Tutti i codici di errore prodotti da validatePerson: ogni lingua DEVE coprirli, altrimenti un
-// ospite straniero vedrebbe un errore vuoto/undefined nel punto di conversione.
-const ERROR_CODES: PersonErrorCode[] = [
-  "lastNameRequired",
-  "firstNameRequired",
-  "sexRequired",
-  "birthDateInvalid",
-  "birthCountryRequired",
-  "citizenshipRequired",
-  "documentTypeRequired",
-  "documentNumberRequired",
-  "documentPlaceRequired",
-];
+// ospite straniero vedrebbe un errore vuoto/undefined nel punto di conversione. Derivati dal locale
+// di default così l'aggiunta di un nuovo codice impone subito la traduzione in tutte le lingue.
+const ERROR_CODES = Object.keys(MESSAGES[DEFAULT_LOCALE].fieldErrors) as PersonErrorCode[];
 
 describe("MESSAGES (i18n check-in)", () => {
   it("ogni lingua definisce le stesse chiavi di livello superiore (niente traduzioni mancanti)", () => {
