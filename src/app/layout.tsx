@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -62,6 +63,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} min-h-dvh antialiased`}
       >
         {children}
+        {/* Vercel Web Analytics: cookieless, nessuna PII, nessun consent banner.
+            Scelta deliberata sull'app (gestisce dati ospiti) → niente session recording. */}
+        <Analytics />
       </body>
     </html>
   );
