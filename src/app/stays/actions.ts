@@ -107,6 +107,9 @@ function personInput(formData: FormData, idx: number): PersonInput {
     birthComuneId: p("birthComuneId"),
     residenceCountryId: p("residenceCountryId"),
     residenceComuneId: p("residenceComuneId"),
+    residenceForeignLocality: p("residenceForeignLocality"),
+    tourismType: p("tourismType"),
+    transportMeans: p("transportMeans"),
     documentTypeId: p("documentTypeId"),
     documentNumber: p("documentNumber"),
     documentPlaceId: p("documentPlaceId"),
@@ -172,15 +175,22 @@ export async function addGuestPartyAction(
   const party: Party =
     tipo === "SINGOLO" ? { tipo, ospite: capoData } : { tipo, capo: capoData, membri };
 
+  const svc = service();
   try {
-    await service().addGuests(stayId, ctx.current.organizationId, [party]);
+    await svc.addGuests(stayId, ctx.current.organizationId, [party]);
   } catch (err) {
     if (err instanceof StaysError) return { ok: false, message: err.message };
     return { ok: false, message: "Errore nell'aggiunta degli ospiti. Riprova." };
   }
 
+  // Auto-generazione best-effort: se gli ospiti sono completi e l'arrivo è in finestra, le schedine
+  // sono già pronte (PENDING). Altrimenti (dati mancanti / fuori finestra) non si rompe nulla: l'host
+  // le genererà completando i dati. Resta tutto PRE-INVIO (reversibile): nessun invio ad Alloggiati.
+  const gen = await svc.tryGenerateSchedine(stayId);
   revalidatePath(`/stays/${stayId}`);
-  return { ok: true, message: "Ospiti aggiunti ✓" };
+  const ready = "created" in gen ? gen.created + gen.existing : 0;
+  const suffix = ready > 0 ? ` · ${ready} schedine pronte` : "";
+  return { ok: true, message: `Ospiti aggiunti ✓${suffix}` };
 }
 
 // ----------------------- GENERAZIONE SCHEDINE -----------------------

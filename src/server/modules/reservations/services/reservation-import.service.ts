@@ -1,4 +1,6 @@
-import { parseReservations } from "../domain/ical";
+import type { ReservationSource } from "@prisma/client";
+import { isReservationLike, parseICal, parseReservations } from "../domain/ical";
+import { buildPreview, type PreviewReservation } from "../domain/preview";
 import { reconcile } from "../domain/reconcile";
 import { detectSource, isValidICalUrl } from "../domain/source";
 import { ICalFetchError, type ICalFetcher, type ReservationImportRepository } from "../ports";
@@ -17,6 +19,16 @@ export interface SyncResult {
   cancelled: number;
   flaggedForReview: number;
   seen: number;
+}
+
+/** Anteprima di un feed iCal PRIMA dell'import (nessuna scrittura a DB). */
+export interface PreviewResult {
+  source: ReservationSource;
+  /** Prenotazioni trovate (dedup per UID), ordinate per arrivo. */
+  reservations: PreviewReservation[];
+  total: number;
+  /** Eventi presenti nel feed ma scartati perché "date bloccate" (non prenotazioni). */
+  blocked: number;
 }
 
 /**
@@ -57,6 +69,57 @@ export class ReservationImportService {
 
   async removeImport(importId: string, organizationId: string): Promise<void> {
     await this.repo.remove(importId, organizationId);
+  }
+
+  /**
+   * ANTEPRIMA (nessuna scrittura): valida l'URL, scarica e legge il feed, e restituisce le
+   * prenotazioni trovate da mostrare PRIMA di importare. In caso di URL/rete/parsing errati
+   * lancia un `ReservationsError` con messaggio gentile per l'utente. Non tocca il DB: si può
+   * chiamare anche su un URL non ancora collegato.
+   */
+  async previewImport(rawUrl: string): Promise<PreviewResult> {
+    const url = rawUrl.trim();
+    if (!isValidICalUrl(url)) {
+      throw new ReservationsError(
+        "URL non valido: incolla il link iCal (https://…) del calendario della struttura.",
+      );
+    }
+
+    let body: string;
+    try {
+      body = await this.fetcher.fetch(url);
+    } catch (err) {
+      throw new ReservationsError(
+        err instanceof ICalFetchError
+          ? err.message
+          : "Errore imprevisto nel leggere il calendario.",
+      );
+    }
+
+    const all = parseICal(body);
+    const reservations = all.filter((e) => isReservationLike(e.summary));
+    const preview = buildPreview(reservations);
+    return {
+      source: detectSource(url),
+      reservations: preview.reservations,
+      total: preview.total,
+      blocked: all.length - reservations.length,
+    };
+  }
+
+  /**
+   * CONFERMA dell'anteprima: collega il feed e lo sincronizza subito, in un solo gesto per
+   * l'host. Restituisce l'esito del sync + l'id del feed creato. Errori (URL duplicato, rete)
+   * risalgono come `ReservationsError`.
+   */
+  async importNow(
+    organizationId: string,
+    propertyId: string,
+    rawUrl: string,
+  ): Promise<SyncResult & { importId: string }> {
+    const { id } = await this.addImport(organizationId, propertyId, rawUrl);
+    const result = await this.syncImport(id, organizationId);
+    return { ...result, importId: id };
   }
 
   /**
@@ -125,5 +188,35 @@ export class ReservationImportService {
       }
     }
     return { results: agg, errors };
+  }
+
+  /**
+   * Re-sync di TUTTI i feed (cross-org), per il cron schedulato. Isola gli errori per feed
+   * (uno rotto non ferma gli altri). NON invia nulla agli enti: aggiorna solo i soggiorni in bozza.
+   */
+  async syncAllFeeds(): Promise<{
+    feeds: number;
+    ok: number;
+    failed: number;
+    results: SyncResult;
+  }> {
+    const all = await this.repo.listAll();
+    const agg: SyncResult = { created: 0, updated: 0, cancelled: 0, flaggedForReview: 0, seen: 0 };
+    let ok = 0;
+    let failed = 0;
+    for (const f of all) {
+      try {
+        const r = await this.syncImport(f.id, f.organizationId);
+        agg.created += r.created;
+        agg.updated += r.updated;
+        agg.cancelled += r.cancelled;
+        agg.flaggedForReview += r.flaggedForReview;
+        agg.seen += r.seen;
+        ok += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    return { feeds: all.length, ok, failed, results: agg };
   }
 }

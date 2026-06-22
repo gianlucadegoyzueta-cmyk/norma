@@ -55,7 +55,7 @@ export default async function AuthErrorPage({
           >
             <AlertTriangle className="size-6" />
           </span>
-          <CardTitle>{title}</CardTitle>
+          <CardTitle className="font-display text-xl">{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">

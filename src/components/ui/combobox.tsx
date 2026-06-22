@@ -21,6 +21,20 @@ const MAX_VISIBLE = 50;
  * navigazione con frecce, Invio per selezionare, Esc per chiudere; errore collegato via
  * aria-describedby quando il testo non corrisponde ad alcuna voce.
  */
+/** Stringhe localizzabili del combobox. Default IT, così le chiamate esistenti restano invariate. */
+export interface ComboBoxLabels {
+  noMatch: string;
+  pickFromList: string;
+  /** Riceve il numero di voci nascoste; restituisce il testo "e altri N…". */
+  more: (n: number) => string;
+}
+
+const DEFAULT_LABELS: ComboBoxLabels = {
+  noMatch: "Nessuna corrispondenza",
+  pickFromList: "Seleziona una voce dall'elenco.",
+  more: (n) => `…e altri ${n}. Affina la ricerca.`,
+};
+
 export function ComboBox({
   name,
   options,
@@ -28,6 +42,7 @@ export function ComboBox({
   required,
   id,
   describedBy,
+  labels = DEFAULT_LABELS,
 }: {
   name: string;
   options: ComboBoxOption[];
@@ -35,6 +50,7 @@ export function ComboBox({
   required?: boolean;
   id?: string;
   describedBy?: string;
+  labels?: ComboBoxLabels;
 }) {
   const reactId = React.useId();
   const inputId = id ?? `${reactId}-input`;
@@ -138,7 +154,7 @@ export function ComboBox({
             // (niente role="option") così lo screen reader non lo annuncia come scelta. Coerente con
             // ComuneTypeahead.tsx (stesso pattern).
             <li role="presentation" className="text-muted-foreground px-2 py-1.5 text-sm">
-              Nessuna corrispondenza
+              {labels.noMatch}
             </li>
           ) : (
             filtered.map((o, i) => (
@@ -163,7 +179,7 @@ export function ComboBox({
           )}
           {total > filtered.length && (
             <li aria-hidden className="text-muted-foreground px-2 py-1.5 text-xs">
-              …e altri {total - filtered.length}. Affina la ricerca.
+              {labels.more(total - filtered.length)}
             </li>
           )}
         </ul>
@@ -171,7 +187,7 @@ export function ComboBox({
 
       {unmatched && (
         <p id={errorId} role="alert" className="text-destructive mt-1 text-xs">
-          Seleziona una voce dall&apos;elenco.
+          {labels.pickFromList}
         </p>
       )}
     </div>

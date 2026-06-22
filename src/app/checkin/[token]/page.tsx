@@ -6,6 +6,7 @@ import {
   DEFAULT_LOCALE,
   isLocale,
   LANG_NAMES,
+  type Locale,
   LOCALES,
   MESSAGES,
 } from "@/server/modules/checkin/messages";
@@ -50,7 +51,27 @@ export default async function CheckinPage({
   const ctx = await resolveCheckinToken(token);
 
   return (
-    <div className="bg-background min-h-dvh">
+    // lang sul sottoalbero: screen reader, sillabazione e correttore usano la lingua scelta dall'ospite.
+    <div lang={locale} className="bg-background relative min-h-dvh">
+      {/* Grana di carta appena percettibile, coerente con la superficie auth (theme-safe). */}
+      <svg
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.5] mix-blend-multiply dark:opacity-[0.18] dark:mix-blend-screen"
+      >
+        <filter id="checkin-grain">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.85"
+            numOctaves="2"
+            stitchTiles="stitch"
+          />
+          <feColorMatrix
+            type="matrix"
+            values="0 0 0 0 0.13 0 0 0 0 0.11 0 0 0 0 0.08 0 0 0 0.04 0"
+          />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#checkin-grain)" />
+      </svg>
       <div className="mx-auto w-full max-w-md px-4 py-8 sm:py-12">
         <div className="mb-6 flex items-center justify-between gap-3">
           <Brand />
@@ -67,7 +88,7 @@ export default async function CheckinPage({
             </CardContent>
           </Card>
         ) : (
-          <CheckinContent token={token} m={m} />
+          <CheckinContent token={token} locale={locale} m={m} />
         )}
       </div>
     </div>
@@ -76,9 +97,11 @@ export default async function CheckinPage({
 
 async function CheckinContent({
   token,
+  locale,
   m,
 }: {
   token: string;
+  locale: Locale;
   m: (typeof MESSAGES)[keyof typeof MESSAGES];
 }) {
   const [countries, comuniRows, documentTypes] = await Promise.all([
@@ -100,6 +123,7 @@ async function CheckinContent({
       </div>
       <CheckinForm
         token={token}
+        locale={locale}
         m={m}
         countries={countries}
         comuni={comuni}

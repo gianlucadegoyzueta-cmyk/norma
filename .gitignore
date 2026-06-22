@@ -34,3 +34,6 @@ npm-debug.log*
 # Claude: comandi condivisi versionati, config locale no
 .claude/settings.local.json
 supabase/.temp/
+
+# Anteprime/scratch locali (screenshot, script di verifica): mai in CI.
+/tmp/

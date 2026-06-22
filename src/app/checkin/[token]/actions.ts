@@ -3,6 +3,7 @@
 import { type PersonInput, validatePerson } from "@/app/stays/guest-validation";
 import { prisma } from "@/server/db";
 import { PrismaReferenceTablesLoader, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
+import { DEFAULT_LOCALE, isLocale, MESSAGES } from "@/server/modules/checkin/messages";
 import { resolveCheckinToken } from "@/server/modules/checkin/token";
 import { PrismaStaysRepository, StaysService } from "@/server/modules/stays";
 
@@ -14,15 +15,22 @@ export type CheckinSubmitState = {
 };
 
 /**
- * Submit PUBBLICO del check-in ospite. Risolve il token, valida i dati (documento OBBLIGATORIO,
- * ospite singolo), crea l'ospite sul soggiorno e CHIUDE il token. NON genera schedine: restano una
- * scelta dell'host dopo la revisione (un invio sbagliato ad Alloggiati è irreversibile).
+ * Submit PUBBLICO del check-in ospite. Risolve il token, valida i dati (documento OBBLIGATORIO),
+ * aggiunge l'ospite al soggiorno. Il token resta valido (più ospiti per lo stesso soggiorno), scade a 30gg.
+ *
+ * AUTOMAZIONE: appena i dati del soggiorno sono completi, genera le schedine PENDING (best-effort).
+ * Generare ≠ inviare: gli intenti restano in outbox e sono REVERSIBILI; l'invio reale alla Questura
+ * resta gated (ALLOGGIATI_CRON_ENABLED + autoSend per-credenziale, guardrail #1). Dati incompleti o
+ * arrivo fuori finestra → tryGenerateSchedine non lancia, il check-in va comunque a buon fine.
  */
 export async function submitCheckinAction(
   _prev: CheckinSubmitState,
   formData: FormData,
 ): Promise<CheckinSubmitState> {
   const token = String(formData.get("token") ?? "");
+  // Lingua scelta dall'ospite: serve a localizzare gli errori per-campo nelle 5 lingue.
+  const langRaw = String(formData.get("lang") ?? "");
+  const locale = isLocale(langRaw) ? langRaw : DEFAULT_LOCALE;
   const ctx = await resolveCheckinToken(token);
   if (!ctx) return { error: "invalid" };
 
@@ -40,13 +48,22 @@ export async function submitCheckinAction(
     birthComuneId: v("birthComuneId"),
     residenceCountryId: v("residenceCountryId"),
     residenceComuneId: v("residenceComuneId"),
+    residenceForeignLocality: v("residenceForeignLocality"),
+    tourismType: v("tourismType"),
+    transportMeans: v("transportMeans"),
     documentTypeId: v("documentTypeId"),
     documentNumber: v("documentNumber"),
     documentPlaceId: v("documentPlaceId"),
   };
 
-  const { data, errors } = validatePerson(input, true);
-  if (!data) return { fieldErrors: errors };
+  const { data, errorCodes } = validatePerson(input, true);
+  if (!data) {
+    // Traduce i codici di errore neutri nelle stringhe della lingua dell'ospite.
+    const labels = MESSAGES[locale].fieldErrors;
+    const fieldErrors: Record<string, string> = {};
+    for (const [field, code] of Object.entries(errorCodes)) fieldErrors[field] = labels[code];
+    return { fieldErrors };
+  }
 
   try {
     const service = new StaysService(
@@ -55,8 +72,12 @@ export async function submitCheckinAction(
       new PrismaReferenceTablesLoader(prisma),
     );
     await service.addGuests(ctx.stayId, ctx.organizationId, [{ tipo: "SINGOLO", ospite: data }]);
-    // NB: il token NON viene chiuso, così lo stesso link serve per più ospiti dello stesso
-    // soggiorno (l'ospite aggiunge sé stesso e i compagni). Scade comunque dopo 30 giorni.
+    // Il token NON viene chiuso: lo stesso link serve per più ospiti dello stesso soggiorno
+    // (l'ospite aggiunge sé stesso e i compagni). Scade comunque dopo 30 giorni.
+    //
+    // Chiude il loop dati→schedina: genera gli intenti PENDING appena il soggiorno è completo.
+    // best-effort (non lancia) e PRE-INVIO (l'invio reale resta gated): non altera l'esito del check-in.
+    await service.tryGenerateSchedine(ctx.stayId);
   } catch {
     return { error: "generic" };
   }

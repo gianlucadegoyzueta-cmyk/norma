@@ -10,8 +10,7 @@ import {
   type AccessState,
   type PlanDefinition,
 } from "@/server/modules/billing";
-import { SiteHeader } from "@/components/site-header";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { ConciergePage } from "@/components/concierge/concierge-page";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { loadBillingView } from "./_lib/billing";
@@ -20,11 +19,11 @@ import { openPortalAction, startCheckoutAction } from "./actions";
 export const metadata: Metadata = { title: "Abbonamento" };
 export const dynamic = "force-dynamic";
 
-const STATE_BADGE: Record<AccessState, { text: string; variant: BadgeProps["variant"] }> = {
-  TRIAL: { text: "Prova gratuita", variant: "secondary" },
-  SUBSCRIBED: { text: "Attivo", variant: "success" },
-  GRACE: { text: "Da regolarizzare", variant: "warning" },
-  EXPIRED: { text: "Scaduto", variant: "destructive" },
+const STATE_BADGE: Record<AccessState, { text: string; cmx: string }> = {
+  TRIAL: { text: "Prova gratuita", cmx: "cmx-badge-wait" },
+  SUBSCRIBED: { text: "Attivo", cmx: "cmx-badge-ok" },
+  GRACE: { text: "Da regolarizzare", cmx: "cmx-badge-wait" },
+  EXPIRED: { text: "Scaduto", cmx: "cmx-badge-err" },
 };
 
 function stateHeadline(access: AccessDecision): { title: string; description: string } {
@@ -68,11 +67,13 @@ function stateHeadline(access: AccessDecision): { title: string; description: st
 
 function PlanCard({ plan, configured }: { plan: PlanDefinition; configured: boolean }) {
   return (
-    <Card className={plan.recommended ? "border-primary" : undefined}>
+    <Card className={plan.recommended ? "border-primary" : undefined} style={{ borderRadius: 18 }}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>{plan.interval === "year" ? "Annuale" : "Mensile"}</CardTitle>
-          {plan.recommended && <Badge variant="success">Consigliato</Badge>}
+          <CardTitle className="font-display">
+            {plan.interval === "year" ? "Annuale" : "Mensile"}
+          </CardTitle>
+          {plan.recommended && <span className="cmx-badge cmx-badge-go">Consigliato</span>}
         </div>
         <CardDescription>
           <span className="text-foreground text-2xl font-semibold">
@@ -109,14 +110,12 @@ export default async function BillingPage() {
   const hasCustomer = Boolean(subscription?.stripeCustomerId);
 
   return (
-    <div className="bg-background min-h-screen">
-      <SiteHeader />
-      <main className="mx-auto max-w-3xl space-y-6 px-4 py-8">
-        <div>
-          <h1 className="text-2xl font-semibold">Abbonamento</h1>
-          <p className="text-muted-foreground">Il piano di Norma e lo stato del tuo abbonamento.</p>
-        </div>
-
+    <ConciergePage
+      kicker="ABBONAMENTO · NORMA"
+      title="Abbonamento"
+      intro="Il piano di Norma e lo stato del tuo abbonamento."
+    >
+      <div className="cmx-section space-y-6" style={{ marginTop: 0 }}>
         {!configured && (
           <Card className="border-warning/40 bg-warning/5">
             <CardHeader>
@@ -155,9 +154,9 @@ export default async function BillingPage() {
                   {access.state === "SUBSCRIBED" && <CheckCircle2 className="text-success" />}
                   {headline.title}
                 </CardTitle>
-                <Badge variant={STATE_BADGE[access.state].variant}>
+                <span className={`cmx-badge ${STATE_BADGE[access.state].cmx}`}>
                   {STATE_BADGE[access.state].text}
-                </Badge>
+                </span>
               </div>
               <CardDescription>{headline.description}</CardDescription>
             </CardHeader>
@@ -205,7 +204,7 @@ export default async function BillingPage() {
             </CardContent>
           </Card>
         )}
-      </main>
-    </div>
+      </div>
+    </ConciergePage>
   );
 }

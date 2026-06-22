@@ -29,6 +29,10 @@ export interface UpsertDeclarationInput {
   comuneId: string;
   period: string;
   amountCents: number;
+  /** Snapshot commissione Norma. Invariante: normaFeeCents + comuneNetCents == amountCents. */
+  normaTakeRateBps: number;
+  normaFeeCents: number;
+  comuneNetCents: number;
   lines: DeclarationLineInput[];
 }
 
@@ -38,6 +42,10 @@ export interface DeclarationRecord {
   comuneId: string;
   period: string;
   amountCents: number;
+  /** Snapshot commissione Norma (take-rate) congelato al calcolo. */
+  normaTakeRateBps: number;
+  normaFeeCents: number;
+  comuneNetCents: number;
   status: TaxDeclarationStatus;
   remittanceMode: TaxRemittanceMode;
 }

@@ -10,6 +10,9 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/favicon.ico")).toBe(true);
     expect(isPublicPath("/icon.svg")).toBe(true);
     expect(isPublicPath("/api/health")).toBe(true);
+    // Cron Vercel: nessuna sessione utente, auth via CRON_SECRET nella route stessa.
+    expect(isPublicPath("/api/cron/alloggiati")).toBe(true);
+    expect(isPublicPath("/api/cron/istat")).toBe(true);
   });
 
   it("apre il flusso di registrazione e recupero a chi è sloggato", () => {

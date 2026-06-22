@@ -7,6 +7,10 @@ import { ComboBox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import {
+  MEZZO_TRASPORTO_OPTIONS,
+  TIPO_TURISMO_OPTIONS,
+} from "@/server/modules/istat/ross1000/domains";
 import { cn } from "@/lib/utils";
 import { addGuestPartyAction } from "../actions";
 import type { GuestPartyState } from "../types";
@@ -167,6 +171,41 @@ function PersonFields({
             options={comuni}
             placeholder="Solo se residente in Italia"
           />
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor={f("residenceForeignLocality")}>Località di residenza (se estero)</Label>
+          <Input
+            id={f("residenceForeignLocality")}
+            name={f("residenceForeignLocality")}
+            placeholder="Solo se residente all'estero"
+            maxLength={30}
+          />
+        </div>
+      </div>
+
+      {/* Movimento turistico (Ross1000) — facoltativi al check-in, obbligatori per il file ISTAT. */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-1.5">
+          <Label htmlFor={f("tourismType")}>Tipo di turismo (movimento turistico)</Label>
+          <Select id={f("tourismType")} name={f("tourismType")} defaultValue="">
+            <option value="">Non specificato</option>
+            {TIPO_TURISMO_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor={f("transportMeans")}>Mezzo di trasporto</Label>
+          <Select id={f("transportMeans")} name={f("transportMeans")} defaultValue="">
+            <option value="">Non specificato</option>
+            {MEZZO_TRASPORTO_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
         </div>
       </div>
 

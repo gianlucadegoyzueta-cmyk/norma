@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, KeyRound, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaCredentialRepository } from "@/server/modules/alloggiati";
-import { SiteHeader } from "@/components/site-header";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { ConciergePage } from "@/components/concierge/concierge-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CredentialForm } from "./CredentialForm";
 import { ExportDataButton } from "./ExportDataButton";
@@ -16,11 +14,11 @@ export const metadata: Metadata = { title: "Credenziali Alloggiati" };
 // Pagina sempre dinamica (legge sessione + DB per utente).
 export const dynamic = "force-dynamic";
 
-const STATUS: Record<string, { text: string; variant: BadgeProps["variant"] }> = {
-  ACTIVE: { text: "Attiva", variant: "success" },
-  INVALID: { text: "Non valida", variant: "destructive" },
-  PENDING_REONBOARDING: { text: "Da verificare", variant: "warning" },
-  DISABLED: { text: "Disattivata", variant: "secondary" },
+const STATUS: Record<string, { text: string; cmx: string }> = {
+  ACTIVE: { text: "Attiva", cmx: "cmx-badge-ok" },
+  INVALID: { text: "Non valida", cmx: "cmx-badge-err" },
+  PENDING_REONBOARDING: { text: "Da verificare", cmx: "cmx-badge-wait" },
+  DISABLED: { text: "Disattivata", cmx: "cmx-badge-wait" },
 };
 
 export default async function CredentialsPage() {
@@ -32,108 +30,92 @@ export default async function CredentialsPage() {
   );
 
   return (
-    <div className="min-h-dvh">
-      <SiteHeader />
-
-      <main
-        id="main-content"
-        tabIndex={-1}
-        className="mx-auto w-full max-w-3xl px-4 py-8 outline-none sm:px-6 sm:py-10"
+    <ConciergePage
+      kicker="VAULT · ALLOGGIATI WEB"
+      title="Credenziali Alloggiati"
+      intro={
+        <>
+          Le credenziali di{" "}
+          <strong style={{ color: "var(--inchiostro)" }}>{ctx.current.organizationName}</strong>{" "}
+          (utente / password / WSKey): le custodisco{" "}
+          <span
+            className="inline-flex items-center gap-1 font-medium"
+            style={{ color: "var(--inchiostro)" }}
+          >
+            <ShieldCheck className="size-3.5" style={{ color: "var(--salvia)" }} aria-hidden />
+            cifrate
+          </span>{" "}
+          nel vault, mai in chiaro. Verifico subito ogni nuova credenziale con Alloggiati (
+          <em>Authentication_Test</em>) — nessun invio di schedine.
+        </>
+      }
+    >
+      <section
+        aria-labelledby="credentials-heading"
+        className="cmx-section"
+        style={{ marginTop: 0 }}
       >
-        <Link
-          href="/dashboard"
-          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
-        >
-          <ArrowLeft className="size-4" aria-hidden />
-          Dashboard
-        </Link>
+        <h2 id="credentials-heading" className="cmx-section-title">
+          Le tue credenziali
+        </h2>
+        {credentials.length === 0 ? (
+          <div className="cmx-empty">
+            <p className="cmx-empty-title">Nessuna credenziale, per ora</p>
+            <p className="cmx-empty-text">
+              Aggiungine una qui sotto: la verifico subito con Alloggiati, senza inviare nulla.
+            </p>
+          </div>
+        ) : (
+          <ul className="grid gap-2.5">
+            {credentials.map((c) => {
+              const s = STATUS[c.status] ?? { text: c.status, cmx: "cmx-badge-wait" };
+              return (
+                <li key={c.id}>
+                  <div className="cmx-row">
+                    <div className="cmx-row-main">
+                      <p className="cmx-row-title truncate">{c.label}</p>
+                      <p className="cmx-row-meta truncate">
+                        {c.category === "GESTIONE_APPARTAMENTI"
+                          ? "gestione appartamenti"
+                          : "struttura singola"}{" "}
+                        · {c.provincia}
+                      </p>
+                    </div>
+                    <span className={`cmx-badge ${s.cmx}`}>{s.text}</span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
 
-        <div className="mb-8">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">
-            Credenziali Alloggiati
-          </h1>
-          <p className="text-muted-foreground mt-2 max-w-prose text-sm">
-            Le credenziali di{" "}
-            <strong className="text-foreground">{ctx.current.organizationName}</strong> (utente /
-            password / WSKey): le custodisco{" "}
-            <span className="text-foreground inline-flex items-center gap-1 font-medium">
-              <ShieldCheck className="text-success size-3.5" aria-hidden />
-              cifrate
-            </span>{" "}
-            nel vault, mai in chiaro. Verifico subito ogni nuova credenziale con Alloggiati (
-            <em>Authentication_Test</em>) — nessun invio di schedine.
-          </p>
-        </div>
+      <section className="cmx-section">
+        <Card style={{ borderRadius: 18 }}>
+          <CardHeader>
+            <CardTitle className="font-display">Aggiungi credenziale</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CredentialForm />
+          </CardContent>
+        </Card>
+      </section>
 
-        <section aria-labelledby="credentials-heading" className="mb-10">
-          <h2 id="credentials-heading" className="text-muted-foreground mb-3 text-sm font-medium">
-            Le tue credenziali
-          </h2>
-          {credentials.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
-                <span className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-lg">
-                  <KeyRound className="size-5" aria-hidden />
-                </span>
-                <p className="text-muted-foreground text-sm">
-                  Nessuna credenziale ancora. Aggiungine una qui sotto.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <ul className="grid gap-2">
-              {credentials.map((c) => {
-                const s = STATUS[c.status] ?? { text: c.status, variant: "secondary" as const };
-                return (
-                  <li key={c.id}>
-                    <Card>
-                      <CardContent className="flex items-center justify-between gap-4 px-4 py-3">
-                        <div className="min-w-0">
-                          <p className="truncate font-medium">{c.label}</p>
-                          <p className="text-muted-foreground truncate text-xs">
-                            {c.category === "GESTIONE_APPARTAMENTI"
-                              ? "gestione appartamenti"
-                              : "struttura singola"}{" "}
-                            · {c.provincia}
-                          </p>
-                        </div>
-                        <Badge variant={s.variant}>{s.text}</Badge>
-                      </CardContent>
-                    </Card>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
-
-        <section className="mb-10">
-          <Card>
-            <CardHeader>
-              <CardTitle>Aggiungi credenziale</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CredentialForm />
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Esporta tutto: i dati dell'host sono suoi, scaricabili in qualsiasi momento. */}
-        <section>
-          <Card>
-            <CardHeader>
-              <CardTitle>I tuoi dati</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <p className="text-muted-foreground text-sm text-pretty">
-                I dati sono tuoi, sempre. Scarica un archivio con soggiorni, ospiti, tasse di
-                soggiorno e invii ISTAT in formato CSV (apribili con Excel o Fogli Google).
-              </p>
-              <ExportDataButton />
-            </CardContent>
-          </Card>
-        </section>
-      </main>
-    </div>
+      {/* Esporta tutto: i dati dell'host sono suoi, scaricabili in qualsiasi momento. */}
+      <section className="cmx-section">
+        <Card style={{ borderRadius: 18 }}>
+          <CardHeader>
+            <CardTitle className="font-display">I tuoi dati</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <p className="text-muted-foreground text-sm text-pretty">
+              I dati sono tuoi, sempre. Scarica un archivio con soggiorni, ospiti, tasse di
+              soggiorno e invii ISTAT in formato CSV (apribili con Excel o Fogli Google).
+            </p>
+            <ExportDataButton />
+          </CardContent>
+        </Card>
+      </section>
+    </ConciergePage>
   );
 }

@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Brand } from "@/components/brand";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { CommandPalette } from "@/components/command-palette";
+import { CommandTrigger } from "@/components/command-trigger";
+import { MobileNav } from "@/components/mobile-nav";
 
 // Header sticky per le pagine autenticate. `actions` accoglie slot a destra
 // (es. menu organizzazione, logout) renderizzati dal chiamante.
@@ -24,11 +26,14 @@ export function SiteHeader({ actions }: { actions?: ReactNode }) {
             <Brand />
           </Link>
           <div className="flex items-center gap-2">
+            <CommandTrigger />
             {actions}
-            <ThemeToggle />
           </div>
         </div>
       </header>
+      {/* Isole client: la palette ⌘K (overlay) e la bottom-bar mobile, presenti su ogni pagina autenticata. */}
+      <CommandPalette />
+      <MobileNav />
     </>
   );
 }

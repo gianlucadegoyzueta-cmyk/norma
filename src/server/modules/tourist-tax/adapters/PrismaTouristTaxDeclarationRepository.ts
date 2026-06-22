@@ -65,8 +65,16 @@ export class PrismaTouristTaxDeclarationRepository implements TouristTaxDeclarat
           comuneId: input.comuneId,
           period: input.period,
           amountCents: input.amountCents,
+          normaTakeRateBps: input.normaTakeRateBps,
+          normaFeeCents: input.normaFeeCents,
+          comuneNetCents: input.comuneNetCents,
         },
-        update: { amountCents: input.amountCents },
+        update: {
+          amountCents: input.amountCents,
+          normaTakeRateBps: input.normaTakeRateBps,
+          normaFeeCents: input.normaFeeCents,
+          comuneNetCents: input.comuneNetCents,
+        },
       });
       await tx.touristTaxDeclarationLine.deleteMany({ where: { declarationId: decl.id } });
       if (input.lines.length > 0) {
@@ -137,6 +145,9 @@ function toRecord(row: {
   comuneId: string;
   period: string;
   amountCents: number;
+  normaTakeRateBps: number;
+  normaFeeCents: number;
+  comuneNetCents: number;
   status: DeclarationRecord["status"];
   remittanceMode: DeclarationRecord["remittanceMode"];
 }): DeclarationRecord {
@@ -146,6 +157,9 @@ function toRecord(row: {
     comuneId: row.comuneId,
     period: row.period,
     amountCents: row.amountCents,
+    normaTakeRateBps: row.normaTakeRateBps,
+    normaFeeCents: row.normaFeeCents,
+    comuneNetCents: row.comuneNetCents,
     status: row.status,
     remittanceMode: row.remittanceMode,
   };

@@ -129,4 +129,18 @@ export class StaysService {
     }
     return { created, existing, schedinaIds };
   }
+
+  /**
+   * Generazione AUTOMATICA best-effort: se i dati sono completi e l'arrivo è in finestra, genera le
+   * schedine PENDING; altrimenti NON lancia — ritorna il motivo dello skip (dati incompleti / fuori
+   * finestra / no credenziale), così il flusso chiamante non si rompe e l'host completerà/genererà poi.
+   * Idempotente come generateSchedine. Resta tutto PRE-INVIO (reversibile): nessun invio ad Alloggiati.
+   */
+  async tryGenerateSchedine(stayId: string): Promise<GenerateResult | { skipped: string }> {
+    try {
+      return await this.generateSchedine(stayId);
+    } catch (err) {
+      return { skipped: err instanceof Error ? err.message : "motivo sconosciuto" };
+    }
+  }
 }

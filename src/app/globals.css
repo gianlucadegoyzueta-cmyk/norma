@@ -11,28 +11,45 @@
 :root {
   --radius: 0.625rem;
 
-  /* Palette di brand "Norma", allineata al marketing (norma.casa):
-     carta avorio, inchiostro caldo, accento terracotta, secondario salvia. */
-  --background: oklch(0.96 0.012 90); /* avorio #f7f2e8 */
-  --foreground: oklch(0.25 0.012 75); /* inchiostro #211c15 */
+  /* Token UFFICIALI di brand (da norma-marketing/globals.css): valori esatti riusati
+     anche dai componenti "Concierge MAX". L'app è uniformata su questi hex. */
+  --brand-avorio: #f7f2e8;
+  --brand-carta: #fbf9f3;
+  --brand-inchiostro: #211c15;
+  --brand-inchiostro-soft: #5b5347;
+  --brand-terracotta: #bc4b2b;
+  --brand-terracotta-dark: #9e3d22;
+  --brand-salvia: #6b7a5e;
+  --brand-salvia-soft: #eef0e8;
+  --brand-hairline: #e0d8c8;
 
-  --card: oklch(0.98 0.007 90); /* carta #fbf9f3 */
-  --card-foreground: oklch(0.25 0.012 75);
+  /* Motion system condiviso (reference Concierge MAX). */
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-micro: 250ms;
+  --dur-enter: 700ms;
+  --dur-scene: 1400ms;
 
-  --popover: oklch(0.98 0.007 90);
-  --popover-foreground: oklch(0.25 0.012 75);
+  /* Palette di brand "Norma": gli stessi hex mappati sui token semantici (shadcn). */
+  --background: var(--brand-avorio);
+  --foreground: var(--brand-inchiostro);
 
-  --primary: oklch(0.55 0.15 40); /* terracotta #bc4b2b */
-  --primary-foreground: oklch(0.97 0.012 90); /* avorio su terracotta */
+  --card: var(--brand-carta);
+  --card-foreground: var(--brand-inchiostro);
 
-  --secondary: oklch(0.95 0.013 130); /* salvia tenue #eef0e8 */
+  --popover: var(--brand-carta);
+  --popover-foreground: var(--brand-inchiostro);
+
+  --primary: var(--brand-terracotta);
+  --primary-foreground: var(--brand-avorio);
+
+  --secondary: var(--brand-salvia-soft);
   --secondary-foreground: oklch(0.34 0.03 120);
 
   --muted: oklch(0.94 0.012 88);
-  --muted-foreground: oklch(0.48 0.016 75); /* inchiostro-soft #5b5347 */
+  --muted-foreground: var(--brand-inchiostro-soft);
 
-  --accent: oklch(0.95 0.013 130);
-  --accent-foreground: oklch(0.42 0.04 130); /* salvia #6b7a5e */
+  --accent: var(--brand-salvia-soft);
+  --accent-foreground: var(--brand-salvia);
 
   --destructive: oklch(0.55 0.2 28);
   --destructive-foreground: oklch(0.97 0.012 90);
@@ -43,9 +60,9 @@
   --warning: oklch(0.72 0.15 70);
   --warning-foreground: oklch(0.27 0.05 70);
 
-  --border: oklch(0.88 0.016 85); /* hairline #e0d8c8 */
-  --input: oklch(0.88 0.016 85);
-  --ring: oklch(0.55 0.15 40); /* terracotta */
+  --border: var(--brand-hairline);
+  --input: var(--brand-hairline);
+  --ring: var(--brand-terracotta);
 }
 
 .dark {
@@ -140,6 +157,31 @@
 
   ::selection {
     background-color: color-mix(in oklch, var(--color-primary) 25%, transparent);
+  }
+
+  /*
+    Baseline di focus-visible per gli elementi interattivi "nudi" (link testuali, <a>, <summary>
+    e simili) che non passano dai componenti UI: garantisce un anello visibile e coerente col
+    brand (ring = terracotta) anche dove non è specificato a mano. I componenti (Button, Input,
+    Select, Tabs…) definiscono già il proprio ring e lo sovrascrivono, quindi non c'è conflitto.
+  */
+  a:focus-visible,
+  summary:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /*
+    Bottom-bar mobile: quando la pagina monta la nav (data-mobile-nav), aggiunge spazio in
+    fondo al contenuto così l'ultima riga non finisce sotto la barra fissa. Solo < md.
+    Evita di toccare il <main> di ogni pagina.
+  */
+  @media (max-width: 767px) {
+    body:has(nav[data-mobile-nav]) main {
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom) + 1rem);
+    }
   }
 }
 

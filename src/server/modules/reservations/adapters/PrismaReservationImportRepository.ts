@@ -66,6 +66,10 @@ export class PrismaReservationImportRepository implements ReservationImportRepos
     };
   }
 
+  async listAll(): Promise<{ id: string; organizationId: string }[]> {
+    return this.prisma.reservationImport.findMany({ select: { id: true, organizationId: true } });
+  }
+
   async listImportedStays(importId: string): Promise<ExistingImportedStay[]> {
     const stays = await this.prisma.stay.findMany({
       where: { reservationImportId: importId, icalUid: { not: null } },

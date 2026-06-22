@@ -114,6 +114,12 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// Commissione Norma di default sulla tassa di soggiorno, in PUNTI BASE (100 bps = 1%).
+  /// null = nessun default org → si applica DEFAULT_TAKE_RATE_BPS (0, nessuna commissione).
+  /// Un comune può sovrascriverla (TouristTaxRule.normaTakeRateBps). È SOLO configurazione:
+  /// l'incasso reale è dietro un gate del founder (port FeeCollectionChannel, non implementato).
+  normaTakeRateBps Int?
+
   memberships            Membership[]
   credentials            AlloggiatiCredential[]
   properties             Property[]
@@ -231,6 +237,11 @@ model AlloggiatiCredential {
   provincia      String // sigla, es. "RM". Una GESTIONE_APPARTAMENTI copre UNA sola provincia.
   status         CredentialStatus   @default(PENDING_REONBOARDING)
 
+  // Opt-in per-credenziale all'AUTO-INVIO del cron (default OFF): l'host decide quando si fida.
+  // Il cron auto-send considera solo le credenziali ACTIVE con autoSend=true; il Send resta gated
+  // anche da ALLOGGIATI_CRON_ENABLED + CRON_SECRET (tripla barriera).
+  autoSend Boolean @default(false)
+
   secretRef String @unique // riferimento al vault (NON il segreto in chiaro)
 
   // Metadati operativi (NON il token vero: quello è effimero e vive in cache a runtime)
@@ -272,6 +283,12 @@ model Property {
   // (Venezia tariffa per zona). Alimentano la risoluzione della tariffa nel calcolatore.
   accommodationCategory String? // null = si userà la tariffa jolly DEFAULT del comune
   touristTaxZone        String? // null = zona DEFAULT del comune
+
+  // Ross1000 (movimento turistico ISTAT): codice struttura assegnato dall'ente + capacità ricettiva.
+  // Alimentano il file <movimenti> (<codice>, <cameredisponibili>, <lettidisponibili>). Null = non configurato.
+  ross1000Code      String? // codice struttura per la trasmissione del movimento turistico
+  camereDisponibili Int? // unità ricettive potenzialmente vendibili
+  lettiDisponibili  Int? // posti letto totali
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -388,6 +405,14 @@ model Guest {
   // con fallback approssimato lato ISTAT finché non è valorizzata. residenceComuneId solo se Italia.
   residenceCountryId String? // Stato di residenza
   residenceComuneId  String? // Comune di residenza (solo se residenza in Italia)
+  // luogoresidenza per residenti ESTERI (NUTS o stringa, max 30): per l'Italia si usa residenceComune.
+  // Senza questo, per un estero il movimento turistico resterebbe sempre INCOMPLETE (mai inventare).
+  residenceForeignLocality String? // luogo di residenza estero (Ross1000 <luogoresidenza>)
+
+  // Ross1000 (movimento turistico): NON richiesti da Alloggiati, ma obbligatori nel tracciato <arrivo>.
+  // Null finché non raccolti → il report li segnala come mancanti (mai inventati).
+  tourismType    String? // tipoturismo (es. "ENOGASTRONOMICO")
+  transportMeans String? // mezzotrasporto (es. "AUTO", "AEREO")
 
   documentTypeId  String? // documento: obbligatorio solo per 16/17/18
   documentNumber  String?
@@ -597,13 +622,23 @@ model TouristTaxDeclaration {
   organizationId String
   comuneId       String
   period         String // es. "2026-05" (mese) o "2026-Q2" (trimestre)
-  amountCents    Int                  @default(0) // denaro in centesimi
+  amountCents    Int                  @default(0) // LORDO: imposta dovuta (somma righe), in centesimi
   status         TaxDeclarationStatus @default(DRAFT)
   remittanceMode TaxRemittanceMode    @default(MANUAL_EXPORT)
   submittedAt    DateTime?
   paidAt         DateTime?
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
+
+  // --- Snapshot commissione Norma (take-rate), congelato al momento del calcolo ---
+  // Invariante: normaFeeCents + comuneNetCents == amountCents. Solo registrazione/trasparenza:
+  // nessun denaro reale movimentato (gate del founder; port FeeCollectionChannel non implementato).
+  /// Take-rate applicata, in punti base (100 bps = 1%). 0 = nessuna commissione.
+  normaTakeRateBps Int @default(0)
+  /// Commissione Norma trattenuta sul lordo (centesimi).
+  normaFeeCents    Int @default(0)
+  /// Netto da versare al comune = amountCents − normaFeeCents (centesimi).
+  comuneNetCents   Int @default(0)
 
   organization Organization                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   comune       Comune                      @relation(fields: [comuneId], references: [id])

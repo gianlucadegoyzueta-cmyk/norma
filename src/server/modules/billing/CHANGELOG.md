@@ -8,8 +8,9 @@ Isolamento multi-tenant per `organizationId`. Tutto pensato per la **sandbox Str
 
 - **Incasso** in TEST MODE via Stripe Checkout (hosted) + Customer Portal (gestione/disdetta).
   Nessun form carte custom: PCI a carico di Stripe.
-- **Modello commerciale (Piano Marketing):** annuale-first — €120/anno consigliato (`norma_annual_v1`),
-  €14/mese rampa (`norma_monthly_v1`).
+- **Modello commerciale (decisione founder 2026-06-20):** annuale-first — €90/anno consigliato (`norma_annual_v2`),
+  €9/mese rampa (`norma_monthly_v2`). Agenzie/PM: €6/mese a struttura (€72/anno) — vetrina sul sito marketing.
+  NB: il bump dei lookup_key a `_v2` fa creare Price nuovi su Stripe al bootstrap (i vecchi €120/€14 non vengono riusati).
 - **Trial legato al PRIMO UTILIZZO, non al tempo:** accesso pieno e senza carta finché gli ospiti
   gestiti sono 0; al primo ospite scatta la richiesta di abbonamento, con 7 giorni di grazia. È
   logica applicativa (`domain/access.ts`), NON un trial Stripe a giorni.

@@ -8,6 +8,7 @@ export interface CredentialMetadata {
   category: CredentialCategory;
   provincia: string;
   status: CredentialStatus;
+  autoSend: boolean;
   secretRef: string;
 }
 
@@ -27,6 +28,7 @@ const SELECT = {
   category: true,
   provincia: true,
   status: true,
+  autoSend: true,
   secretRef: true,
 } satisfies Prisma.AlloggiatiCredentialSelect;
 
@@ -67,12 +69,44 @@ export class PrismaCredentialRepository {
     return this.prisma.alloggiatiCredential.findMany({ where: { organizationId }, select: SELECT });
   }
 
+  /**
+   * Tutti gli id delle credenziali ATTIVE, di OGNI organizzazione. Lettura INTERNA per i job di
+   * sistema (es. lo scheduler invio+reconcile): non c'è un'org chiamante, l'autorizzazione è il
+   * contesto di sistema del cron. Ritorna solo gli id (nessun metadato/segreto di tenant).
+   */
+  async listActiveCredentialIds(): Promise<string[]> {
+    const rows = await this.prisma.alloggiatiCredential.findMany({
+      where: { status: "ACTIVE" },
+      select: { id: true },
+      orderBy: { createdAt: "asc" },
+    });
+    return rows.map((r) => r.id);
+  }
+
+  /** Credenziali ATTIVE con opt-in all'auto-invio (autoSend=true): le sole che il cron auto-invia. */
+  async listAutoSendCredentialIds(): Promise<string[]> {
+    const rows = await this.prisma.alloggiatiCredential.findMany({
+      where: { status: "ACTIVE", autoSend: true },
+      select: { id: true },
+      orderBy: { createdAt: "asc" },
+    });
+    return rows.map((r) => r.id);
+  }
+
   async updateStatus(id: string, organizationId: string, status: CredentialStatus): Promise<void> {
     // updateMany con (id, organizationId): una credenziale di un'altra org non viene aggiornata
     // (0 righe), mai un'eccezione e mai una scrittura cross-tenant. Isolamento by query.
     await this.prisma.alloggiatiCredential.updateMany({
       where: { id, organizationId },
       data: { status },
+    });
+  }
+
+  /** Opt-in/out all'auto-invio per la credenziale. Isolamento by query (updateMany con org). */
+  async setAutoSend(id: string, organizationId: string, autoSend: boolean): Promise<void> {
+    await this.prisma.alloggiatiCredential.updateMany({
+      where: { id, organizationId },
+      data: { autoSend },
     });
   }
 

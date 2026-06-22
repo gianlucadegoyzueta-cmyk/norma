@@ -13,6 +13,7 @@ function fakeRepo(rule: TouristTaxRule | null): TouristTaxConfigRepository {
     upsertVersion: async () => {
       throw new Error("non usato nel test");
     },
+    getOrgTakeRateBps: async () => null,
   };
 }
 

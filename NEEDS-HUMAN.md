@@ -74,3 +74,35 @@ migrate.yml già presente, che gira al merge su main).
 ### 7. Tassa di soggiorno — export PDF
 
 - **Perché è qui:** NON ha schema, è additivo (libreria PDF). **Spedibile**, ma lo lascio come PR per revisione visiva (il layout del PDF è estetica che non posso vedere). Se lo trovi in PR aperta, è questo.
+
+### 9. Movimento turistico — copertura nazionale (nuove regioni)
+
+- **Stato codice (branch `feat/movimento-turistico-nuove-regioni`, CI verde):** copertura portata da 13 a **15 regioni FILE + serializer Sicilia pronto**.
+  - ✅ **Puglia** (SPOT, XML) — FILE end-to-end (serializer + loader + dispatch reminder).
+  - ✅ **Umbria** (Turismatica C59, .txt fixed-width, 1 file/giorno) — FILE end-to-end. Tabella codici provenienze trascritta dal PDF ufficiale.
+  - ✅ **Sicilia** (WebAPI PMS) — body XML serializzato e testato; **trasmissione NON attiva** (è un'API: client + invio reale gated).
+- **Cosa serve da te — azioni di sblocco (bozze pronte in `tmp/outreach/email-sblocco-regioni.md`):**
+  1. **Campania** (Web API Sinfonia): email a giuseppe.pezone@regione.campania.it → Swagger + utenze test. Senza spec non scrivo il client.
+  2. **Sicilia** (attivazione): PEC a servizioturistico.ct@certmail.regione.sicilia.it → credenziali UTENTE PMS. Poi: conferma codifica **Gender 1/2** con l'ente (il PDF è incoerente), e **primo invio reale solo con tua decisione** (guardrail #1).
+  3. **Valle d'Aosta** (VIT): accreditamento fornitore PMS presso RAVDA/INVA → spec server-to-server.
+  4. **Friuli-VG** (WebTur): richiesta tracciato file a Insiel.
+  5. **PA Trento** (STU/DTU): PEC ISPAT per modulo Software House + tracciato C59 (canale file importabile; per affitti brevi serve DTU/CIPAT).
+- **Decisione tua — Bolzano (PA):** TIC-Web/LTS richiede **certificazione software** obbligatoria (barriera vera, spec non pubblica). Vale per una sola provincia? Se sì, primo passo: contatto LTS (info@lts.it). Altrimenti resta ASSISTITO.
+- **Follow-up minore:** verificare le regioni Ross1000 a confidenza media nel routing (Toscana, Lombardia web-service, Abruzzo) — già FILE, solo conferma sul campo.
+
+#### 9b. Trasmissione AUTO (Sicilia) — infrastruttura pronta, vault credenziali da attivare
+
+- **Stato codice (CI verde):** la catena AUTO Sicilia è completa e testata: `sicilia/report.ts` (dati→payload), `sicilia/tracciato-xml.ts` (body), `sicilia/pms-client.ts` (HTTP, transport iniettabile), `sicilia/transport.ts` (fetch reale), `sicilia/transmit.ts` (orchestrazione con **gate a tripla barriera**: flag globale + opt-in struttura + conferma esplicita; default CHIUSO). L'astrazione credenziali è in `regional/credentials.ts` (porta + provider in-memory).
+- **PARCHEGGIATO — schema vault credenziali regionali (HIGH, serve tuo backup):** manca il modello DB per custodire le credenziali del CLIENTE per-struttura. Da aggiungere a `prisma/schema.prisma` (sul modello di `AlloggiatiCredential`):
+  - `model RegionalCredential { id, organizationId, propertyId?, serializerId (es. "turistat-xml"), label, status (ACTIVE|PENDING|DISABLED), autoTransmit Boolean @default(false), secretRef @unique (→ SecretsVault, mai in chiaro), config Json? (dati non segreti, es. hotelCode Sicilia), lastVerifiedAt, createdAt, updatedAt }` + back-relation su Organization e Property + enum `RegionalCredentialStatus`.
+  - Estendere `SecretsVault` con metodi generici (storeRaw/retrieveRaw) per segreti non-Alloggiati, + provider Prisma `PrismaRegionalCredentialProvider` (legge `RegionalCredential` + vault, degrada con grazia su P2021 se la tabella non esiste).
+  - **Attivazione (tuo ordine):** backup DB (guardrail 2) → genera/applica la migrazione → UI per far inserire al cliente le sue credenziali regionali + opt-in `autoTransmit`.
+- **Attivazione invio reale Sicilia (CRITICAL — guardrail #1):** solo dopo credenziali UTENTE PMS reali del cliente, conferma codifica **Gender 1/2** con l'ente, e tua decisione esplicita sul primo invio. Il gate `SICILIA_TRANSMIT_ENABLED` resta OFF finché non lo accendi tu.
+- **Adapter futuri (stesso stampo, quando arriva la spec):** Campania (API), VdA, FVG, Trento — si innestano implementando un client + un provider credenziali, riusando `transmit.ts`/`credentials.ts`.
+
+#### 9c. Assunzioni note (dalla review avversariale — low, da decidere consapevolmente)
+
+- **`occupazionepostoletto` = "si" per tutti (SPOT):** Norma non raccoglie il dato → default conservativo. Gonfia leggermente l'occupazione posti letto per famiglie con bambini co-dormienti. Se serve precisione, raccogliere il dato; altrimenti è uno scostamento noto dalla disciplina "mai inventare" (qui un default, non un INCOMPLETE).
+- **Giorno-calendario in UTC (ISTAT) vs Europe/Rome (Alloggiati/CSV):** i moduli ISTAT (ross1000/spot/umbria) bucketizzano i giorni in UTC; assumono `arrivalDate/departureDate` a mezzanotte UTC. Un soggiorno importato da iCal con orario vicino a mezzanotte UTC può finire nel giorno/mese sbagliato. Fix futuro: derivare il giorno in Europe/Rome (come `stays/domain/generation.ts`).
+- **`closedDays` non cablato:** il dominio (ross1000/spot/umbria) sa azzerare l'occupazione nei giorni di chiusura, ma i loader non passano i giorni di chiusura (Norma non li traccia). Capacità pronta, inerte finché non c'è una sorgente di chiusura/disponibilità.
+- **Doppio submit del check-in → `Guest` orfano (LOW, pre-esistente):** `addGuests` non deduplica; se l'ospite invia due volte si crea un secondo `Guest` (conteggio gonfiato). NON crea schedine doppie (la dedup-key le assorbe) né invii. Fix futuro: dedup ospite per (soggiorno, n° documento) — ora possibile perché il documento è obbligatorio — o guardia anti-re-submit nel form. Tocca `addGuests` (usato anche dai flussi host) → da fare con un test dedicato.

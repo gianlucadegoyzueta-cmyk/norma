@@ -15,6 +15,11 @@ const SESSION_COOKIES = ["authjs.session-token", "__Secure-authjs.session-token"
  */
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  // Anteprime di sviluppo (`/dev/*`): raggiungibili senza login SOLO fuori produzione.
+  // Le pagine stesse fanno `notFound()` in produzione, ma qui evitiamo pure il redirect.
+  if (process.env.NODE_ENV !== "production" && pathname.startsWith("/dev/")) {
+    return NextResponse.next();
+  }
   if (isPublicPath(pathname)) return NextResponse.next();
 
   const hasSession = SESSION_COOKIES.some((name) => req.cookies.has(name));

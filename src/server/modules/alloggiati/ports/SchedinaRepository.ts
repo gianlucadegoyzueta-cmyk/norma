@@ -71,6 +71,13 @@ export interface SchedinaRepository {
   parkExhausted(credentialId: string, maxAttempts: number): Promise<number>;
 
   /**
+   * Parcheggia in NEEDS_REVIEW le schedine PENDING tra gli `ids` indicati (le righe bocciate dal
+   * Test dry-run prima dell'auto-send): NON verranno inviate, restano visibili all'host. Salta gli id
+   * non più PENDING (idempotente). Ritorna quante ne sono state parcheggiate.
+   */
+  parkByIds(ids: readonly string[]): Promise<number>;
+
+  /**
    * Rimette in coda una schedina NEEDS_REVIEW (→ PENDING) AZZERANDO i tentativi, così l'host può
    * ritentare dopo aver risolto. Isolamento garantito a monte (chiamata dopo findById per org).
    */
