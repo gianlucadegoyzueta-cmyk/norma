@@ -1,8 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  assertFeeBreakdownInvariant,
   assertValidTakeRateBps,
   computeNormaFee,
   DEFAULT_TAKE_RATE_BPS,
+  FeeBreakdownInvariantError,
   formatTakeRateBps,
   InvalidTakeRateError,
   MAX_TAKE_RATE_BPS,
@@ -125,7 +127,66 @@ describe("resolveTakeRateBps — precedenza comune → org → default", () => {
   });
 
   it("una take-rate malformata in config lancia (barriera del dominio)", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     expect(() => resolveTakeRateBps({ comuneBps: 99999 })).toThrow(InvalidTakeRateError);
+    warn.mockRestore();
+  });
+});
+
+// A10: oltre a lanciare, un valore fuori range viene LOGGATO (warning) prima del throw.
+describe("resolveTakeRateBps — warning su valore fuori range (A10)", () => {
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+  beforeEach(() => {
+    warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+  });
+  afterEach(() => {
+    warnSpy.mockRestore();
+  });
+
+  it("comuneBps fuori range: logga un warning e poi lancia", () => {
+    expect(() => resolveTakeRateBps({ comuneBps: 99999 })).toThrow(InvalidTakeRateError);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(String(warnSpy.mock.calls[0][0])).toContain("COMUNE");
+  });
+
+  it("orgDefaultBps fuori range: logga un warning e poi lancia", () => {
+    expect(() => resolveTakeRateBps({ comuneBps: null, orgDefaultBps: -5 })).toThrow(
+      InvalidTakeRateError,
+    );
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(String(warnSpy.mock.calls[0][0])).toContain("ORGANIZATION");
+  });
+
+  it("valore valido: nessun warning", () => {
+    resolveTakeRateBps({ comuneBps: 250 });
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+});
+
+// A8: invariante contabile fee + netto == lordo.
+describe("assertFeeBreakdownInvariant (A8)", () => {
+  it("accetta uno snapshot coerente (60 + 2340 == 2400)", () => {
+    expect(() => assertFeeBreakdownInvariant(2400, 60, 2340)).not.toThrow();
+  });
+
+  it("accetta lo zero (0 + 0 == 0)", () => {
+    expect(() => assertFeeBreakdownInvariant(0, 0, 0)).not.toThrow();
+  });
+
+  it("rifiuta fee + netto ≠ lordo", () => {
+    expect(() => assertFeeBreakdownInvariant(2400, 60, 2341)).toThrow(FeeBreakdownInvariantError);
+    expect(() => assertFeeBreakdownInvariant(2400, 100, 2000)).toThrow(FeeBreakdownInvariantError);
+  });
+
+  it("coerente con ogni output di computeNormaFee", () => {
+    for (const gross of [0, 1, 633, 2400, 12345]) {
+      for (const bps of [0, 100, 250, 333, MAX_TAKE_RATE_BPS]) {
+        const f = computeNormaFee(gross, bps);
+        expect(() =>
+          assertFeeBreakdownInvariant(f.grossCents, f.normaFeeCents, f.comuneNetCents),
+        ).not.toThrow();
+      }
+    }
   });
 });
 
