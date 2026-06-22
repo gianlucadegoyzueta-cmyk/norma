@@ -2,6 +2,7 @@
 
 import { type CSSProperties, useActionState, useEffect, useRef } from "react";
 import { Brand } from "@/components/brand";
+import { FormMessage } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { advanceFromWelcomeAction } from "../actions";
 
@@ -44,9 +45,10 @@ export function WelcomeStep({ onNext }: { onNext: () => void }) {
       </div>
       <form
         action={action}
-        className="ob-reveal"
+        className="ob-reveal flex flex-col items-center gap-3"
         style={{ "--ob-delay": "480ms" } as CSSProperties}
       >
+        {state && !state.ok ? <FormMessage>{state.message}</FormMessage> : null}
         <SubmitButton size="lg" pendingLabel="Un attimo…">
           Partiamo
         </SubmitButton>

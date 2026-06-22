@@ -1,4 +1,4 @@
-import type { TipoAlloggiato } from "@prisma/client";
+import type { ReservationSource, StayImportStatus, TipoAlloggiato } from "@prisma/client";
 import type { ResolverGuest } from "../../alloggiati";
 import { type GuestData, type Party, tipiPerParty } from "../domain/parties";
 import type {
@@ -10,7 +10,11 @@ import type {
 } from "../ports";
 
 type GuestRow = ResolverGuest & { id: string; stayId: string };
-type StayRow = CreateStayInput & { id: string };
+type StayRow = CreateStayInput & {
+  id: string;
+  importSource: ReservationSource | null;
+  importStatus: StayImportStatus | null;
+};
 type PropertyInfo = {
   credentialId: string | null;
   alloggiatiApartmentId: string | null;
@@ -51,8 +55,21 @@ export class InMemoryStaysRepository implements StaysRepository {
 
   async createStay(input: CreateStayInput): Promise<{ id: string }> {
     const id = `stay_${++this.seq}`;
-    this.stays.set(id, { id, ...input });
+    this.stays.set(id, { id, ...input, importSource: null, importStatus: null });
     return { id };
+  }
+
+  /**
+   * Helper per i test: marca un soggiorno come importato da iCal (provenienza + stato di import),
+   * così la lista può esercitare la stessa logica di provenienza del percorso Prisma.
+   */
+  setStayImport(
+    stayId: string,
+    source: ReservationSource | null,
+    status: StayImportStatus | null,
+  ): void {
+    const stay = this.stays.get(stayId);
+    if (stay) this.stays.set(stayId, { ...stay, importSource: source, importStatus: status });
   }
 
   async addGuests(
@@ -118,7 +135,17 @@ export class InMemoryStaysRepository implements StaysRepository {
           isShortStay: s.isShortStay,
           guestsCount: s.guestsCount,
           guestsAdded,
-          schedine: { total: 0, pending: 0, sending: 0, acquired: 0, rejected: 0, unverified: 0 },
+          schedine: {
+            total: 0,
+            pending: 0,
+            sending: 0,
+            acquired: 0,
+            rejected: 0,
+            unverified: 0,
+            needsReview: 0,
+          },
+          importSource: s.importSource,
+          importStatus: s.importStatus,
         };
       });
   }

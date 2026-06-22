@@ -1,4 +1,9 @@
-import type { SchedinaStatus, TipoAlloggiato } from "@prisma/client";
+import type {
+  ReservationSource,
+  SchedinaStatus,
+  StayImportStatus,
+  TipoAlloggiato,
+} from "@prisma/client";
 import type { ResolverGuest } from "../alloggiati";
 import type { Party } from "./domain/parties";
 
@@ -32,6 +37,7 @@ export interface SchedinaStatusCounts {
   acquired: number;
   rejected: number;
   unverified: number;
+  needsReview: number;
 }
 
 /** Riga soggiorno come serve alla lista (immobile risolto + riepilogo schedine). */
@@ -47,6 +53,11 @@ export interface StayListItem {
   guestsCount: number; // dichiarato alla creazione
   guestsAdded: number; // ospiti effettivamente inseriti
   schedine: SchedinaStatusCounts;
+  // --- Provenienza import iCal (additivo; null = soggiorno creato a mano) ---
+  /** Piattaforma di origine se il soggiorno arriva da un feed iCal (Airbnb/Booking/VRBO/altro). */
+  importSource: ReservationSource | null;
+  /** Stato di import: DRAFT (bozza da completare), CANCELLED, NEEDS_CANCEL_REVIEW. null = a mano. */
+  importStatus: StayImportStatus | null;
 }
 
 /** Un ospite come serve alla pagina di dettaglio (anagrafica essenziale + stato schedina). */
