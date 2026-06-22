@@ -138,8 +138,10 @@ export default async function AgencyPage({
               </article>
               <article className="agency-kpi">
                 <div className="agency-kpi-value">€{euros(totals.taxAccruedCents)}</div>
-                <div className="agency-kpi-label">Tassa di soggiorno (trimestre)</div>
-                <div className="agency-kpi-hint">maturata sul periodo corrente</div>
+                <div className="agency-kpi-label">Tassa di soggiorno (periodo)</div>
+                <div className="agency-kpi-hint">
+                  maturata nel periodo di dichiarazione di ogni comune
+                </div>
               </article>
               <article className="agency-kpi">
                 <div className="agency-kpi-value">

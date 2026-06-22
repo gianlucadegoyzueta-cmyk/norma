@@ -6,6 +6,7 @@ import {
   buildAgencyOverview,
   type PropertyComplianceInput,
 } from "@/server/modules/dashboard/agency-overview";
+import { PrismaTouristTaxConfigRepository } from "@/server/modules/tourist-tax/adapters/PrismaTouristTaxConfigRepository";
 import { periodOf } from "@/server/modules/tourist-tax/domain/period";
 
 /**
@@ -22,7 +23,6 @@ export async function getAgencyOverview(
 ): Promise<AgencyOverview> {
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-  const quarter = periodOf(now, "QUARTERLY");
 
   const properties = await prisma.property.findMany({
     where: { organizationId: orgId },
@@ -33,6 +33,7 @@ export async function getAgencyOverview(
       credentialId: true,
       cinStatus: true,
       ross1000Code: true,
+      comuneId: true,
       comune: { select: { name: true, provincia: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -40,10 +41,32 @@ export async function getAgencyOverview(
 
   if (properties.length === 0) return buildAgencyOverview([]);
 
+  // Periodo dichiarazione CORRENTE per ogni comune coinvolto. Il periodo (mensile/trimestrale/
+  // annuale) è CONFIGURABILE per comune nella regola tassa: si risolve con la funzione canonica
+  // del modulo tourist-tax (findRuleForDate → rule.declaration.period) e poi periodOf, invece di
+  // assumere "QUARTERLY" per tutti (che azzererebbe la KPI per i comuni non trimestrali).
+  const taxConfigs = new PrismaTouristTaxConfigRepository(prisma);
+  const comuneIds = [...new Set(properties.map((p) => p.comuneId))];
+  const periodByComune = new Map<string, string>();
+  await Promise.all(
+    comuneIds.map(async (comuneId) => {
+      const rule = await taxConfigs.findRuleForDate(comuneId, now);
+      if (!rule) return; // comune senza regola attiva → nessun periodo da aggregare
+      periodByComune.set(comuneId, periodOf(now, rule.declaration.period));
+    }),
+  );
+  // Una clausola (comuneId, period) per comune con regola: colpisce l'unique
+  // (organizationId, comuneId, period) di TouristTaxDeclaration. Vuoto → nessuna tassa da sommare.
+  const declarationFilters = [...periodByComune.entries()].map(([comuneId, period]) => ({
+    organizationId: orgId,
+    comuneId,
+    period,
+  }));
+
   // --- Schedine per immobile (overdue / pending), via guest → stay → property ---
   // Le schedine sono legate all'immobile solo attraverso l'ospite e il suo soggiorno: si
   // raggruppa in memoria sul propertyId della catena, restando dentro l'org per ogni read.
-  const [overdueSchedine, pendingSchedine, arrivalsToday, quarterLines] = await Promise.all([
+  const [overdueSchedine, pendingSchedine, arrivalsToday, periodLines] = await Promise.all([
     prisma.schedina.findMany({
       where: {
         organizationId: orgId,
@@ -52,8 +75,14 @@ export async function getAgencyOverview(
       },
       select: { guest: { select: { stay: { select: { propertyId: true } } } } },
     }),
+    // PENDING/UNVERIFIED ancora ENTRO scadenza: disgiunte dalle overdue (deadlineAt < now), così la
+    // KPI "in attesa" non conta due volte ciò che è già "oltre scadenza".
     prisma.schedina.findMany({
-      where: { organizationId: orgId, status: { in: ["PENDING", "UNVERIFIED"] } },
+      where: {
+        organizationId: orgId,
+        status: { in: ["PENDING", "UNVERIFIED"] },
+        deadlineAt: { gte: now },
+      },
       select: { guest: { select: { stay: { select: { propertyId: true } } } } },
     }),
     // Check-in attesi OGGI: arrivi del giorno senza alcun token di check-in completato.
@@ -65,20 +94,22 @@ export async function getAgencyOverview(
       },
       select: { propertyId: true },
     }),
-    // Tassa maturata nel trimestre per immobile: somma le righe di dichiarazione del periodo,
-    // mappate all'immobile via lo stayId della riga.
-    prisma.touristTaxDeclarationLine.findMany({
-      where: { declaration: { organizationId: orgId, period: quarter } },
-      select: { amountCents: true, stayId: true },
-    }),
+    // Tassa maturata nel periodo CORRENTE di ciascun comune (mensile/trimestrale/annuale), sommata
+    // dalle righe di dichiarazione e mappata all'immobile via lo stayId della riga.
+    declarationFilters.length
+      ? prisma.touristTaxDeclarationLine.findMany({
+          where: { declaration: { OR: declarationFilters } },
+          select: { amountCents: true, stayId: true },
+        })
+      : Promise.resolve([] as { amountCents: number; stayId: string }[]),
   ]);
 
   const overdueByProperty = countByProperty(overdueSchedine.map((s) => s.guest.stay.propertyId));
   const pendingByProperty = countByProperty(pendingSchedine.map((s) => s.guest.stay.propertyId));
   const checkinsByProperty = countByProperty(arrivalsToday.map((s) => s.propertyId));
 
-  // stayId → propertyId per le righe tassa del trimestre (una sola read aggiuntiva, mirata).
-  const lineStayIds = [...new Set(quarterLines.map((l) => l.stayId))];
+  // stayId → propertyId per le righe tassa del periodo (una sola read aggiuntiva, mirata).
+  const lineStayIds = [...new Set(periodLines.map((l) => l.stayId))];
   const lineStays = lineStayIds.length
     ? await prisma.stay.findMany({
         where: { id: { in: lineStayIds }, organizationId: orgId },
@@ -87,7 +118,7 @@ export async function getAgencyOverview(
     : [];
   const propertyByStay = new Map(lineStays.map((s) => [s.id, s.propertyId]));
   const taxByProperty = new Map<string, number>();
-  for (const line of quarterLines) {
+  for (const line of periodLines) {
     const pid = propertyByStay.get(line.stayId);
     if (!pid) continue; // soggiorno di un'altra org (impossibile per il filtro) o rimosso
     taxByProperty.set(pid, (taxByProperty.get(pid) ?? 0) + line.amountCents);
