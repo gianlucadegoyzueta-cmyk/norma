@@ -160,6 +160,20 @@
   }
 
   /*
+    Baseline di focus-visible per gli elementi interattivi "nudi" (link testuali, <a>, <summary>
+    e simili) che non passano dai componenti UI: garantisce un anello visibile e coerente col
+    brand (ring = terracotta) anche dove non è specificato a mano. I componenti (Button, Input,
+    Select, Tabs…) definiscono già il proprio ring e lo sovrascrivono, quindi non c'è conflitto.
+  */
+  a:focus-visible,
+  summary:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /*
     Bottom-bar mobile: quando la pagina monta la nav (data-mobile-nav), aggiunge spazio in
     fondo al contenuto così l'ultima riga non finisce sotto la barra fissa. Solo < md.
     Evita di toccare il <main> di ogni pagina.
