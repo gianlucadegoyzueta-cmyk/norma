@@ -9,6 +9,7 @@ import { PrismaReferenceTablesLoader, PrismaSchedinaRepository } from "@/server/
 import { PrismaStaysRepository, StaysService } from "@/server/modules/stays";
 import { ConciergePage } from "@/components/concierge/concierge-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { NO_SCHEDINA_LABEL } from "@/lib/schedina-status-display";
 import { StayForm } from "./StayForm";
 
 export const metadata: Metadata = { title: "Soggiorni" };
@@ -95,7 +96,7 @@ export default async function StaysPage() {
                       </p>
                     </div>
                     {s.schedine.total === 0 ? (
-                      <span className="cmx-badge cmx-badge-wait shrink-0">Nessuna schedina</span>
+                      <span className="cmx-badge cmx-badge-wait shrink-0">{NO_SCHEDINA_LABEL}</span>
                     ) : (
                       <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
                         {s.schedine.acquired > 0 && (
@@ -121,6 +122,11 @@ export default async function StaysPage() {
                         {s.schedine.unverified > 0 && (
                           <span className="cmx-badge cmx-badge-wait">
                             {s.schedine.unverified} da verificare
+                          </span>
+                        )}
+                        {s.schedine.needsReview > 0 && (
+                          <span className="cmx-badge cmx-badge-err">
+                            {s.schedine.needsReview} da rivedere
                           </span>
                         )}
                       </div>
