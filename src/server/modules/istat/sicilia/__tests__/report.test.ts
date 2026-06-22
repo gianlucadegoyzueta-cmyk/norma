@@ -96,6 +96,48 @@ describe("loadSiciliaReport", () => {
     }
   });
 
+  it("[A1] open stay → SHORT-CIRCUIT: nessun guest costruito, niente notte-zero inventata", async () => {
+    const prisma = fakePrisma([
+      { id: "sOpen", arrivalDate: ARR, departureDate: null, guests: [guest({ id: "gOpen" })] },
+    ]);
+    const out = await loadSiciliaReport(prisma, input);
+    expect(out.kind).toBe("INCOMPLETE");
+    if (out.kind === "INCOMPLETE") {
+      // Solo il datum di struttura (departureDate del soggiorno aperto); NESSUN missing per-guest:
+      // il guest non viene neppure costruito (mai un departureDate = arrivalDate fabbricato).
+      expect(out.missing).toEqual([{ field: "departureDate", scope: "STRUTTURA", refId: "sOpen" }]);
+      expect(out.missing.some((m) => m.scope === "GUEST")).toBe(false);
+    }
+  });
+
+  it("[A1] mix open + chiuso → INCOMPLETE; il datum aperto referenzia solo il soggiorno aperto", async () => {
+    const prisma = fakePrisma([
+      { id: "sClosed", arrivalDate: ARR, departureDate: DEP, guests: [guest({ id: "gC" })] },
+      { id: "sOpen", arrivalDate: ARR, departureDate: null, guests: [guest({ id: "gO" })] },
+    ]);
+    const out = await loadSiciliaReport(prisma, input);
+    expect(out.kind).toBe("INCOMPLETE");
+    if (out.kind === "INCOMPLETE") {
+      const dep = out.missing.filter((m) => m.field === "departureDate");
+      expect(dep).toHaveLength(1);
+      expect(dep[0].refId).toBe("sOpen");
+    }
+  });
+
+  it("[A1] OK: departureDate reale, mai uguale ad arrivalDate (nessun fallback)", async () => {
+    const prisma = fakePrisma([
+      { id: "s1", arrivalDate: ARR, departureDate: DEP, guests: [guest()] },
+    ]);
+    const out = await loadSiciliaReport(prisma, input);
+    expect(out.kind).toBe("OK");
+    if (out.kind === "OK") {
+      const g = out.stays[0].guests[0];
+      expect(g.departureDate).toBe(DEP.toISOString());
+      expect(g.departureDate).not.toBe(g.arrivalDate);
+      expect(g.rooms[0].endDate).toBe(DEP.toISOString());
+    }
+  });
+
   it("hotelCode mancante → INCOMPLETE", async () => {
     const prisma = fakePrisma([
       { id: "s1", arrivalDate: ARR, departureDate: DEP, guests: [guest()] },

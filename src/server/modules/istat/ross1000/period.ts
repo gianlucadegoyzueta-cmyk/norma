@@ -31,6 +31,40 @@ function parse(periodStr: string): { y: number; m: number } {
   return { y: Number(m[1]), m: month };
 }
 
+/**
+ * Verifica che (anno, mese 1-based, giorno) sia un giorno-calendario REALE con round-trip UTC.
+ * Una data "fantasma" (es. 30 febbraio) rotola al mese successivo, quindi `getUTCDate()` non
+ * torna `day`. "Mai inventare dati": un giorno inesistente è un errore, non lo si normalizza
+ * in silenzio. Lancia `InvalidPeriodError` se il giorno non esiste.
+ */
+export function assertRealCalendarDay(year: number, month1: number, day: number): void {
+  const probe = new Date(Date.UTC(year, month1 - 1, day));
+  if (
+    probe.getUTCFullYear() !== year ||
+    probe.getUTCMonth() !== month1 - 1 ||
+    probe.getUTCDate() !== day
+  ) {
+    throw new InvalidPeriodError(
+      `${year}-${String(month1).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+    );
+  }
+}
+
+/**
+ * Parsa una data "YYYY-MM-DD" rifiutando i giorni inesistenti (es. "2025-02-30", "2025-13-01").
+ * Ritorna mezzanotte UTC del giorno. Lancia `InvalidPeriodError` su formato o giorno non reale.
+ */
+export function parseCalendarDate(dateStr: string): Date {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  if (!m) throw new InvalidPeriodError(dateStr);
+  const year = Number(m[1]);
+  const month1 = Number(m[2]);
+  const day = Number(m[3]);
+  if (month1 < 1 || month1 > 12) throw new InvalidPeriodError(dateStr);
+  assertRealCalendarDay(year, month1, day);
+  return new Date(Date.UTC(year, month1 - 1, day));
+}
+
 /** Periodo "YYYY-MM" che contiene una data. */
 export function periodOf(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
