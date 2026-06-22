@@ -33,12 +33,22 @@ describe("validatePerson", () => {
   });
 
   it("input valido → data popolata e nessun errore", () => {
-    const { data, errors } = validatePerson(valid, true);
+    const { data, errors, errorCodes } = validatePerson(valid, true);
     expect(errors).toEqual({});
+    expect(errorCodes).toEqual({});
     expect(data?.firstName).toBe("Mario");
     expect(data?.lastName).toBe("Rossi");
     expect(data?.sex).toBe("M");
     expect(data?.birthDate.toISOString()).toContain("1990-01-15");
+  });
+
+  it("errorCodes resta in sync con errors (chiavi identiche) e usa codici stabili", () => {
+    const { errors, errorCodes } = validatePerson({}, true);
+    // Stesse chiavi-campo in entrambe le mappe: il check-in pubblico localizza tramite i codici,
+    // il flusso autenticato usa le stringhe IT — non devono divergere.
+    expect(Object.keys(errorCodes).sort()).toEqual(Object.keys(errors).sort());
+    expect(errorCodes.lastName).toBe("lastNameRequired");
+    expect(errorCodes.documentNumber).toBe("documentNumberRequired");
   });
 
   it("data di nascita non valida → errore SOLO su birthDate", () => {
