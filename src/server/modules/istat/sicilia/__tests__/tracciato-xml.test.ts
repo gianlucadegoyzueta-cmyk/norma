@@ -114,6 +114,57 @@ describe("buildStaysPmsXml — addfrompms", () => {
   it("nessuno stay → errore", () => {
     expect(() => buildStaysPmsXml([])).toThrow(SiciliaXmlError);
   });
+
+  it("[A1] DepartureDate == ArrivalDate (notte-zero) → errore", () => {
+    const sameDay = "2014-07-05T10:00:00.000Z";
+    expect(() =>
+      buildStaysPmsXml([
+        stay({
+          guests: [
+            guest({
+              arrivalDate: sameDay,
+              departureDate: sameDay,
+              rooms: [{ roomId: "13", startDate: sameDay, endDate: sameDay }],
+            }),
+          ],
+        }),
+      ]),
+    ).toThrow(/successiva ad ArrivalDate/);
+  });
+
+  it("[A1] DepartureDate < ArrivalDate (intervallo invertito) → errore", () => {
+    const arr = "2014-07-11T10:00:00.000Z";
+    expect(() =>
+      buildStaysPmsXml([
+        stay({
+          guests: [
+            guest({
+              arrivalDate: arr,
+              departureDate: "2014-07-05T10:00:00.000Z", // prima dell'arrivo
+              rooms: [{ roomId: "13", startDate: arr, endDate: "2014-07-12T10:00:00.000Z" }],
+            }),
+          ],
+        }),
+      ]),
+    ).toThrow(/successiva ad ArrivalDate/);
+  });
+
+  it("[A1] Room con EndDate <= StartDate → errore (guest-dates valide)", () => {
+    const arr = "2014-07-05T10:00:00.000Z";
+    expect(() =>
+      buildStaysPmsXml([
+        stay({
+          guests: [
+            guest({
+              arrivalDate: arr,
+              departureDate: "2014-07-11T10:00:00.000Z", // soggiorno valido a livello guest
+              rooms: [{ roomId: "13", startDate: arr, endDate: arr }], // room degenere
+            }),
+          ],
+        }),
+      ]),
+    ).toThrow(/EndDate.*non successiva a StartDate/);
+  });
 });
 
 describe("buildEndDayPmsXml — enddayfrompms", () => {

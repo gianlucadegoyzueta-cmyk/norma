@@ -54,4 +54,32 @@ describe("routing regionale movimento turistico", () => {
     expect(regionMovementForProvincia(null)).toBeNull();
     expect(regionMovementForProvincia(undefined)).toBeNull();
   });
+
+  it("[A11] contratto trim+upper: spazi attorno alla sigla vengono normalizzati", () => {
+    expect(regionMovementForProvincia("rm ")?.regionId).toBe("lazio");
+    expect(regionMovementForProvincia(" RM")?.regionId).toBe("lazio");
+    expect(regionMovementForProvincia("  rm  ")?.regionId).toBe("lazio");
+    expect(regionMovementForProvincia("Mi")?.regionId).toBe("lombardia");
+  });
+
+  it("[A11] vuoto / solo-spazi → null (nessun routing inventato)", () => {
+    expect(regionMovementForProvincia("")).toBeNull();
+    expect(regionMovementForProvincia("   ")).toBeNull();
+    expect(regionMovementForProvincia("\t")).toBeNull();
+  });
+
+  it("[A11] sigle inesistenti dopo normalizzazione → null", () => {
+    expect(regionMovementForProvincia("XX")).toBeNull();
+    expect(regionMovementForProvincia("zz")).toBeNull();
+    expect(regionMovementForProvincia("rm rm")).toBeNull(); // resta non-sigla anche in upper
+    expect(regionMovementForProvincia("123")).toBeNull();
+  });
+
+  it("[A11] copertura: OGNI provincia in tabella risolve in upper, lower e con spazi", () => {
+    for (const [sigla, regionId] of Object.entries(PROVINCIA_TO_REGIONE)) {
+      expect(regionMovementForProvincia(sigla)?.regionId, sigla).toBe(regionId);
+      expect(regionMovementForProvincia(sigla.toLowerCase())?.regionId, sigla).toBe(regionId);
+      expect(regionMovementForProvincia(` ${sigla} `)?.regionId, sigla).toBe(regionId);
+    }
+  });
 });

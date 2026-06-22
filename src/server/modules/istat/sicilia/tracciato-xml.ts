@@ -105,6 +105,16 @@ function tag(name: string, value: string): string {
   return `<${name}>${escapeXml(value)}</${name}>`;
 }
 
+/**
+ * `true` se l'intervallo è degenere o invertito (`end <= start`) tra due dateTime UTC. Se uno dei
+ * due non è un dateTime UTC valido ritorna `false`: la validazione di FORMATO (`requireUtc`, a valle)
+ * darà l'errore specifico, evitando un messaggio fuorviante sull'ordine. Confronto sui timestamp.
+ */
+function requireUtcOrder(start: string, end: string): boolean {
+  if (!UTC_DATETIME.test(start) || !UTC_DATETIME.test(end)) return false;
+  return Date.parse(end) <= Date.parse(start);
+}
+
 // ----------------------------- costruzione -----------------------------
 
 function buildRoom(r: SiciliaRoom): string {
@@ -129,6 +139,21 @@ function buildGuest(g: SiciliaGuest): string {
   }
   if (g.gender !== 1 && g.gender !== 2) {
     throw new SiciliaXmlError(`Guest "${g.guestId}": Gender non valido (atteso 1 o 2).`);
+  }
+  // "Mai inventare dati": un soggiorno deve durare almeno una notte. Se DepartureDate <= ArrivalDate
+  // (o una Room ha EndDate <= StartDate) rifiutiamo invece di emettere una notte-zero/negativa. Le
+  // date qui sono già nel formato UTC validato a valle; il confronto cronologico è quello dei timestamp.
+  if (requireUtcOrder(g.arrivalDate, g.departureDate)) {
+    throw new SiciliaXmlError(
+      `Guest "${g.guestId}": DepartureDate (${g.departureDate}) deve essere successiva ad ArrivalDate (${g.arrivalDate}).`,
+    );
+  }
+  for (const r of g.rooms) {
+    if (requireUtcOrder(r.startDate, r.endDate)) {
+      throw new SiciliaXmlError(
+        `Guest "${g.guestId}": Room "${r.roomId}" ha EndDate (${r.endDate}) non successiva a StartDate (${r.startDate}).`,
+      );
+    }
   }
 
   const emailTrimmed = g.email?.trim() ?? "";

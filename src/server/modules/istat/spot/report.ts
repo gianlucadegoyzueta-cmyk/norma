@@ -100,42 +100,51 @@ export async function loadSpotReport(
     },
   });
 
-  const aggregateStays: SpotAggregateStay[] = stays.map((s) => ({
-    stayId: s.id,
-    arrivalDate: s.arrivalDate,
-    departureDate: s.departureDate,
-    guests: s.guests.map((g): SpotGuest => {
-      const need = (val: string | null | undefined, field: string): string => {
-        if (val === null || val === undefined || val === "") {
-          missing.push({ field, scope: "GUEST", refId: g.id });
-          return "";
-        }
-        return val;
-      };
+  const aggregateStays: SpotAggregateStay[] = [];
+  for (const s of stays) {
+    // Soggiorno ancora APERTO (nessuna partenza): durata ignota → aggregarlo INVENTEREBBE presenze.
+    // "Mai inventare dati" → segnaliamo ed escludiamo PRIMA dell'aggregazione; esito INCOMPLETE.
+    if (s.departureDate === null) {
+      missing.push({ field: "departureDate", scope: "STRUTTURA", refId: s.id });
+      continue;
+    }
+    aggregateStays.push({
+      stayId: s.id,
+      arrivalDate: s.arrivalDate,
+      departureDate: s.departureDate,
+      guests: s.guests.map((g): SpotGuest => {
+        const need = (val: string | null | undefined, field: string): string => {
+          if (val === null || val === undefined || val === "") {
+            missing.push({ field, scope: "GUEST", refId: g.id });
+            return "";
+          }
+          return val;
+        };
 
-      // Residenza: Italia → comune; estero → codice Paese (SPOT usa il codice Paese, non NUTS).
-      const isItaly = g.residenceCountry?.code === ITALIA_CODE;
-      const residenza: SpotResidenza = isItaly
-        ? { comuneResidenzaCode: need(g.residenceComune?.code, "comuneresidenza") }
-        : { paeseResidenzaCode: need(g.residenceCountry?.code, "paeseresidenza") };
+        // Residenza: Italia → comune; estero → codice Paese (SPOT usa il codice Paese, non NUTS).
+        const isItaly = g.residenceCountry?.code === ITALIA_CODE;
+        const residenza: SpotResidenza = isItaly
+          ? { comuneResidenzaCode: need(g.residenceComune?.code, "comuneresidenza") }
+          : { paeseResidenzaCode: need(g.residenceCountry?.code, "paeseresidenza") };
 
-      // idcapo (leaderCodice) obbligatorio per i membri 19/20.
-      const alSeguito = LEAD_AL_SEGUITO.has(g.tipoAlloggiato);
-      const leaderCodice = alSeguito ? need(g.leaderId, "leaderId") : undefined;
+        // idcapo (leaderCodice) obbligatorio per i membri 19/20.
+        const alSeguito = LEAD_AL_SEGUITO.has(g.tipoAlloggiato);
+        const leaderCodice = alSeguito ? need(g.leaderId, "leaderId") : undefined;
 
-      return {
-        codiceClienteSr: g.id,
-        tipoAlloggiato: g.tipoAlloggiato,
-        leaderCodice: leaderCodice || undefined,
-        sesso: g.sex,
-        cittadinanzaCode: need(g.citizenship?.code, "cittadinanza"),
-        residenza,
-        // occupazionepostoletto non è un dato raccolto da Norma: default "occupa" (assunzione documentata).
-        occupaPostoLetto: true,
-        eta: ageAt(g.birthDate, s.arrivalDate),
-      };
-    }),
-  }));
+        return {
+          codiceClienteSr: g.id,
+          tipoAlloggiato: g.tipoAlloggiato,
+          leaderCodice: leaderCodice || undefined,
+          sesso: g.sex,
+          cittadinanzaCode: need(g.citizenship?.code, "cittadinanza"),
+          residenza,
+          // occupazionepostoletto non è un dato raccolto da Norma: default "occupa" (assunzione documentata).
+          occupaPostoLetto: true,
+          eta: ageAt(g.birthDate, s.arrivalDate),
+        };
+      }),
+    });
+  }
 
   if (missing.length > 0) {
     return { kind: "INCOMPLETE", missing };
