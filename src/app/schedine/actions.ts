@@ -157,7 +157,10 @@ export async function sendCredentialAction(
 
   // Cattura le PENDING PRIMA del batch: sono ESATTAMENTE le righe che verranno processate.
   // Ci servono i loro id per derivare l'esito riga-per-riga dopo, senza toccare l'outbox.
-  const pendingBefore = await schedinaRepo.listPendingByCredential(credentialId);
+  const pendingBefore = await schedinaRepo.listPendingByCredential(
+    credentialId,
+    ctx.current.organizationId,
+  );
   const sentIds = new Set(pendingBefore.map((r) => r.id));
 
   try {
