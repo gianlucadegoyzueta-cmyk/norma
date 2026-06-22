@@ -37,6 +37,7 @@ Vercel). **Non è online**: l'accensione (`DIGEST_ENABLED=true` su Vercel) la de
   (OWNER/ADMIN). Opzioni: (1) merge con `DIGEST_ENABLED` OFF ora, accensione dopo i piloti;
   (2) merge e accensione su un'org pilota interna; (3) tenere la PR parcheggiata. Raccomandazione:
   **(1)** — codice in main, interruttore spento, si accende quando vuoi. Rischio: nullo a flag OFF.
+
 ## SESSIONE 2026-06-12 (notte) — coda 2, corsia G2: command palette ⌘K + mobile/PWA
 
 **Unità G2** (`feat/cmdk-mobile`) — **PR #83 mergiata** (squash `34dc113`), CI GitHub verde
