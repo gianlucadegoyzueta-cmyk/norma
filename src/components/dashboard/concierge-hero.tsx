@@ -51,8 +51,29 @@ function RotatingWord({ words, intervalMs = 2400 }: { words: string[]; intervalM
 }
 
 /**
+ * Versione testuale pulita dell'hero per gli screen reader: le parole rotanti collassano
+ * sulla PRIMA alternativa (quella che descrive il dominio) e gli spazi prima della
+ * punteggiatura vengono ricuciti. Serve come `aria-label` dell'<h1>, così l'AT legge una
+ * frase di senso compiuto invece della concatenazione di TUTTE le varianti rotanti.
+ */
+function heroLabel(lines: HeroSegment[][]): string {
+  return lines
+    .map((segments) =>
+      segments.map((seg) => (seg.rotate ? (seg.rotate[0] ?? "") : (seg.text ?? ""))).join(""),
+    )
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .replace(/\s+([.,;:])/g, "$1")
+    .trim();
+}
+
+/**
  * Hero "ink reveal": ogni parola appare con leggera sfocatura/rotazione, a scaglioni.
  * Le righe sono separate da <br>. Il ritardo è incrementale parola-per-parola.
+ *
+ * A11y: l'animazione spezza il titolo in decine di <span> e la parola rotante impila tutte
+ * le alternative; per uno screen reader è rumore illeggibile. Diamo quindi all'<h1> un
+ * `aria-label` con la frase pulita e nascondiamo l'intera resa visiva (`aria-hidden`).
  */
 export function ConciergeHero({
   kicker,
@@ -67,40 +88,46 @@ export function ConciergeHero({
   return (
     <div className="cmx-hero">
       <div className="cmx-kicker">{kicker}</div>
-      <div className="cmx-rule" />
-      <h1>
-        {lines.map((segments, li) => (
-          <Fragment key={li}>
-            {li > 0 && <br />}
-            {segments.map((seg, si) => {
-              // Parola rotante: un'unica unità "ink reveal" che poi cicla da sola.
-              if (seg.rotate) {
-                const delay = 0.25 + wordIndex * 0.07;
-                wordIndex += 1;
-                return (
-                  <span key={`${si}-rot`} className="cmx-w" style={{ animationDelay: `${delay}s` }}>
-                    <RotatingWord words={seg.rotate} />
-                  </span>
-                );
-              }
-              const words = (seg.text ?? "").split(/(\s+)/);
-              return words.map((w, wi) => {
-                if (w.trim() === "") return <Fragment key={`${si}-${wi}`}>{w}</Fragment>;
-                const delay = 0.25 + wordIndex * 0.07;
-                wordIndex += 1;
-                return (
-                  <span
-                    key={`${si}-${wi}`}
-                    className="cmx-w"
-                    style={{ animationDelay: `${delay}s` }}
-                  >
-                    {seg.hi ? <span className="cmx-hi">{w}</span> : w}
-                  </span>
-                );
-              });
-            })}
-          </Fragment>
-        ))}
+      <div className="cmx-rule" aria-hidden />
+      <h1 aria-label={heroLabel(lines)}>
+        <span aria-hidden>
+          {lines.map((segments, li) => (
+            <Fragment key={li}>
+              {li > 0 && <br />}
+              {segments.map((seg, si) => {
+                // Parola rotante: un'unica unità "ink reveal" che poi cicla da sola.
+                if (seg.rotate) {
+                  const delay = 0.25 + wordIndex * 0.07;
+                  wordIndex += 1;
+                  return (
+                    <span
+                      key={`${si}-rot`}
+                      className="cmx-w"
+                      style={{ animationDelay: `${delay}s` }}
+                    >
+                      <RotatingWord words={seg.rotate} />
+                    </span>
+                  );
+                }
+                const words = (seg.text ?? "").split(/(\s+)/);
+                return words.map((w, wi) => {
+                  if (w.trim() === "") return <Fragment key={`${si}-${wi}`}>{w}</Fragment>;
+                  const delay = 0.25 + wordIndex * 0.07;
+                  wordIndex += 1;
+                  return (
+                    <span
+                      key={`${si}-${wi}`}
+                      className="cmx-w"
+                      style={{ animationDelay: `${delay}s` }}
+                    >
+                      {seg.hi ? <span className="cmx-hi">{w}</span> : w}
+                    </span>
+                  );
+                });
+              })}
+            </Fragment>
+          ))}
+        </span>
       </h1>
       {(sub.text || sub.bold) && (
         <p className="cmx-sub">
