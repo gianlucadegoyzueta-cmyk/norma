@@ -52,6 +52,19 @@ export function CheckinForm({
   // Bump della key: rimonta il <form> per "Aggiungi un'altra persona" senza ricaricare la pagina
   // (niente flash, niente scroll perso, niente round-trip di rete come faceva window.location.reload).
   const [formKey, setFormKey] = useState(0);
+  // "Mostra successo" tenuto in uno stato locale SEPARATO da useActionState: useActionState non si
+  // resetta da solo, quindi se l'early return dipendesse da state.ok il form non ricomparirebbe mai
+  // ("Aggiungi un'altra persona" sarebbe un no-op). Con questo flag possiamo tornare al form pulito
+  // — false + bump della key — senza ricaricare la pagina.
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Quando l'azione va a buon fine, mostra la conferma. È un effetto (non un calcolo in render)
+  // perché vogliamo poterlo riabbassare al click su "Aggiungi un'altra persona". Dipende dall'intero
+  // `state` (nuova identità a ogni dispatch) e non da `state.ok`: così anche un SECONDO submit ok
+  // di fila — dove ok resta true — riaccende la conferma dopo che l'utente era tornato al form.
+  useEffect(() => {
+    if (state.ok) setShowSuccess(true);
+  }, [state]);
 
   // Dopo un submit con errori: porta l'ospite al PRIMO campo errato (scroll + focus). Su un modulo
   // lungo da mobile è la differenza tra "non capisco perché non parte" e "ah, manca questo".
@@ -62,13 +75,18 @@ export function CheckinForm({
       if (first) {
         // I combobox usano l'id "<campo>-cb"; gli altri controlli usano l'id = nome campo.
         const el = document.getElementById(first) ?? document.getElementById(`${first}-cb`);
-        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Rispetta prefers-reduced-motion: chi ha disattivato le animazioni non vuole lo scroll
+        // animato (può dare nausea/vertigini). matchMedia può mancare in ambienti non-browser.
+        const reduceMotion =
+          typeof window !== "undefined" &&
+          window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+        el?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
         el?.focus({ preventScroll: true });
       }
     }
   }, [state]);
 
-  if (state.ok) {
+  if (showSuccess) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
@@ -84,7 +102,12 @@ export function CheckinForm({
             variant="outline"
             size="sm"
             className="mt-2"
-            onClick={() => setFormKey((k) => k + 1)}
+            onClick={() => {
+              // Torna al form: nascondi la conferma e bumpa la key per rimontare un form pulito
+              // (campi azzerati). Lo stato di useActionState resta ok, ma non è più letto in render.
+              setShowSuccess(false);
+              setFormKey((k) => k + 1);
+            }}
           >
             {m.addAnother}
           </Button>
@@ -95,9 +118,13 @@ export function CheckinForm({
 
   const err = (k: string) => state.fieldErrors?.[k];
   const errorId = (k: string) => `${k}-error`;
+  // Errori per-campo: polite, non assertivi. A submit fallito ci sono N errori e altrettanti
+  // role="alert" creerebbero un burst assertivo che interrompe lo screen reader N volte; il banner
+  // di riepilogo (role="alert") fa l'annuncio immediato, qui basta aria-live="polite" + il legame
+  // aria-describedby con il campo, che li annuncia quando l'ospite vi torna sopra.
   const fieldError = (k: string) =>
     err(k) ? (
-      <p id={errorId(k)} className="text-destructive text-xs" role="alert">
+      <p id={errorId(k)} className="text-destructive text-xs" role="status" aria-live="polite">
         {err(k)}
       </p>
     ) : null;
@@ -109,7 +136,9 @@ export function CheckinForm({
   const comboLabels: ComboBoxLabels = {
     noMatch: m.comboNoMatch,
     pickFromList: m.comboPickFromList,
-    more: () => m.comboMore,
+    // Reintroduce il conteggio delle voci nascoste (la firma è (n) => string e il combobox la chiama
+    // col numero di risultati non mostrati): "N · <invito ad affinare>", tradotto per lingua.
+    more: (n) => `${n} · ${m.comboMore}`,
   };
 
   // Massimo oggi: nessuna data di nascita nel futuro (vincolo nativo, prima ancora del submit).
