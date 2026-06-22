@@ -13,6 +13,7 @@ import { UnverifiedNote } from "@/components/unverified-note";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isOverdue } from "@/lib/schedina-status";
+import { schedinaStatusDisplay } from "@/lib/schedina-status-display";
 import { cn } from "@/lib/utils";
 import { AutoSendToggle } from "./AutoSendToggle";
 import { CredentialOutboxControls } from "./CredentialOutboxControls";
@@ -30,15 +31,15 @@ const dateTimeFmt = new Intl.DateTimeFormat("it-IT", {
   timeZone: "Europe/Rome",
 });
 
-// Etichetta + classe badge Concierge per ogni stato della schedina.
-const STATUS: Record<SchedinaStatus, { text: string; cmx: string }> = {
-  PENDING: { text: "Da inviare", cmx: "cmx-badge-wait" },
-  SENDING: { text: "In invio", cmx: "cmx-badge-wait" },
-  ACQUIRED: { text: "Acquisita", cmx: "cmx-badge-ok" },
-  REJECTED: { text: "Respinta", cmx: "cmx-badge-err" },
-  UNVERIFIED: { text: "Da verificare", cmx: "cmx-badge-wait" },
-  NEEDS_REVIEW: { text: "Da rivedere", cmx: "cmx-badge-wait" },
-};
+// L'ordine dei chip di riepilogo in testa (etichetta + classe badge dal display condiviso).
+const SUMMARY_ORDER: SchedinaStatus[] = [
+  "PENDING",
+  "SENDING",
+  "ACQUIRED",
+  "REJECTED",
+  "UNVERIFIED",
+  "NEEDS_REVIEW",
+];
 
 export default async function SchedinePage() {
   const ctx = await getCurrentContext();
@@ -108,13 +109,14 @@ export default async function SchedinePage() {
     >
       {schedine.length > 0 && (
         <div className="cmx-section flex flex-wrap gap-2" style={{ marginTop: 0 }}>
-          {(Object.keys(STATUS) as SchedinaStatus[])
-            .filter((st) => counts[st])
-            .map((st) => (
-              <span key={st} className={cn("cmx-badge", STATUS[st].cmx)}>
-                {counts[st]} {STATUS[st].text.toLowerCase()}
+          {SUMMARY_ORDER.filter((st) => counts[st]).map((st) => {
+            const d = schedinaStatusDisplay(st);
+            return (
+              <span key={st} className={cn("cmx-badge", d.badgeClass)}>
+                {counts[st]} {d.label.toLowerCase()}
               </span>
-            ))}
+            );
+          })}
           {overdueCount > 0 && (
             <span className="cmx-badge cmx-badge-err inline-flex items-center gap-1">
               <AlertTriangle className="size-3" />
@@ -254,8 +256,10 @@ export default async function SchedinePage() {
                         </p>
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1">
-                        <span className={cn("cmx-badge", STATUS[s.status].cmx)}>
-                          {STATUS[s.status].text}
+                        <span
+                          className={cn("cmx-badge", schedinaStatusDisplay(s.status).badgeClass)}
+                        >
+                          {schedinaStatusDisplay(s.status).label}
                         </span>
                         <span
                           className="text-xs"

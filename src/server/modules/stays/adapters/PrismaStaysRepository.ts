@@ -11,7 +11,15 @@ import type {
 
 /** Riepilogo vuoto, da incrementare per stato. */
 function emptyCounts(): SchedinaStatusCounts {
-  return { total: 0, pending: 0, sending: 0, acquired: 0, rejected: 0, unverified: 0 };
+  return {
+    total: 0,
+    pending: 0,
+    sending: 0,
+    acquired: 0,
+    rejected: 0,
+    unverified: 0,
+    needsReview: 0,
+  };
 }
 
 function tallySchedine(statuses: (SchedinaStatus | null | undefined)[]): SchedinaStatusCounts {
@@ -24,6 +32,7 @@ function tallySchedine(statuses: (SchedinaStatus | null | undefined)[]): Schedin
     else if (s === "ACQUIRED") c.acquired += 1;
     else if (s === "REJECTED") c.rejected += 1;
     else if (s === "UNVERIFIED") c.unverified += 1;
+    else if (s === "NEEDS_REVIEW") c.needsReview += 1;
   }
   return c;
 }
