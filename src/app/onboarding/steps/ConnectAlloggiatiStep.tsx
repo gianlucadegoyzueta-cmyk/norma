@@ -57,27 +57,37 @@ export function ConnectAlloggiatiStep({
     return (
       <div className="mx-auto w-full max-w-md text-center">
         {!syncFailed ? (
-          <div className="flex flex-col items-center gap-4 py-8" role="status" aria-live="polite">
+          <div className="flex flex-col items-center gap-4 py-8">
             <span
               aria-hidden
               className="bg-success/12 text-success flex size-12 items-center justify-center rounded-full text-xl"
             >
               ✓
             </span>
-            <div className="space-y-1">
+            <div className="space-y-1" role="status" aria-live="polite">
               <p className="font-medium">Credenziale verificata</p>
               <p className="text-muted-foreground inline-flex items-center gap-2 text-sm">
                 <Spinner className="size-4" /> Preparo le tabelle dei comuni…
               </p>
             </div>
+            {/* Niente vicolo cieco: la prima sync (Luoghi, ~11k righe) può essere lenta. */}
+            <p className="text-muted-foreground text-xs">
+              È la struttura più grande: può volerci qualche secondo.
+            </p>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4 py-6">
             <FormMessage>{syncState?.message}</FormMessage>
             <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={retrySync} disabled={syncPending}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={retrySync}
+                disabled={syncPending}
+                aria-busy={syncPending || undefined}
+              >
                 {syncPending ? <Spinner className="size-4" /> : null}
-                Riprova
+                {syncPending ? "Riprovo…" : "Riprova"}
               </Button>
               <Button type="button" onClick={onNext}>
                 Salta e prosegui
