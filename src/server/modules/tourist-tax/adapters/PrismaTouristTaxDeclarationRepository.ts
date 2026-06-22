@@ -1,4 +1,5 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
+import { assertFeeBreakdownInvariant } from "../domain/take-rate";
 import type {
   DeclarationLineRecord,
   DeclarationPatch,
@@ -51,6 +52,8 @@ export class PrismaTouristTaxDeclarationRepository implements TouristTaxDeclarat
   }
 
   async upsertDeclarationWithLines(input: UpsertDeclarationInput): Promise<DeclarationRecord> {
+    // Barriera all'I/O: non persistere mai uno snapshot dove fee + netto ≠ lordo.
+    assertFeeBreakdownInvariant(input.amountCents, input.normaFeeCents, input.comuneNetCents);
     return this.prisma.$transaction(async (tx) => {
       const decl = await tx.touristTaxDeclaration.upsert({
         where: {
@@ -131,6 +134,24 @@ export class PrismaTouristTaxDeclarationRepository implements TouristTaxDeclarat
     organizationId: string,
     patch: DeclarationPatch,
   ): Promise<void> {
+    // Se il patch tocca lo snapshot contabile, i tre campi viaggiano insieme e l'invariante
+    // fee + netto == lordo va verificata prima della scrittura (nessun importo incoerente in DB).
+    const touchesFee =
+      patch.amountCents !== undefined ||
+      patch.normaFeeCents !== undefined ||
+      patch.comuneNetCents !== undefined;
+    if (touchesFee) {
+      if (
+        patch.amountCents === undefined ||
+        patch.normaFeeCents === undefined ||
+        patch.comuneNetCents === undefined
+      ) {
+        throw new Error(
+          "Patch snapshot incompleto: amountCents, normaFeeCents e comuneNetCents vanno aggiornati insieme",
+        );
+      }
+      assertFeeBreakdownInvariant(patch.amountCents, patch.normaFeeCents, patch.comuneNetCents);
+    }
     // updateMany con guardia organizationId: un id di un'altra org non aggiorna nulla.
     await this.prisma.touristTaxDeclaration.updateMany({
       where: { id, organizationId },

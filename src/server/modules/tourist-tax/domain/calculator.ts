@@ -63,6 +63,61 @@ export class TouristTaxRateResolutionError extends Error {
   }
 }
 
+/**
+ * Errore di INPUT al calcolatore: dati del soggiorno o dell'ospite incoerenti (date invertite,
+ * data di nascita impossibile). È una barriera: meglio fermarsi che produrre un importo assurdo.
+ */
+export class TouristTaxCalculationError extends Error {
+  constructor(
+    message: string,
+    readonly field: string,
+  ) {
+    super(`Calcolo tassa di soggiorno non possibile [${field}]: ${message}`);
+    this.name = "TouristTaxCalculationError";
+  }
+}
+
+const MIN_BIRTH_YEAR = 1900;
+/** Tetto difensivo sull'età: oltre è certamente un errore di data, non un ospite reale. */
+const MAX_PLAUSIBLE_AGE = 150;
+
+/**
+ * Valida che un ospite sia coerente con il soggiorno, per non produrre calcoli su date assurde:
+ *  - data di nascita ANTERIORE all'arrivo (un ospite non può nascere dopo il check-in);
+ *  - anno di nascita ≥ 1900 (sotto è quasi certamente un refuso/parsing errato);
+ *  - età all'arrivo nell'intervallo [0, 150).
+ * Lancia TouristTaxCalculationError con messaggio chiaro. PURA.
+ */
+export function validateGuestForStay(guest: GuestTaxInput, arrivalDate: Date): void {
+  const birth = guest.birthDate;
+  if (Number.isNaN(birth.getTime())) {
+    throw new TouristTaxCalculationError(
+      `data di nascita non valida per l'ospite "${guest.id}"`,
+      "guest.birthDate",
+    );
+  }
+  if (birth.getTime() >= arrivalDate.getTime()) {
+    throw new TouristTaxCalculationError(
+      `l'ospite "${guest.id}" risulta nato (${isoDate(birth)}) alla data di arrivo o dopo ` +
+        `(${isoDate(arrivalDate)}): data di nascita impossibile`,
+      "guest.birthDate",
+    );
+  }
+  if (birth.getUTCFullYear() < MIN_BIRTH_YEAR) {
+    throw new TouristTaxCalculationError(
+      `anno di nascita ${birth.getUTCFullYear()} dell'ospite "${guest.id}" inferiore a ${MIN_BIRTH_YEAR}`,
+      "guest.birthDate",
+    );
+  }
+  const age = ageAtDate(birth, arrivalDate);
+  if (age < 0 || age >= MAX_PLAUSIBLE_AGE) {
+    throw new TouristTaxCalculationError(
+      `età ${age} dell'ospite "${guest.id}" fuori dall'intervallo plausibile [0, ${MAX_PLAUSIBLE_AGE})`,
+      "guest.birthDate",
+    );
+  }
+}
+
 const MS_PER_DAY = 86_400_000;
 
 /** Età in anni compiuti a una data di riferimento (UTC, per evitare derive di fuso). */
@@ -197,6 +252,16 @@ export function computeTouristTax(
     };
   }
 
+  // Date invertite: con una partenza nota PRIMA dell'arrivo il soggiorno non esiste.
+  // countNights le clamperebbe a 0 nascondendo l'errore: meglio fermarsi esplicitamente.
+  if (stay.departureDate.getTime() < stay.arrivalDate.getTime()) {
+    throw new TouristTaxCalculationError(
+      `data di partenza (${isoDate(stay.departureDate)}) anteriore all'arrivo ` +
+        `(${isoDate(stay.arrivalDate)})`,
+      "stay.departureDate",
+    );
+  }
+
   const totalNights = countNights(stay.arrivalDate, stay.departureDate);
   const billableNights =
     rule.nightCap === null ? totalNights : Math.min(totalNights, rule.nightCap);
@@ -217,6 +282,7 @@ export function computeTouristTax(
   const rate = resolveRate(rule.rates, stay.accommodationCategory, stay.zone);
 
   const breakdowns: GuestTaxBreakdown[] = guests.map((g) => {
+    validateGuestForStay(g, stay.arrivalDate);
     const exemptByType = !!g.exemptionType && rule.exemptions.types.includes(g.exemptionType);
     const age = ageAtDate(g.birthDate, stay.arrivalDate);
     const { pct: agePct, band } = reductionForAge(age, rule.ageReductions);

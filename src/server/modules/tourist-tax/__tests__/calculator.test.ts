@@ -3,7 +3,9 @@ import {
   ageAtDate,
   computeTouristTax,
   countNights,
+  TouristTaxCalculationError,
   TouristTaxRateResolutionError,
+  validateGuestForStay,
   type GuestTaxInput,
   type StayTaxInput,
 } from "../domain/calculator";
@@ -64,6 +66,36 @@ describe("validazione regola (le fixture seed sono tutte valide)", () => {
         declaration: { ...ROMA.rule.declaration, remittance: { channel: "BONIFICO" } },
       }),
     ).toThrow(TouristTaxRuleError);
+  });
+});
+
+// A9: dueDay valido per cadenza (MONTHLY/QUARTERLY → 1..28; ANNUAL → 1..31).
+describe("A9 — dueDay valido per cadenza", () => {
+  const withDeclaration = (period: string, dueDay: number) =>
+    parseTouristTaxRule({
+      ...ROMA.rule,
+      declaration: { ...ROMA.rule.declaration, period, dueDay },
+    });
+
+  it("MONTHLY accetta 28, rifiuta 29", () => {
+    expect(() => withDeclaration("MONTHLY", 28)).not.toThrow();
+    expect(() => withDeclaration("MONTHLY", 29)).toThrow(TouristTaxRuleError);
+  });
+
+  it("QUARTERLY accetta 28, rifiuta 29", () => {
+    expect(() => withDeclaration("QUARTERLY", 28)).not.toThrow();
+    expect(() => withDeclaration("QUARTERLY", 29)).toThrow(TouristTaxRuleError);
+  });
+
+  it("ANNUAL accetta 31, rifiuta 32", () => {
+    expect(() => withDeclaration("ANNUAL", 31)).not.toThrow();
+    expect(() => withDeclaration("ANNUAL", 32)).toThrow(TouristTaxRuleError);
+  });
+
+  it("ogni cadenza rifiuta dueDay 0 (bordo inferiore)", () => {
+    expect(() => withDeclaration("MONTHLY", 0)).toThrow(TouristTaxRuleError);
+    expect(() => withDeclaration("QUARTERLY", 0)).toThrow(TouristTaxRuleError);
+    expect(() => withDeclaration("ANNUAL", 0)).toThrow(TouristTaxRuleError);
   });
 });
 
@@ -303,5 +335,64 @@ describe("casi limite trasversali", () => {
         ruleNoDefault,
       ),
     ).toThrow(TouristTaxRateResolutionError);
+  });
+});
+
+// A5: date invertite → errore esplicito (countNights le clamperebbe a 0 nascondendo il bug).
+describe("A5 — date di soggiorno invertite", () => {
+  it("partenza prima dell'arrivo → TouristTaxCalculationError", () => {
+    expect(() =>
+      computeTouristTax(stay("2025-06-10", "2025-06-05"), [guest("a", "1990-01-01")], ROMA.rule),
+    ).toThrow(TouristTaxCalculationError);
+  });
+
+  it("partenza == arrivo è ammessa (0 notti, totale 0)", () => {
+    const r = computeTouristTax(
+      stay("2025-06-10", "2025-06-10"),
+      [guest("a", "1990-01-01")],
+      ROMA.rule,
+    );
+    expect(r.totalCents).toBe(0);
+    expect(r.guests[0].totalNights).toBe(0);
+  });
+});
+
+// A6: validazione ospite (data di nascita coerente col soggiorno).
+describe("A6 — validazione ospite per il soggiorno", () => {
+  it("ospite nato nel 2030 (dopo l'arrivo 2025) → TouristTaxCalculationError dal calcolo", () => {
+    expect(() =>
+      computeTouristTax(stay("2025-06-01", "2025-06-03"), [guest("a", "2030-01-01")], ROMA.rule),
+    ).toThrow(TouristTaxCalculationError);
+  });
+
+  it("validateGuestForStay accetta un ospite plausibile", () => {
+    expect(() => validateGuestForStay(guest("a", "1990-01-01"), d("2025-06-01"))).not.toThrow();
+  });
+
+  it("rifiuta data di nascita uguale o successiva all'arrivo", () => {
+    expect(() => validateGuestForStay(guest("a", "2025-06-01"), d("2025-06-01"))).toThrow(
+      TouristTaxCalculationError,
+    );
+    expect(() => validateGuestForStay(guest("a", "2025-07-01"), d("2025-06-01"))).toThrow(
+      TouristTaxCalculationError,
+    );
+  });
+
+  it("rifiuta anno di nascita < 1900", () => {
+    expect(() => validateGuestForStay(guest("a", "1899-12-31"), d("2025-06-01"))).toThrow(
+      TouristTaxCalculationError,
+    );
+  });
+
+  it("rifiuta età ≥ 150 (data assurda)", () => {
+    // 1900-01-01 → età 150 a un arrivo nel 2050 (anno ≥ 1900 ma età fuori range).
+    expect(() => validateGuestForStay(guest("a", "1900-01-01"), d("2050-06-01"))).toThrow(
+      TouristTaxCalculationError,
+    );
+  });
+
+  it("accetta i bordi: nato il giorno prima dell'arrivo (età 0) e 1900 con età < 150", () => {
+    expect(() => validateGuestForStay(guest("a", "2025-05-31"), d("2025-06-01"))).not.toThrow();
+    expect(() => validateGuestForStay(guest("a", "1900-01-01"), d("2025-06-01"))).not.toThrow();
   });
 });

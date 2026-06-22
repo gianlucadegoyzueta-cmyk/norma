@@ -6,7 +6,7 @@ import type { TaxDeclarationStatus, TaxRemittanceMode } from "@prisma/client";
 import { computeTouristTax } from "../domain/calculator";
 import { assertValidDeclarationTransition, isDeclarationRecomputable } from "../domain/declaration";
 import { periodBounds } from "../domain/period";
-import { computeNormaFee } from "../domain/take-rate";
+import { assertFeeBreakdownInvariant, computeNormaFee } from "../domain/take-rate";
 import { resolveTakeRateBps } from "../domain/take-rate-config";
 import type { TouristTaxConfigRepository } from "../ports/TouristTaxConfigRepository";
 import type {
@@ -98,6 +98,8 @@ export class TouristTaxDeclarationService {
     const orgDefaultBps = await this.configs.getOrgTakeRateBps(input.organizationId);
     const takeRate = resolveTakeRateBps({ comuneBps: comuneTakeRateBps, orgDefaultBps });
     const fee = computeNormaFee(total, takeRate.bps);
+    // Invariante contabile prima di persistere: fee + netto deve ricomporre il lordo.
+    assertFeeBreakdownInvariant(total, fee.normaFeeCents, fee.comuneNetCents);
 
     const declaration = await this.declarations.upsertDeclarationWithLines({
       organizationId: input.organizationId,
@@ -120,6 +122,8 @@ export class TouristTaxDeclarationService {
   ): Promise<DeclarationRecord> {
     const decl = await this.declarations.getDeclaration(id, organizationId);
     if (!decl) throw new Error("Dichiarazione non trovata");
+    // Non far avanzare di stato (verso l'invio/pagamento) uno snapshot contabilmente incoerente.
+    assertFeeBreakdownInvariant(decl.amountCents, decl.normaFeeCents, decl.comuneNetCents);
     assertValidDeclarationTransition(decl.status, to);
     const patch: DeclarationPatch = { status: to };
     if (to === "SUBMITTED") patch.submittedAt = new Date();
