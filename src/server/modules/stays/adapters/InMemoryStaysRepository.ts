@@ -135,7 +135,15 @@ export class InMemoryStaysRepository implements StaysRepository {
           isShortStay: s.isShortStay,
           guestsCount: s.guestsCount,
           guestsAdded,
-          schedine: { total: 0, pending: 0, sending: 0, acquired: 0, rejected: 0, unverified: 0 },
+          schedine: {
+            total: 0,
+            pending: 0,
+            sending: 0,
+            acquired: 0,
+            rejected: 0,
+            unverified: 0,
+            needsReview: 0,
+          },
           importSource: s.importSource,
           importStatus: s.importStatus,
         };

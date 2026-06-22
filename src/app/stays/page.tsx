@@ -14,6 +14,7 @@ import {
 } from "@/server/modules/stays";
 import { ConciergePage } from "@/components/concierge/concierge-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { NO_SCHEDINA_LABEL } from "@/lib/schedina-status-display";
 import { StayForm } from "./StayForm";
 
 export const metadata: Metadata = { title: "Soggiorni" };
@@ -141,7 +142,7 @@ export default async function StaysPage() {
                       <div className="flex shrink-0 flex-col items-end gap-1.5">
                         {provenance.notice && <ImportNoticeBadge notice={provenance.notice} />}
                         {s.schedine.total === 0 ? (
-                          <span className="cmx-badge cmx-badge-wait">Nessuna schedina</span>
+                          <span className="cmx-badge cmx-badge-wait">{NO_SCHEDINA_LABEL}</span>
                         ) : (
                           <div className="flex flex-wrap justify-end gap-1.5">
                             {s.schedine.acquired > 0 && (
@@ -170,6 +171,11 @@ export default async function StaysPage() {
                               </span>
                             )}
                           </div>
+                        )}
+                        {s.schedine.needsReview > 0 && (
+                          <span className="cmx-badge cmx-badge-err">
+                            {s.schedine.needsReview} da rivedere
+                          </span>
                         )}
                       </div>
                     </div>
