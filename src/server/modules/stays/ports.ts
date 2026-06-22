@@ -32,6 +32,7 @@ export interface SchedinaStatusCounts {
   acquired: number;
   rejected: number;
   unverified: number;
+  needsReview: number;
 }
 
 /** Riga soggiorno come serve alla lista (immobile risolto + riepilogo schedine). */
