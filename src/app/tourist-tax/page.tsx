@@ -4,6 +4,7 @@ import type { TaxDeclarationStatus, TaxRemittanceMode } from "@prisma/client";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { periodLabel } from "@/server/modules/tourist-tax/domain/period";
+import { formatTakeRateBps } from "@/server/modules/tourist-tax/domain/take-rate";
 import { formatEuroCents } from "@/server/modules/tourist-tax/services/estimate.service";
 import { ConciergePage } from "@/components/concierge/concierge-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,7 +85,7 @@ export default async function TouristTaxPage() {
                             {d.comune.name} · {periodLabel(d.period)}
                           </CardTitle>
                           <p className="text-muted-foreground mt-1 text-sm">
-                            Imposta dovuta:{" "}
+                            Imposta riscossa:{" "}
                             <span className="font-medium" style={{ color: "var(--inchiostro)" }}>
                               {formatEuroCents(d.amountCents)}
                             </span>
@@ -94,6 +95,45 @@ export default async function TouristTaxPage() {
                       </div>
                     </CardHeader>
                     <CardContent>
+                      {d.normaTakeRateBps > 0 && (
+                        <dl
+                          className="mb-4 grid gap-2 rounded-xl p-3 text-sm"
+                          style={{
+                            background: "var(--avorio, #f7f2e8)",
+                            border: "1px solid var(--hairline, #d4cabb)",
+                          }}
+                        >
+                          <div className="flex items-baseline justify-between gap-3">
+                            <dt className="text-muted-foreground">Imposta lorda riscossa</dt>
+                            <dd className="font-medium">{formatEuroCents(d.amountCents)}</dd>
+                          </div>
+                          <div className="flex items-baseline justify-between gap-3">
+                            <dt className="text-muted-foreground">
+                              Servizio Norma ({formatTakeRateBps(d.normaTakeRateBps)})
+                            </dt>
+                            <dd
+                              className="font-medium"
+                              style={{ color: "var(--terracotta, #bc4b2b)" }}
+                            >
+                              − {formatEuroCents(d.normaFeeCents)}
+                            </dd>
+                          </div>
+                          <div
+                            className="flex items-baseline justify-between gap-3 border-t pt-2"
+                            style={{ borderColor: "var(--hairline, #d4cabb)" }}
+                          >
+                            <dt className="font-medium" style={{ color: "var(--inchiostro)" }}>
+                              Netto da versare al comune
+                            </dt>
+                            <dd
+                              className="font-display text-base font-medium"
+                              style={{ color: "var(--inchiostro)" }}
+                            >
+                              {formatEuroCents(d.comuneNetCents)}
+                            </dd>
+                          </div>
+                        </dl>
+                      )}
                       <DeclarationActions
                         id={d.id}
                         status={d.status}

@@ -11,6 +11,8 @@
 //   - una sola regola per (comune, validFrom): tariffe diverse nel tempo = righe diverse.
 // ============================================================
 
+import { MAX_TAKE_RATE_BPS } from "./take-rate";
+
 /** Modello di calcolo. v1: solo per-persona-per-notte (estendibile in futuro, es. PERCENTAGE). */
 export type TaxModel = "PER_PERSON_PER_NIGHT";
 
@@ -92,6 +94,12 @@ export interface TouristTaxRule {
   ageEvaluatedAt: "STAY_START";
   exemptions: ExemptionConfig;
   declaration: DeclarationConfig;
+  /**
+   * Commissione Norma (take-rate) per QUESTO comune, in punti base (100 bps = 1%).
+   * Opzionale: se assente, vale il default a livello organizzazione (vedi take-rate-config.ts).
+   * È solo configurazione: il calcolo è in domain/take-rate.ts, l'incasso reale è un port a parte.
+   */
+  normaTakeRateBps?: number;
 }
 
 // ----------------------------- VALIDAZIONE -----------------------------
@@ -267,6 +275,15 @@ export function parseTouristTaxRule(input: unknown): TouristTaxRule {
     });
   }
 
+  // Take-rate per-comune (opzionale). Intero 0..MAX_TAKE_RATE_BPS, dove 100 bps = 1%.
+  let normaTakeRateBps: number | undefined;
+  if (input.normaTakeRateBps !== undefined && input.normaTakeRateBps !== null) {
+    const bps = asInt(input.normaTakeRateBps, "normaTakeRateBps");
+    if (bps < 0 || bps > MAX_TAKE_RATE_BPS)
+      fail("normaTakeRateBps", `0..${MAX_TAKE_RATE_BPS} (100 bps = 1%)`);
+    normaTakeRateBps = bps;
+  }
+
   return {
     currency: "EUR",
     model: "PER_PERSON_PER_NIGHT",
@@ -278,5 +295,6 @@ export function parseTouristTaxRule(input: unknown): TouristTaxRule {
     ageEvaluatedAt: "STAY_START",
     exemptions: { types: exemptionTypes },
     declaration: parseDeclaration(input.declaration, "declaration"),
+    ...(normaTakeRateBps !== undefined ? { normaTakeRateBps } : {}),
   };
 }
