@@ -29,6 +29,14 @@ export class PrismaTouristTaxConfigRepository implements TouristTaxConfigReposit
     return parseTouristTaxRule(selected);
   }
 
+  async getOrgTakeRateBps(organizationId: string): Promise<number | null> {
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { normaTakeRateBps: true },
+    });
+    return org?.normaTakeRateBps ?? null;
+  }
+
   async listVersions(comuneId: string): Promise<TouristTaxConfigVersion[]> {
     const rows = await this.prisma.touristTaxConfig.findMany({
       where: { comuneId },

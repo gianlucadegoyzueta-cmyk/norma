@@ -1,6 +1,7 @@
 // Export CSV della dichiarazione, pronto per l'invio al comune. PURO (dati in → stringa out).
 // Separatore ";" (convenzione IT/Excel); importi in euro con virgola decimale; righe CRLF.
 
+import { formatTakeRateBps } from "./take-rate";
 import { formatEuroCents } from "../services/estimate.service";
 
 export interface DeclarationLineExport {
@@ -12,10 +13,20 @@ export interface DeclarationLineExport {
   amountCents: number;
 }
 
+/** Ripartizione commissione Norma da mostrare nell'export. Presente solo se take-rate > 0. */
+export interface DeclarationFeeExport {
+  takeRateBps: number;
+  normaFeeCents: number;
+  comuneNetCents: number;
+}
+
 export interface DeclarationExport {
   comuneName: string;
   periodLabel: string;
+  /** Lordo riscosso: somma delle righe (l'imposta dovuta dagli ospiti). */
   totalCents: number;
+  /** Ripartizione servizio Norma (opzionale: assente = nessuna commissione applicata). */
+  fee?: DeclarationFeeExport;
   lines: DeclarationLineExport[];
 }
 
@@ -43,5 +54,12 @@ export function toDeclarationCsv(d: DeclarationExport): string {
     );
   }
   out.push(row(["TOTALE", "", "", "", euro(d.totalCents)]));
+  if (d.fee && d.fee.takeRateBps > 0) {
+    out.push("");
+    out.push(
+      row([`Servizio Norma (${formatTakeRateBps(d.fee.takeRateBps)})`, euro(d.fee.normaFeeCents)]),
+    );
+    out.push(row(["Netto da versare al comune", euro(d.fee.comuneNetCents)]));
+  }
   return out.join("\r\n");
 }
