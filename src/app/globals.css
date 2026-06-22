@@ -23,9 +23,12 @@
   --brand-salvia-soft: #eef0e8;
   --brand-hairline: #e0d8c8;
 
-  /* Motion system condiviso (reference Concierge MAX). */
+  /* Motion system condiviso (reference Concierge MAX) + scala micro per le interazioni Linear-style. */
   --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1); /* snappy: hover/active/focus */
+  --dur-fast: 150ms; /* micro-interazioni (hover, active, border) */
   --dur-micro: 250ms;
+  --dur-interaction: 300ms; /* transizioni di stato (tab, toggle) */
   --dur-enter: 700ms;
   --dur-scene: 1400ms;
 
@@ -135,6 +138,16 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  /* Sistema di elevazioni "Carta & Inchiostro" (ombra tinta d'inchiostro, sottile alla Linear).
+     Sostituisce gli shadow-* di default → tutta l'app eredita la profondità calda e discreta.
+     `shadow-pop` = lift su hover; `shadow-ring`/--ring-shadow = focus accessibile. */
+  --shadow-xs: 0 1px 2px rgba(33, 28, 21, 0.05);
+  --shadow-sm: 0 1px 2px rgba(33, 28, 21, 0.05), 0 2px 6px -2px rgba(33, 28, 21, 0.06);
+  --shadow-md: 0 2px 6px -2px rgba(33, 28, 21, 0.06), 0 8px 20px -8px rgba(33, 28, 21, 0.1);
+  --shadow-lg: 0 4px 10px -4px rgba(33, 28, 21, 0.07), 0 16px 40px -14px rgba(33, 28, 21, 0.15);
+  --shadow-xl: 0 24px 60px -22px rgba(33, 28, 21, 0.22);
+  --shadow-pop: 0 1px 2px rgba(33, 28, 21, 0.05), 0 10px 26px -10px rgba(33, 28, 21, 0.16);
 }
 
 @layer base {

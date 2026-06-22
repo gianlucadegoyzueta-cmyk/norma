@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 import type { SchedinaStatus } from "@prisma/client";
@@ -7,31 +6,29 @@ import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaCredentialRepository, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
 import { ConciergePage } from "@/components/concierge/concierge-page";
-import { ReopenNeedsReviewButton } from "@/components/reopen-needs-review-button";
-import { ReopenRejectedButton } from "@/components/reopen-rejected-button";
-import { UnverifiedNote } from "@/components/unverified-note";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isOverdue } from "@/lib/schedina-status";
 import { schedinaStatusDisplay } from "@/lib/schedina-status-display";
 import { cn } from "@/lib/utils";
 import { AutoSendToggle } from "./AutoSendToggle";
 import { CredentialOutboxControls } from "./CredentialOutboxControls";
-import { mapAlloggiatiError } from "./error-codes";
 import { ReconcileControls } from "./ReconcileControls";
+import { SchedineList } from "./schedine-list";
 
 export const metadata: Metadata = { title: "Schedine" };
 export const dynamic = "force-dynamic";
 
-const dateTimeFmt = new Intl.DateTimeFormat("it-IT", {
-  day: "2-digit",
-  month: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "Europe/Rome",
-});
+// Priorità d'azione della lista: ciò che richiede l'host in cima, l'acquisito (fatto) in fondo.
+const STATUS_PRIORITY: SchedinaStatus[] = [
+  "REJECTED",
+  "NEEDS_REVIEW",
+  "PENDING",
+  "UNVERIFIED",
+  "SENDING",
+  "ACQUIRED",
+];
 
-// L'ordine dei chip di riepilogo in testa (etichetta + classe badge dal display condiviso).
+// L'ordine dei chip di riepilogo in testa (etichetta + classe badge dal display condiviso #111).
 const SUMMARY_ORDER: SchedinaStatus[] = [
   "PENDING",
   "SENDING",
@@ -82,6 +79,17 @@ export default async function SchedinePage() {
   }, {});
   const overdueCount = schedine.filter((s) => isOverdue(s, now)).length;
 
+  // Ordine d'azione della lista: stato per priorità, poi overdue, poi scadenza (l'intro lo promette).
+  const sortedSchedine = [...schedine].sort((a, b) => {
+    const ra = STATUS_PRIORITY.indexOf(a.status);
+    const rb = STATUS_PRIORITY.indexOf(b.status);
+    if (ra !== rb) return ra - rb;
+    const oa = isOverdue(a, now) ? 0 : 1;
+    const ob = isOverdue(b, now) ? 0 : 1;
+    if (oa !== ob) return oa - ob;
+    return a.deadlineAt.getTime() - b.deadlineAt.getTime();
+  });
+
   // Mappa schedina REJECTED → stayId per il link "Correggi" (query di pagina, nessun cambio al dominio).
   const rejectedIds = schedine.filter((s) => s.status === "REJECTED").map((s) => s.id);
   const stayIdBySchedina = new Map<string, string>();
@@ -95,6 +103,8 @@ export default async function SchedinePage() {
 
   return (
     <ConciergePage
+      dense
+      active="schedine"
       kicker="OUTBOX · ALLOGGIATI WEB"
       title="Schedine"
       intro={
@@ -109,6 +119,13 @@ export default async function SchedinePage() {
     >
       {schedine.length > 0 && (
         <div className="cmx-section flex flex-wrap gap-2" style={{ marginTop: 0 }}>
+          {/* Urgenza in testa (#105), poi i conteggi per stato dal display unico (#111). */}
+          {overdueCount > 0 && (
+            <span className="cmx-badge cmx-badge-err inline-flex items-center gap-1">
+              <AlertTriangle className="size-3" />
+              {overdueCount} oltre scadenza
+            </span>
+          )}
           {SUMMARY_ORDER.filter((st) => counts[st]).map((st) => {
             const d = schedinaStatusDisplay(st);
             return (
@@ -117,12 +134,6 @@ export default async function SchedinePage() {
               </span>
             );
           })}
-          {overdueCount > 0 && (
-            <span className="cmx-badge cmx-badge-err inline-flex items-center gap-1">
-              <AlertTriangle className="size-3" />
-              {overdueCount} oltre scadenza
-            </span>
-          )}
         </div>
       )}
 
@@ -130,7 +141,7 @@ export default async function SchedinePage() {
         <section className="cmx-section">
           <Card style={{ borderRadius: 18 }}>
             <CardHeader>
-              <CardTitle className="font-display">Da inviare ad Alloggiati</CardTitle>
+              <CardTitle>Da inviare ad Alloggiati</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <p className="text-muted-foreground text-sm">
@@ -158,7 +169,7 @@ export default async function SchedinePage() {
         <section className="cmx-section">
           <Card style={{ borderRadius: 18 }}>
             <CardHeader>
-              <CardTitle className="font-display">Da verificare (esito ignoto)</CardTitle>
+              <CardTitle>Da verificare (esito ignoto)</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <p className="text-muted-foreground text-sm">
@@ -188,7 +199,7 @@ export default async function SchedinePage() {
         <section className="cmx-section">
           <Card style={{ borderRadius: 18 }}>
             <CardHeader>
-              <CardTitle className="font-display">Auto-invio programmato</CardTitle>
+              <CardTitle>Auto-invio programmato</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <p className="text-muted-foreground text-sm">
@@ -222,116 +233,7 @@ export default async function SchedinePage() {
       )}
 
       <section className="cmx-section">
-        {schedine.length === 0 ? (
-          <div className="cmx-empty">
-            <p className="cmx-empty-title">Nessuna schedina, per ora</p>
-            <p className="cmx-empty-text">
-              Quando aggiungi un soggiorno, preparo qui le schedine pronte da confermare. Inizia da
-              un{" "}
-              <Link href="/stays" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
-                soggiorno
-              </Link>
-              .
-            </p>
-          </div>
-        ) : (
-          <ul className="grid gap-2.5">
-            {schedine.map((s) => {
-              const overdue = isOverdue(s, now);
-              return (
-                <li key={s.id}>
-                  <div
-                    className="cmx-row"
-                    style={{
-                      flexDirection: "column",
-                      alignItems: "stretch",
-                      ...(overdue ? { borderColor: "rgba(188,75,43,0.45)" } : {}),
-                    }}
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="cmx-row-main">
-                        <p className="cmx-row-title truncate">{s.guestName}</p>
-                        <p className="cmx-row-meta truncate">
-                          {s.propertyName} · {s.credentialLabel}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 flex-col items-end gap-1">
-                        <span
-                          className={cn("cmx-badge", schedinaStatusDisplay(s.status).badgeClass)}
-                        >
-                          {schedinaStatusDisplay(s.status).label}
-                        </span>
-                        <span
-                          className="text-xs"
-                          style={{
-                            color: overdue ? "var(--terracotta-dark)" : "var(--soft)",
-                            fontWeight: overdue ? 600 : 400,
-                          }}
-                        >
-                          {overdue ? "scaduta " : "entro "}
-                          {dateTimeFmt.format(s.deadlineAt)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {s.status === "REJECTED" && (
-                      <div
-                        className="mt-3 grid gap-1.5 border-t pt-3"
-                        style={{ borderColor: "var(--hairline)" }}
-                      >
-                        <p className="text-xs" style={{ color: "var(--terracotta-dark)" }}>
-                          {s.lastErrorCod ? (
-                            <span style={{ color: "var(--soft)" }}>[{s.lastErrorCod}] </span>
-                          ) : null}
-                          {mapAlloggiatiError(s.lastErrorCod, s.lastErrorDes)}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-2">
-                          {stayIdBySchedina.get(s.id) ? (
-                            <Link href={`/stays/${stayIdBySchedina.get(s.id)}`}>
-                              <Button variant="outline" size="sm">
-                                Correggi
-                              </Button>
-                            </Link>
-                          ) : null}
-                          <ReopenRejectedButton schedinaId={s.id} />
-                        </div>
-                      </div>
-                    )}
-                    {s.status === "UNVERIFIED" && (
-                      <div
-                        className="mt-3 border-t pt-3"
-                        style={{ borderColor: "var(--hairline)" }}
-                      >
-                        <UnverifiedNote />
-                      </div>
-                    )}
-                    {s.status === "NEEDS_REVIEW" && (
-                      <div
-                        className="mt-3 grid gap-1.5 border-t pt-3"
-                        style={{ borderColor: "var(--hairline)" }}
-                      >
-                        <p className="text-xs" style={{ color: "var(--soft)" }}>
-                          Tentativi di invio esauriti: controlla i dati della schedina, poi
-                          rimettila in coda.
-                        </p>
-                        <div className="flex flex-wrap items-center gap-2">
-                          {stayIdBySchedina.get(s.id) ? (
-                            <Link href={`/stays/${stayIdBySchedina.get(s.id)}`}>
-                              <Button variant="outline" size="sm">
-                                Apri soggiorno
-                              </Button>
-                            </Link>
-                          ) : null}
-                          <ReopenNeedsReviewButton schedinaId={s.id} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <SchedineList schedine={sortedSchedine} stayIdBySchedina={stayIdBySchedina} now={now} />
       </section>
     </ConciergePage>
   );

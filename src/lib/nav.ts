@@ -7,6 +7,7 @@ import {
   type LucideIcon,
   KeyRound,
   LayoutDashboard,
+  LifeBuoy,
   Receipt,
 } from "lucide-react";
 
@@ -38,6 +39,12 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Abbonamento",
     Icon: CreditCard,
     keywords: "pagamento fattura stripe",
+  },
+  {
+    href: "/support",
+    label: "Assistenza",
+    Icon: LifeBuoy,
+    keywords: "aiuto supporto domande chat assistente ai",
   },
 ];
 

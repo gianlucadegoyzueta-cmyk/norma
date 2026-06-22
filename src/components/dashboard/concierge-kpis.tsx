@@ -32,7 +32,7 @@ export interface KpiSpec {
 }
 
 /** Altezza di una riga dell'odometro (deve combaciare con `.cmx-odo`/`.cmx-digit` nel CSS). */
-const ROW = 52;
+const ROW = 44;
 
 function prefersReducedMotion(): boolean {
   return (
@@ -192,7 +192,7 @@ function Kpi({ kpi, i }: { kpi: KpiSpec; i: number }) {
       <button
         type="button"
         ref={tilt.ref}
-        className="cmx-kpi"
+        className={kpi.due ? "cmx-kpi cmx-kpi-urgent" : "cmx-kpi"}
         style={{ "--i": i } as React.CSSProperties}
         onMouseMove={tilt.onMove}
         onMouseLeave={tilt.onLeave}

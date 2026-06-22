@@ -38,6 +38,8 @@ export default async function PropertiesPage() {
 
   return (
     <ConciergePage
+      dense
+      active="properties"
       kicker="ANAGRAFICA · IMMOBILI"
       title="Immobili"
       intro={
@@ -93,9 +95,22 @@ export default async function PropertiesPage() {
                             {p.credential.label}
                           </span>
                         ) : (
-                          <span className="cmx-badge cmx-badge-err">Senza credenziale</span>
+                          <span className="inline-flex items-center gap-2">
+                            <span className="cmx-badge cmx-badge-err">Senza credenziale</span>
+                            <Link
+                              href={`/properties/${p.id}`}
+                              className="text-xs font-medium"
+                              style={{ color: "var(--terracotta)" }}
+                            >
+                              collega
+                            </Link>
+                          </span>
                         )}
-                        {needsCin && <span className="cmx-badge cmx-badge-err">Senza CIN</span>}
+                        {needsCin ? (
+                          <span className="cmx-badge cmx-badge-err">Senza CIN</span>
+                        ) : (
+                          <span className="cmx-badge cmx-badge-ok">CIN ottenuto</span>
+                        )}
                       </div>
                     </div>
                     {cin && (
@@ -112,7 +127,7 @@ export default async function PropertiesPage() {
       <section className="cmx-section">
         <Card style={{ borderRadius: 18 }}>
           <CardHeader>
-            <CardTitle className="font-display">Aggiungi immobile</CardTitle>
+            <CardTitle>Aggiungi immobile</CardTitle>
           </CardHeader>
           <CardContent>
             {credentials.length === 0 ? (

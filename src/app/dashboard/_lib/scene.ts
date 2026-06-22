@@ -10,9 +10,6 @@ const QUARTER_LABEL: Record<string, string> = {
   Q4: "IV trim",
 };
 
-/** Le cose VERE che Norma gestisce — parole che si auto-sostituiscono nell'hero. */
-const NORMA_HANDLES = ["le tue schedine", "la tassa di soggiorno", "l'ISTAT", "i tuoi check-in"];
-
 function greetingFor(now: Date): string {
   const hour = Number(
     new Intl.DateTimeFormat("it-IT", { hour: "2-digit", hour12: false, timeZone: ROME_TZ }).format(
@@ -48,49 +45,25 @@ export function buildSceneCopy(
   const k = proposals.length;
   const things = data.hero.thingsDone;
 
-  // --- Hero: saluto · cosa Norma tiene in regola (rotante) · stato concreto di oggi ---
-  const lines: HeroSegment[][] = [];
+  // --- Hero ASCIUTTO (dual-judge, consenso alto): saluto serif a UNA riga + una sotto-riga
+  // di stato sans. Le decisioni NON si raccontano qui — vivono nel blocco "Aspettano il tuo
+  // via libera" sotto (regola anti-ridondanza: un fatto, un posto solo). La ricevuta Questura
+  // vive nel diario "Fatto stanotte", non in cima. Niente parola rotante.
   const greeting = greetingFor(now);
-  lines.push([{ text: firstName ? `${greeting} ${firstName}.` : `${greeting}.` }]);
-  lines.push([{ text: "Tengo in regola " }, { rotate: NORMA_HANDLES }, { text: "." }]);
+  const lines: HeroSegment[][] = [
+    [{ text: firstName ? `${greeting} ${firstName}.` : `${greeting}.` }],
+  ];
 
-  if (things > 0) {
-    const noun = things === 1 ? "cosa" : "cose";
-    if (k > 0) {
-      const dnoun = k === 1 ? "decisione" : "decisioni";
-      const verb = k === 1 ? "aspetta" : "aspettano";
-      lines.push([
-        { text: "Stanotte ho sistemato " },
-        { text: `${things} ${noun}`, hi: true },
-        { text: `; ${k} ${dnoun} ${verb} il tuo via libera.` },
-      ]);
-    } else {
-      lines.push([
-        { text: "Stanotte ho sistemato " },
-        { text: `${things} ${noun}`, hi: true },
-        { text: ". Per oggi non serve altro." },
-      ]);
-    }
-  } else if (k > 0) {
-    const dnoun = k === 1 ? "decisione" : "decisioni";
-    const intro = k === 1 ? "C'è " : "Ci sono ";
-    const rel = k === 1 ? "che aspetta" : "che aspettano";
-    lines.push([
-      { text: intro },
-      { text: `${k} ${dnoun}`, hi: true },
-      { text: ` ${rel} il tuo via libera.` },
-    ]);
-  } else {
-    lines.push([{ text: "Oggi è tutto in regola: nessuna scadenza da gestire." }]);
-  }
-
-  const sub =
-    data.acquiredYesterday > 0 && data.receiptRef
+  const noun = things === 1 ? "cosa" : "cose";
+  const sub: { text: string; bold?: string } =
+    things > 0
       ? {
-          bold: "Le schedine di ieri sono state acquisite dalla Questura",
-          text: `(ricevuta n. ${data.receiptRef}). Decidi tu, eseguo io.`,
+          bold: `Stanotte ho sistemato ${things} ${noun}.`,
+          text: k > 0 ? " Il resto è in regola." : " Per oggi non serve altro.",
         }
-      : { bold: "Decidi tu, eseguo io.", text: "Norma prepara, tu approvi con un tocco." };
+      : k > 0
+        ? { bold: "Tutto pronto.", text: " Niente è scaduto: aspetto solo il tuo via libera." }
+        : { bold: "Tutto in regola.", text: " Nessuna scadenza da gestire oggi." };
 
   const kicker = `${new Intl.DateTimeFormat("it-IT", {
     weekday: "long",

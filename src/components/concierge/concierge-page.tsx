@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
-import { SealMark } from "@/components/ui/seal-mark";
+import { AppShell } from "@/components/shell/app-shell";
+import { cn } from "@/lib/utils";
 import "@/app/dashboard/concierge.css";
 import "./concierge-page.css";
 
@@ -11,97 +11,108 @@ export interface ConciergePageProps {
   kicker?: string;
   /** Sottotitolo opzionale. */
   intro?: ReactNode;
-  /** Dove torna il link in alto a destra. Default: dashboard. */
+  /** Mantenuti per compatibilità con i chiamanti: con la sidebar persistente il "torna"
+   *  non serve più, ma le pagine possono ancora passarli senza errori. */
   backHref?: string;
   backLabel?: string;
-  /** Azioni opzionali a destra dell'header (oltre al link "torna"). */
+  /** Azioni opzionali nella topbar (a destra). */
   actions?: ReactNode;
+  /** Voce di navigazione attiva nella sidebar (es. "schedine"). */
+  active?: string;
+  /**
+   * Variante "strumento" per le pagine operative (direzione estetica: app densa, marketing
+   * editoriale — vedi docs/design/DIRECTION.md). Titolo sans sobrio, niente grana/sigillo
+   * decorativi. Le utility .cmx (badge, sezioni, righe) restano disponibili al contenuto.
+   */
+  dense?: boolean;
   children: ReactNode;
 }
 
 /**
- * Guscio "Concierge" riusabile per le pagine interne: grana di carta, sigillo in filigrana,
- * header con marchio Norma, testata editoriale a sinistra. Stesso linguaggio della dashboard
- * (classe `.cmx`), così tutta l'app è coerente al livello massimo. Presentazionale e PII-free.
+ * Guscio "Concierge" riusabile per le pagine interne, ora montato dentro l'AppShell
+ * (sidebar persistente + topbar). Per default conserva il linguaggio .cmx editoriale (grana,
+ * sigillo, titolo serif); con `dense` adotta la testata sobria da strumento. Presentazionale e PII-free.
  */
 export function ConciergePage({
   title,
   kicker,
   intro,
-  backHref = "/dashboard",
-  backLabel = "Dashboard",
   actions,
+  active,
+  dense,
   children,
 }: ConciergePageProps) {
   return (
-    <div className="cmx">
-      {/* Grana carta decorativa (uguale alla dashboard). */}
-      <svg className="cmx-grain" aria-hidden>
-        <filter id="cmx-noise-page">
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.8"
-            numOctaves={2}
-            stitchTiles="stitch"
-          />
-          <feColorMatrix
-            type="matrix"
-            values="0 0 0 0 0.13 0 0 0 0 0.11 0 0 0 0 0.08 0 0 0 0.05 0"
-          />
-        </filter>
-        <rect width="100%" height="100%" filter="url(#cmx-noise-page)" />
-      </svg>
-
-      <a
-        href="#main-content"
-        className="bg-card text-foreground focus-visible:ring-ring sr-only rounded-md px-4 py-2 shadow focus:not-sr-only focus:absolute focus:top-2 focus:left-4 focus:z-50 focus:ring-2"
-      >
-        Salta al contenuto
-      </a>
-
-      <div className="cmx-wrap">
-        {/* Sigillo guilloche in filigrana dietro la testata. */}
-        <div className="cmx-seal-bg" aria-hidden>
-          <svg viewBox="0 0 200 200" fill="none" stroke="#211c15" strokeWidth="0.35">
-            <circle cx="100" cy="100" r="96" />
-            <circle cx="100" cy="100" r="88" strokeDasharray="1 3" />
-            <circle cx="100" cy="100" r="78" strokeDasharray="6 4" />
-            <circle cx="100" cy="100" r="66" strokeDasharray="1 2" />
-            <circle cx="100" cy="100" r="55" />
-            <circle cx="100" cy="100" r="44" strokeDasharray="8 3" />
-            <g strokeDasharray="1 5">
-              <circle cx="100" cy="100" r="34" />
-              <circle cx="100" cy="100" r="24" />
-            </g>
+    <AppShell actions={actions} active={active}>
+      <div className="cmx">
+        {/* Grana carta decorativa (solo variante editoriale). */}
+        {!dense && (
+          <svg className="cmx-grain" aria-hidden>
+            <filter id="cmx-noise-page">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.8"
+                numOctaves={2}
+                stitchTiles="stitch"
+              />
+              <feColorMatrix
+                type="matrix"
+                values="0 0 0 0 0.13 0 0 0 0 0.11 0 0 0 0 0.08 0 0 0 0.05 0"
+              />
+            </filter>
+            <rect width="100%" height="100%" filter="url(#cmx-noise-page)" />
           </svg>
-        </div>
+        )}
 
-        <header className="cmx-top">
-          <Link className="cmx-brand" href="/dashboard" aria-label="Norma — dashboard">
-            <SealMark />
-            <span>Norma</span>
-          </Link>
-          <div className="cmx-top-right">
-            {actions}
-            <Link className="cmx-back" href={backHref}>
-              ← {backLabel}
-            </Link>
-          </div>
-        </header>
+        <div className={cn("cmx-wrap", dense && "cmx-wrap-dense")}>
+          {/* Sigillo guilloche in filigrana dietro la testata (solo variante editoriale). */}
+          {!dense && (
+            <div className="cmx-seal-bg" aria-hidden>
+              <svg viewBox="0 0 200 200" fill="none" stroke="#211c15" strokeWidth="0.35">
+                <circle cx="100" cy="100" r="96" />
+                <circle cx="100" cy="100" r="88" strokeDasharray="1 3" />
+                <circle cx="100" cy="100" r="78" strokeDasharray="6 4" />
+                <circle cx="100" cy="100" r="66" strokeDasharray="1 2" />
+                <circle cx="100" cy="100" r="55" />
+                <circle cx="100" cy="100" r="44" strokeDasharray="8 3" />
+                <g strokeDasharray="1 5">
+                  <circle cx="100" cy="100" r="34" />
+                  <circle cx="100" cy="100" r="24" />
+                </g>
+              </svg>
+            </div>
+          )}
 
-        <main id="main-content" tabIndex={-1} className="outline-none">
-          <div className="cmx-pagehead">
-            {kicker ? (
-              <div className="cmx-kicker">
-                <span className="cmx-kicker-text">{kicker}</span>
-              </div>
-            ) : null}
-            <h1 className="cmx-pagetitle">{title}</h1>
-            {intro ? <p className="cmx-pagesub">{intro}</p> : null}
-          </div>
+          {dense ? (
+            <header className="relative z-[2] mb-7 max-w-3xl">
+              {kicker ? (
+                <p className="text-[11px] font-semibold tracking-[0.14em] text-[var(--soft)] uppercase">
+                  {kicker}
+                </p>
+              ) : null}
+              <h1 className="mt-1.5 text-[23px] font-semibold tracking-[-0.01em] text-[var(--inchiostro)] sm:text-[25px]">
+                {title}
+              </h1>
+              {intro ? (
+                <p className="mt-2.5 max-w-2xl text-[14px] leading-relaxed text-[var(--soft)]">
+                  {intro}
+                </p>
+              ) : null}
+            </header>
+          ) : (
+            <div className="cmx-pagehead">
+              {kicker ? (
+                <div className="cmx-kicker">
+                  <span className="cmx-kicker-text">{kicker}</span>
+                </div>
+              ) : null}
+              <h1 className="cmx-pagetitle">{title}</h1>
+              {intro ? <p className="cmx-pagesub">{intro}</p> : null}
+            </div>
+          )}
           {children}
-        </main>
+        </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

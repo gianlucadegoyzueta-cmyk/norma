@@ -14,6 +14,33 @@ migrate.yml già presente, che gira al merge su main).
 
 ---
 
+## DA DECIDERE PRIMA DEL MERGE DI #105 (app-redesign)
+
+### 0. #105 trascina la feature Support-AI + una migrazione schema (HIGH — decisione tua)
+
+- **Contesto (osservato):** il branch `feat/app-redesign` (#105) è costruito **sopra**
+  `feat/support-ai` (PR #107, mai mergiata su main). Per questo, oltre alla pura presentazione,
+  #105 porta con sé l'intera feature assistente-AI host-facing: route `/api/support/chat`,
+  pagina `/support`, `SupportChat`, modulo `src/server/modules/support/*` (incl.
+  `PrismaTicketStore`) **e** la migrazione `prisma/migrations/20260620111627_add_support_tickets`
+  (nuovo `model SupportTicket`). Su `main` questa feature e questa migrazione **non esistono**.
+- **Perché non l'ho toccata da solo:** è oltre lo scope dichiarato (#105 = "redesign di
+  presentazione") **e** è classe HIGH (schema + nuova migrazione in prod). Le due opzioni sono
+  entrambe irreversibili/destructive in senso opposto, quindi serve la tua decisione:
+  - **A) Tieni la feature** → al merge di #105 partirà anche la migrazione `add_support_tickets`
+    su Supabase prod: richiede backup fresco (guardrail #2) prima del deploy.
+  - **B) Scorpora la feature** → #105 torna presentazione-pura: va rimosso il codice support
+    (`src/app/support`, `src/app/api/support`, `src/server/modules/support`, link sidebar
+    `/support`, voce NAV) **e** la migrazione, e la feature support-AI resta in PR #107 a sé.
+- **Cosa NON ho fatto:** non ho mergiato, non ho applicato migrazioni, non ho cancellato la
+  feature. Il branch è coerente e con CI verde **così com'è (opzione A)**. Se vuoi la B, è un
+  intervento separato e tracciabile.
+- **Raccomandazione:** decidere A/B prima di mergiare #105. Default suggerito: B (mantieni #105
+  presentazione-pura, mergia support-AI come PR #107 indipendente con il suo backup), così la
+  classe di rischio di #105 resta MEDIUM e non HIGH.
+
+---
+
 ## Parcheggiate
 
 ### 1. ISTAT — presenze turistiche per-regione

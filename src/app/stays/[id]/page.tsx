@@ -187,6 +187,8 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <ConciergePage
+      dense
+      active="stays"
       backHref="/stays"
       backLabel="Soggiorni"
       kicker="DETTAGLIO · SOGGIORNO"
@@ -292,7 +294,7 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
       <section className="cmx-section">
         <Card style={{ borderRadius: 18 }}>
           <CardHeader>
-            <CardTitle className="font-display">Genera schedine</CardTitle>
+            <CardTitle>Genera schedine</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
             <p className="text-muted-foreground text-sm">
@@ -312,7 +314,7 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
       <section className="cmx-section">
         <Card style={{ borderRadius: 18 }}>
           <CardHeader>
-            <CardTitle className="font-display">Aggiungi ospiti</CardTitle>
+            <CardTitle>Aggiungi ospiti</CardTitle>
           </CardHeader>
           <CardContent>
             {!health.ready ? (

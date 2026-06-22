@@ -101,3 +101,15 @@ Prossima azione.
 - Docker: via **colima** (niente Docker Desktop). Se `docker ps` fallisce: `colima start`.
   Postgres locale per test migrazioni: `docker compose up -d db` (vedi docker-compose.yml).
 - Playwright: chromium già in cache condivisa (~/Library/Caches/ms-playwright).
+
+## Stack AI disponibile (globale — integrato 2026-06-18, vedi ~/.claude/STACK.md)
+
+Complementare al setup di questo repo (guard hook `scripts/hooks/guard.sh`, comandi flotta daily-ops/night-run/ship-unit). Da Claude Code/Cursor sono disponibili:
+
+- **Slash command globali**: `/ship` (pre-PR gate: typecheck+lint+test+rischio), `/risk` (classe LOW/MEDIUM/HIGH/CRITICAL), `/code-review`, `/stack-status`, `/eod`.
+- **Subagent**: `pr-reviewer` (applica le classi di rischio del kernel), `test-runner` (CI locale → rossi), `kernel-guardian` (aderenza kernel), `repo-cartographer`.
+- **Workflow** in `.claude/workflows/` (invoca con scriptPath): `code-review.mjs` (review diff multi-dimensione + verifica avversariale) · `dual-judge.mjs` (Claude+Gemini sulle decisioni dibattibili).
+- **Multi-cervello**: `~/.claude/bin/gemini-ask.sh "domanda"` per un secondo parere; `dual-judge` per consenso/divergenza su scelte critiche.
+- **MCP** (14 connettori): github, filesystem, context7, playwright, Linear, Notion, Slack, Apollo, n8n…
+
+Per norma il rischio resta sovrano: billing/auth/schema/PII = HIGH+, invii reali = CRITICAL (sempre umano).

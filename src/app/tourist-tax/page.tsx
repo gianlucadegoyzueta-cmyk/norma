@@ -42,6 +42,7 @@ export default async function TouristTaxPage() {
 
   return (
     <ConciergePage
+      dense
       kicker="VERSAMENTI · IMPOSTA DI SOGGIORNO"
       title="Tassa di soggiorno"
       intro="Preparo le dichiarazioni periodiche per comune: calcolo l'imposta, esporto e tengo traccia del versamento."
@@ -49,7 +50,7 @@ export default async function TouristTaxPage() {
       <section className="cmx-section" style={{ marginTop: 0 }}>
         <Card style={{ borderRadius: 18 }}>
           <CardHeader>
-            <CardTitle className="font-display">Nuova dichiarazione</CardTitle>
+            <CardTitle>Nuova dichiarazione</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4 text-sm">
@@ -81,7 +82,7 @@ export default async function TouristTaxPage() {
                     <CardHeader>
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <CardTitle className="font-display text-base">
+                          <CardTitle className="text-base">
                             {d.comune.name} · {periodLabel(d.period)}
                           </CardTitle>
                           <p className="text-muted-foreground mt-1 text-sm">
