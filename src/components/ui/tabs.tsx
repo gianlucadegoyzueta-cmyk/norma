@@ -105,7 +105,7 @@ export function TabsTrigger({
       aria-controls={`${ctx.idBase}-panel-${value}`}
       onClick={() => ctx.setValue(value)}
       className={cn(
-        "ring-offset-background focus-visible:ring-ring inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
+        "ring-offset-background focus-visible:ring-ring inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors duration-150 ease-[var(--ease-brand)] outline-none focus-visible:ring-2 focus-visible:ring-offset-2 motion-reduce:transition-none",
         selected ? "bg-background text-foreground shadow-sm" : "hover:text-foreground",
         className,
       )}
