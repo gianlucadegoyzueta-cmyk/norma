@@ -107,6 +107,9 @@ export function ConciergeScene({
           <nav className="cmx-quicknav" aria-label="Vai a una sezione">
             <span className="cmx-sc-label">Vai a</span>
             <span className="cmx-quicknav-pills">
+              <Link className="cmx-sc" href="/agency">
+                Strutture
+              </Link>
               <Link className="cmx-sc" href="/schedine">
                 Schedine
               </Link>

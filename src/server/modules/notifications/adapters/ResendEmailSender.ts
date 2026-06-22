@@ -8,6 +8,11 @@ import type { EmailMessage, EmailSender } from "../ports";
  */
 export class ResendEmailSender implements EmailSender {
   async send(message: EmailMessage): Promise<void> {
-    await sendTransactionalEmail(message);
+    await sendTransactionalEmail({
+      to: message.to,
+      subject: message.subject,
+      text: message.text,
+      ...(message.html ? { html: message.html } : {}),
+    });
   }
 }

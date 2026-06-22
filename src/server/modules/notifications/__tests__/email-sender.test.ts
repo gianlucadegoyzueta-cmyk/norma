@@ -19,6 +19,7 @@ describe("EmailSender (transport finto)", () => {
       to: "ospite@example.com",
       subject: composed.subject,
       text: composed.text,
+      html: composed.html,
     });
   });
 

@@ -2,6 +2,7 @@
 // (InMemoryStaysRepository è escluso: è un aiuto per i test.)
 
 export * from "./domain/generation";
+export * from "./domain/import-provenance";
 export * from "./domain/parties";
 export * from "./ports";
 export * from "./adapters/PrismaStaysRepository";

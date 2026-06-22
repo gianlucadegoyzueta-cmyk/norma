@@ -10,9 +10,22 @@ try {
 }
 
 export default defineConfig({
-  // L'alias "@/..." dei sorgenti vale anche nei test (tsconfig paths non è letto da Vitest da solo).
   resolve: {
-    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+    // Array form con regex: `^@/` evita di intercettare gli scope npm (@prisma/*, @anthropic-ai/*…).
+    alias: [
+      {
+        // `@/...` → `src/...` (stesso path mapping di tsconfig): permette ai test di importare moduli
+        // applicativi che usano l'alias `@/` (es. le funzioni dati delle pagine).
+        find: /^@\//,
+        replacement: `${fileURLToPath(new URL("./src", import.meta.url))}/`,
+      },
+      {
+        // `server-only` è fornito da Next solo a runtime; nei test non esiste. Lo stub vuoto consente
+        // di importare moduli marcati server-only sotto vitest.
+        find: /^server-only$/,
+        replacement: fileURLToPath(new URL("./test/stubs/server-only.ts", import.meta.url)),
+      },
+    ],
   },
   // tsconfig usa jsx:"preserve" (lo gestisce Next); per i test serve il transform automatico di React 19.
   esbuild: { jsx: "automatic" },

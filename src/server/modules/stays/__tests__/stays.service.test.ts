@@ -199,8 +199,23 @@ describe("StaysService", () => {
     });
     // Senza outbox in memoria, il riepilogo schedine è a zero.
     expect(list[0].schedine.total).toBe(0);
+    // Soggiorno creato a mano: nessuna provenienza di import.
+    expect(list[0].importSource).toBeNull();
+    expect(list[0].importStatus).toBeNull();
     // Isolamento: un'altra org non vede questi soggiorni.
     expect(await service.listStays("org_2")).toHaveLength(0);
+  });
+
+  it("lista: espone la provenienza di import (source + status) per i soggiorni da iCal", async () => {
+    staysRepo.setProperty("prop_1", { credentialId: "cred_1", alloggiatiApartmentId: null });
+    const { stayId } = await setupStayWithFamily();
+    staysRepo.setStayImport(stayId, "AIRBNB", "NEEDS_CANCEL_REVIEW");
+    const list = await service.listStays("org_1");
+    expect(list[0]).toMatchObject({
+      id: stayId,
+      importSource: "AIRBNB",
+      importStatus: "NEEDS_CANCEL_REVIEW",
+    });
   });
 
   it("createStay valida i dati (guestsCount ≥ 1, partenza ≥ arrivo)", async () => {

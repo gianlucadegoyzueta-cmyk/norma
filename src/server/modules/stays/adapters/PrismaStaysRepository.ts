@@ -139,6 +139,8 @@ export class PrismaStaysRepository implements StaysRepository {
         departureDate: true,
         isShortStay: true,
         guestsCount: true,
+        importSource: true,
+        importStatus: true,
         property: {
           select: {
             name: true,
@@ -163,6 +165,8 @@ export class PrismaStaysRepository implements StaysRepository {
       guestsCount: s.guestsCount,
       guestsAdded: s.guests.length,
       schedine: tallySchedine(s.guests.map((g) => g.schedina?.status)),
+      importSource: s.importSource,
+      importStatus: s.importStatus,
     }));
   }
 

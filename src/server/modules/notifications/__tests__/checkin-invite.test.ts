@@ -1,114 +1,41 @@
 import { describe, expect, it } from "vitest";
+import { CHECKIN_EMAIL_STRINGS, type CheckinEmailStrings } from "../domain/checkin-invite-content";
 import {
   chooseCheckinEmailKind,
   composeCheckinEmail,
+  EMAIL_LOCALES,
   isValidEmail,
 } from "../domain/checkin-invite";
 
 const URL_FIXTURE = "https://app.norma.casa/checkin/abc123";
 const PROPERTY = "Casa dei Glicini";
+const KINDS = ["invite", "reminder"] as const;
 
-describe("composeCheckinEmail", () => {
-  it("invito IT: contiene struttura, link e tono sobrio (snapshot)", () => {
-    const email = composeCheckinEmail({
-      kind: "invite",
-      locale: "it",
-      propertyName: PROPERTY,
-      checkinUrl: URL_FIXTURE,
-    });
-    expect(email).toMatchInlineSnapshot(`
-      {
-        "subject": "Completa il check-in per il tuo soggiorno a Casa dei Glicini",
-        "text": "Benvenuto,
-
-      per il tuo soggiorno a Casa dei Glicini ti chiediamo di completare il check-in online: bastano due minuti e ti evita formalità all'arrivo.
-
-      Completa qui:
-      https://app.norma.casa/checkin/abc123
-
-      Il link è personale: non condividerlo. Se hai già completato il check-in, ignora questo messaggio.
-
-      — Norma, per conto del tuo host
-      Compliance per affitti brevi · norma.casa",
-      }
-    `);
+describe("composeCheckinEmail — copertura multilingua", () => {
+  it("supporta esattamente it/en/de/fr/es (allineate al check-in pubblico)", () => {
+    expect([...EMAIL_LOCALES]).toEqual(["it", "en", "de", "fr", "es"]);
   });
 
-  it("invito EN: contiene struttura, link e footer (snapshot)", () => {
-    const email = composeCheckinEmail({
-      kind: "invite",
-      locale: "en",
-      propertyName: PROPERTY,
-      checkinUrl: URL_FIXTURE,
-    });
-    expect(email).toMatchInlineSnapshot(`
-      {
-        "subject": "Complete the check-in for your stay at Casa dei Glicini",
-        "text": "Welcome,
-
-      for your stay at Casa dei Glicini, please complete the online check-in: it only takes two minutes and saves you formalities on arrival.
-
-      Complete it here:
-      https://app.norma.casa/checkin/abc123
-
-      This link is personal — please don't share it. If you've already checked in, ignore this message.
-
-      — Norma, on behalf of your host
-      Compliance for short-term rentals · norma.casa",
+  it("rende subject, text e html per ogni lingua e tipo", () => {
+    for (const locale of EMAIL_LOCALES) {
+      for (const kind of KINDS) {
+        const email = composeCheckinEmail({
+          kind,
+          locale,
+          propertyName: PROPERTY,
+          checkinUrl: URL_FIXTURE,
+        });
+        expect(email.subject.length, `subject ${locale}/${kind}`).toBeGreaterThan(0);
+        expect(email.text.length, `text ${locale}/${kind}`).toBeGreaterThan(0);
+        expect(email.html.length, `html ${locale}/${kind}`).toBeGreaterThan(0);
       }
-    `);
+    }
   });
 
-  it("promemoria IT: subject distinto e tono gentile (snapshot)", () => {
-    const email = composeCheckinEmail({
-      kind: "reminder",
-      locale: "it",
-      propertyName: PROPERTY,
-      checkinUrl: URL_FIXTURE,
-    });
-    expect(email).toMatchInlineSnapshot(`
-      {
-        "subject": "Promemoria: completa il check-in per Casa dei Glicini",
-        "text": "Ciao,
-
-      manca poco al tuo arrivo a Casa dei Glicini e non risulta ancora completato il check-in online. Quando hai un minuto, completalo qui:
-      https://app.norma.casa/checkin/abc123
-
-      Bastano due minuti. Se lo hai già fatto, ignora pure questo messaggio.
-
-      — Norma, per conto del tuo host
-      Compliance per affitti brevi · norma.casa",
-      }
-    `);
-  });
-
-  it("promemoria EN: subject distinto (snapshot)", () => {
-    const email = composeCheckinEmail({
-      kind: "reminder",
-      locale: "en",
-      propertyName: PROPERTY,
-      checkinUrl: URL_FIXTURE,
-    });
-    expect(email).toMatchInlineSnapshot(`
-      {
-        "subject": "Reminder: complete the check-in for Casa dei Glicini",
-        "text": "Hi,
-
-      your arrival at Casa dei Glicini is coming up and the online check-in isn't completed yet. When you have a minute, complete it here:
-      https://app.norma.casa/checkin/abc123
-
-      It only takes two minutes. If you've already done it, please ignore this message.
-
-      — Norma, on behalf of your host
-      Compliance for short-term rentals · norma.casa",
-      }
-    `);
-  });
-
-  it("include sempre l'URL esatto del check-in nel testo", () => {
-    for (const kind of ["invite", "reminder"] as const) {
-      for (const locale of ["it", "en"] as const) {
-        const { text } = composeCheckinEmail({
+  it("include sempre nome immobile e URL esatto in testo e html", () => {
+    for (const locale of EMAIL_LOCALES) {
+      for (const kind of KINDS) {
+        const { text, html } = composeCheckinEmail({
           kind,
           locale,
           propertyName: PROPERTY,
@@ -116,6 +43,102 @@ describe("composeCheckinEmail", () => {
         });
         expect(text).toContain(URL_FIXTURE);
         expect(text).toContain(PROPERTY);
+        expect(html).toContain(URL_FIXTURE);
+        expect(html).toContain(PROPERTY);
+      }
+    }
+  });
+
+  it("il testo semplice non contiene markup HTML", () => {
+    for (const locale of EMAIL_LOCALES) {
+      const { text } = composeCheckinEmail({
+        kind: "invite",
+        locale,
+        propertyName: PROPERTY,
+        checkinUrl: URL_FIXTURE,
+      });
+      expect(text).not.toMatch(/<[a-z!/]/i);
+    }
+  });
+
+  it("l'html è on-brand 'Carta & Inchiostro' (terracotta + avorio) e ha lang corretto", () => {
+    for (const locale of EMAIL_LOCALES) {
+      const { html } = composeCheckinEmail({
+        kind: "invite",
+        locale,
+        propertyName: PROPERTY,
+        checkinUrl: URL_FIXTURE,
+      });
+      expect(html).toContain("#bc4b2b"); // terracotta
+      expect(html).toContain("#f7f2e8"); // avorio
+      expect(html).toContain("Fraunces");
+      expect(html).toContain(`<html lang="${locale}">`);
+      expect(html).toContain('role="presentation"'); // table-based layout
+      expect(html.toLowerCase()).toContain("<!doctype html>");
+    }
+  });
+
+  it("escapa il nome immobile nell'html (no injection)", () => {
+    const { html } = composeCheckinEmail({
+      kind: "invite",
+      locale: "it",
+      propertyName: "Casa <script>\"&'",
+      checkinUrl: URL_FIXTURE,
+    });
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&lt;script&gt;");
+  });
+
+  it("invito vs promemoria hanno subject distinti (per lingua)", () => {
+    for (const locale of EMAIL_LOCALES) {
+      const invite = composeCheckinEmail({
+        kind: "invite",
+        locale,
+        propertyName: PROPERTY,
+        checkinUrl: URL_FIXTURE,
+      });
+      const reminder = composeCheckinEmail({
+        kind: "reminder",
+        locale,
+        propertyName: PROPERTY,
+        checkinUrl: URL_FIXTURE,
+      });
+      expect(invite.subject).not.toBe(reminder.subject);
+    }
+  });
+});
+
+describe("CHECKIN_EMAIL_STRINGS — nessuna chiave vuota", () => {
+  const REQUIRED_KEYS: (keyof CheckinEmailStrings)[] = [
+    "subject",
+    "greeting",
+    "body",
+    "cta",
+    "linkLabel",
+    "note",
+    "footerSignature",
+    "footerTagline",
+  ];
+
+  it("ogni lingua e tipo ha tutte le chiavi valorizzate (non vuote)", () => {
+    for (const locale of EMAIL_LOCALES) {
+      for (const kind of KINDS) {
+        const strings = CHECKIN_EMAIL_STRINGS[locale][kind];
+        for (const key of REQUIRED_KEYS) {
+          const value = strings[key];
+          expect(typeof value, `${locale}/${kind}/${key} tipo`).toBe("string");
+          expect(value.trim().length, `${locale}/${kind}/${key} vuoto`).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  it("subject e body contengono il placeholder {property} (lo legano allo struttura)", () => {
+    for (const locale of EMAIL_LOCALES) {
+      for (const kind of KINDS) {
+        const { subject, body } = CHECKIN_EMAIL_STRINGS[locale][kind];
+        expect(subject, `${locale}/${kind} subject`).toContain("{property}");
+        expect(body, `${locale}/${kind} body`).toContain("{property}");
       }
     }
   });
