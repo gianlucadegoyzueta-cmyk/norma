@@ -1,11 +1,33 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { AlertTriangle, CheckCircle2, Loader2, Send, ShieldCheck, XCircle } from "lucide-react";
+import type { CredentialStatus } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { sendCredentialAction, verifyCredentialAction } from "./actions";
 import type { OutboxResult, SendResult, SendSummary } from "./types";
+
+// Spiegazione per-stato quando la credenziale NON è ATTIVA: l'invio è bloccato e va detto perché,
+// con l'azione esatta da fare. Distingue scaduta/da-reonboarding, password cambiata, disattivata.
+const INACTIVE_COPY: Record<
+  Exclude<CredentialStatus, "ACTIVE">,
+  { reason: string; action: string }
+> = {
+  PENDING_REONBOARDING: {
+    reason: "Credenziale da riverificare (scaduta o mai verificata).",
+    action: "Esegui la verifica in “Credenziali” per riattivarla e poter inviare.",
+  },
+  INVALID: {
+    reason: "Credenziale non valida: autenticazione fallita (password cambiata?).",
+    action: "Aggiorna la password in “Credenziali”, poi riverifica per poter inviare.",
+  },
+  DISABLED: {
+    reason: "Credenziale disattivata.",
+    action: "Riattivala in “Credenziali” per poter inviare.",
+  },
+};
 
 function Feedback({ state }: { state: OutboxResult | null }) {
   if (!state) return null;
@@ -80,12 +102,13 @@ function SendSummaryView({ summary }: { summary: SendSummary }) {
 export function CredentialOutboxControls({
   credentialId,
   pendingCount,
-  active,
+  status,
 }: {
   credentialId: string;
   pendingCount: number;
-  active: boolean;
+  status: CredentialStatus;
 }) {
+  const active = status === "ACTIVE";
   const [verifyState, verifyAction, verifying] = useActionState<OutboxResult | null, FormData>(
     verifyCredentialAction,
     null,
@@ -101,10 +124,25 @@ export function CredentialOutboxControls({
   const ackId = `ack-${credentialId}`;
 
   if (!active) {
+    const copy = INACTIVE_COPY[status];
     return (
-      <p className="text-muted-foreground text-xs">
-        Credenziale non ATTIVA: verificala in “Credenziali” per poter inviare.
-      </p>
+      <div
+        role="alert"
+        className="border-warning/40 bg-warning/10 grid gap-1.5 rounded-md border p-3 text-xs"
+      >
+        <p className="text-warning-foreground inline-flex items-center gap-1.5 font-medium">
+          <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
+          Invio bloccato · credenziale non attiva
+        </p>
+        <p className="text-muted-foreground">{copy.reason}</p>
+        <p className="text-muted-foreground">{copy.action}</p>
+        <Link
+          href={`/credentials#cred-${credentialId}`}
+          className="text-foreground font-medium underline underline-offset-2"
+        >
+          Vai alla credenziale →
+        </Link>
+      </div>
     );
   }
 
