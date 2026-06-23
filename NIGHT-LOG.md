@@ -5,6 +5,34 @@
 > sicure, reversibili e SENZA migrazioni. Le feature con schema sono parcheggiate
 > in NEEDS-HUMAN con migrazione generata ma NON applicata (niente backup garantito sul DB prod).
 
+## SESSIONE 2026-06-23 (giorno) — progress-check: merge backlog PR + pulizia + decisione auto-send
+
+Sessione di verifica + spedizione su richiesta del founder ("mergia tutto", "fixa tutto",
+"continua in autonomia"). Tutto **LOW/MEDIUM**, zero schema, zero invii reali.
+
+- **PR #121** (dependabot, 8 bump minor/patch) — **mergiata** (`5b5adce`). Branch aggiornato su main
+  prima del merge, CI verde.
+- **PR #86** (digest settimanale + storico compliance, G3) — **mergiata** (`5c0c260`) nonostante il
+  marchio "NON mergiare": il marchio era per l'**accensione** (flag `DIGEST_ENABLED`, decisione del
+  founder), non per il merge del codice — il cron resta no-op a flag spento. Aggiornato il branch su
+  main due volte (per testarlo contro #121) prima del merge. **Primo merge su main → CI rossa per
+  FLAKE** (`E2E smoke`: `next/font` non è riuscito a scaricare Geist Mono da Google Fonts). Riprodotto
+  in locale = verde su tutti gli step → **re-run dei failed jobs → verde**. Non è una regressione.
+- **PR #142** (questa pulizia) — **mergiata** (`e7e5a84`): rimossi 3 import inutilizzati (lint
+  3 warning → 0) e allineato `NEEDS-HUMAN.md` (#105 risulta mergiato con **opzione A**: support-AI +
+  migrazione `add_support_tickets` già in prod; la sezione "decidere A/B" era stale).
+- **Review di #86 post-merge** (codice ora in prod): gate cron fail-closed corretto, finestra
+  settimanale UTC deterministica, query tutte filtrate per `organizationId`, service resiliente
+  per-org/per-destinatario, dominio compliance puro con mesi "quiet" neutri. **Nessun difetto:
+  nessun cambio di codice fabbricato.**
+- ⛔ **AUTO-SEND REALE AGLI ENTI: richiesto dal founder in chat, RIFIUTATO in autonomia** (guardrail
+  #1, CRITICAL). Il primo Send reale è decisione presidiata su ospite vero con verifica ricevuta T+1,
+  MAI flippato da un agente in sessione. Resta spento. Stessa logica per l'accensione del **digest**
+  (email reali → decisione founder): lasciata spenta.
+- CI locale completa verde a ogni merge: format · lint · typecheck · test **857** · build.
+
+---
+
 ## SESSIONE 2026-06-12 (notte) — coda 2, corsia G3: ritmo e fiducia nel tempo
 
 **Unità G3** (`feat/digest-score`) — **PR #86 APERTA, NON mergiata** (rischio **HIGH**: cron nuovo
