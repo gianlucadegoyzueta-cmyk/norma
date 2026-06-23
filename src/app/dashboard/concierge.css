@@ -31,8 +31,11 @@
 .cmx-grain {
   position: fixed;
   inset: 0;
+  /* Decorativa: non deve mai intercettare click né coprire contenuto/nav.
+     pointer-events:none la rende inerte; z-index:0 la confina sotto il contenuto
+     (z-index:2) e sotto la bottom-nav (z-40) invece che sopra a z-50. */
   pointer-events: none;
-  z-index: 50;
+  z-index: 0;
   /* "Concierge sobrio": grana ridotta a un sussurro, non più velo a tutto schermo sui dati. */
   opacity: 0.22;
   mix-blend-mode: multiply;
