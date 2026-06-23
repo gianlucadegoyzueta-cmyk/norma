@@ -27,6 +27,14 @@ export function IstatSubmitButton({
 
   function onClick() {
     setError(null);
+    // Aggiornare una registrazione esistente sovrascrive la data di invio (dato di compliance):
+    // micro-conferma prima di sostituire la data precedente.
+    if (
+      submittedLabel &&
+      !window.confirm(`Aggiorno la data della registrazione da ${submittedLabel} a oggi?`)
+    ) {
+      return;
+    }
     start(async () => {
       const res = await markIstatSubmittedAction(period);
       if (!res.ok) return setError(res.error);

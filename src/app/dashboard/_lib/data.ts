@@ -299,7 +299,7 @@ export async function getDashboardData(
       id: `checkin-${arrivalNeedingCheckin.id}`,
       emoji: "🛎️",
       bold: `Arrivo il ${dateLabel} a ${arrivalNeedingCheckin.property.name}`,
-      rest: " senza check-in completato. Ho pronto il link personale dell'ospite: copialo e mandaglielo, alla schedina penso io secondo le tue regole.",
+      rest: " senza check-in completato. Ho pronto il link personale dell'ospite: copialo e mandaglielo, poi ti preparo la schedina dai suoi dati.",
       meta: `${arrivalNeedingCheckin.guestsCount} ${arrivalNeedingCheckin.guestsCount === 1 ? "ospite" : "ospiti"} · check-in self-service`,
       primary: {
         label: "Copia link check-in",
@@ -330,7 +330,7 @@ export async function getDashboardData(
       id: "ical-drafts",
       emoji: "📅",
       bold: `${draftStaysNoGuests.length} ${draftStaysNoGuests.length === 1 ? "bozza importata" : "bozze importate"} dal calendario senza ospiti.`,
-      rest: " Completa i dati degli ospiti e preparo le schedine in automatico.",
+      rest: " Completa i dati degli ospiti e ti preparo le schedine, pronte da confermare.",
       meta: `import iCal · ${first.property.name}`,
       primary: { label: "Completa ospiti", action: { type: "link", href: `/stays/${first.id}` } },
       secondary: { label: "Vedi soggiorni", href: "/stays" },
@@ -358,7 +358,8 @@ export async function getDashboardData(
       ? {
           when: "OGGI",
           title: `${overdueCount} ${overdueCount === 1 ? "schedina" : "schedine"} oltre scadenza`,
-          detail: "Vanno gestite subito: una comunicazione tardiva ad Alloggiati è una violazione.",
+          detail:
+            "Da gestire subito: oltre le 24h dall'arrivo la comunicazione ad Alloggiati è tardiva. Apri e conferma.",
         }
       : pendingSchedine > 0
         ? {
@@ -387,7 +388,7 @@ export async function getDashboardData(
         when: agendaWhen(s.departureDate, now),
         title: `Partenza ${s.property.name}`,
         detail: "Conteggio tassa di soggiorno",
-        norma: "aggiornato in automatico",
+        norma: "lo tengo aggiornato, pronto da confermare",
       });
     }
   }

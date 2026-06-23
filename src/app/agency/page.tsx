@@ -13,7 +13,7 @@ import { getAgencyOverview } from "./_lib/data";
 import { PropertySwitcher } from "./PropertySwitcher";
 import "./agency.css";
 
-export const metadata: Metadata = { title: "Agenzia" };
+export const metadata: Metadata = { title: "Strutture" };
 
 export const dynamic = "force-dynamic";
 

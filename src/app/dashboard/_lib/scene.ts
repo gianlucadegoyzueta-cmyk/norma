@@ -187,7 +187,8 @@ export function buildSceneCopy(
     },
     {
       value: hours,
-      label: "ore risparmiate nel mese",
+      prefix: "~",
+      label: "ore risparmiate · stima",
       trend: guestsThisMonth > 0 ? `stimate su ${guestsThisMonth} ospiti` : "stima sugli ospiti",
       detail: {
         title: "Ore risparmiate nel mese",

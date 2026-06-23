@@ -68,22 +68,31 @@ export function DeclarationActions({
 
   function onExport() {
     setMsg(null);
+    setOk(null);
     start(async () => {
       const res = await prepareRemittanceAction(id);
       if (!res.ok) return setMsg(res.error);
       const r = res.result;
-      if (r.kind === "EXPORT_READY") download(r.filename, r.mimeType, r.content);
-      else if (r.kind === "REDIRECT") window.open(r.url, "_blank", "noopener");
-      else setMsg(r.message); // NOT_IMPLEMENTED → spiega che si usa l'export manuale
+      if (r.kind === "EXPORT_READY") {
+        download(r.filename, r.mimeType, r.content);
+        setOk(`Scaricato ${r.filename}.`);
+      } else if (r.kind === "REDIRECT") {
+        const w = window.open(r.url, "_blank", "noopener");
+        if (w === null) {
+          setMsg("Il browser ha bloccato la finestra: abilita i popup o usa Esporta CSV.");
+        }
+      } else setMsg(r.message); // NOT_IMPLEMENTED → spiega che si usa l'export manuale
     });
   }
 
   function onExportPdf() {
     setMsg(null);
+    setOk(null);
     start(async () => {
       const res = await prepareDeclarationPdfAction(id);
       if (!res.ok) return setMsg(res.error);
       downloadBase64(res.filename, res.base64, "application/pdf");
+      setOk(`Scaricato ${res.filename}.`);
     });
   }
 
