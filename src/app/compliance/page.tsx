@@ -10,7 +10,6 @@ import {
   loadComplianceHistory,
 } from "@/server/modules/compliance";
 import { SiteHeader } from "@/components/site-header";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Storico compliance" };
@@ -18,11 +17,11 @@ export const dynamic = "force-dynamic";
 
 const VERDICT: Record<
   ComplianceVerdict,
-  { label: string; variant: BadgeProps["variant"]; Icon: typeof CircleCheck }
+  { label: string; badgeClass: string; Icon: typeof CircleCheck }
 > = {
-  regular: { label: "Regolare", variant: "success", Icon: CircleCheck },
-  attention: { label: "Da sistemare", variant: "warning", Icon: TriangleAlert },
-  quiet: { label: "Nessun movimento", variant: "outline", Icon: CircleSlash },
+  regular: { label: "Regolare", badgeClass: "cmx-badge-ok", Icon: CircleCheck },
+  attention: { label: "Da sistemare", badgeClass: "cmx-badge-wait", Icon: TriangleAlert },
+  quiet: { label: "Nessun movimento", badgeClass: "", Icon: CircleSlash },
 };
 
 /** Riga di registro: mese, badge di posizione, e il dettaglio in parole sobrie. */
@@ -34,10 +33,10 @@ function MonthRow({ row }: { row: MonthComplianceRow }) {
         <p className="font-display text-sm font-medium capitalize">{humanMonth(row.month)}</p>
         <p className="text-muted-foreground mt-0.5 text-xs">{detail(row)}</p>
       </div>
-      <Badge variant={v.variant} className="shrink-0">
+      <span className={`cmx-badge ${v.badgeClass} inline-flex shrink-0 items-center gap-1`}>
         <v.Icon aria-hidden />
         {v.label}
-      </Badge>
+      </span>
     </li>
   );
 }
