@@ -371,16 +371,20 @@
   text-transform: uppercase;
   /* Testo piccolo (11px): terracotta-dark per AA su avorio. */
   color: var(--terracotta-dark);
-  opacity: 0;
+  /* Affordance persistente (anche su touch/tastiera, dove non c'è hover): visibile a riposo,
+     piena su hover/focus. */
+  opacity: 0.85;
   transition: opacity 0.25s;
 }
-.cmx-kpi:hover .cmx-kpi-cta {
+.cmx-kpi:hover .cmx-kpi-cta,
+.cmx-kpi:focus-visible .cmx-kpi-cta {
   opacity: 1;
 }
 .cmx-kpi-arrow {
   transition: transform 0.25s var(--ease);
 }
-.cmx-kpi:hover .cmx-kpi-arrow {
+.cmx-kpi:hover .cmx-kpi-arrow,
+.cmx-kpi:focus-visible .cmx-kpi-arrow {
   transform: translateX(4px);
 }
 .cmx-odo {
@@ -390,6 +394,8 @@
   font-weight: 700;
   font-size: 40px;
   letter-spacing: -0.025em;
+  /* Cifre allineate: l'odometro è il caso d'uso dei numeri tabulari. */
+  font-variant-numeric: tabular-nums;
   height: 44px;
   overflow: hidden;
 }
@@ -421,6 +427,7 @@
   height: 44px;
   line-height: 44px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ===== FOGLIO DI DETTAGLIO KPI (<dialog>) ===== */
@@ -1019,6 +1026,37 @@
   }
   .cmx-odo {
     font-size: 42px;
+  }
+  /* Affordance di scroll sui pill: sfumatura ai bordi quando la barra eccede la larghezza. */
+  .cmx-quicknav-pills {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 14px,
+      black calc(100% - 14px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 14px,
+      black calc(100% - 14px),
+      transparent 100%
+    );
+  }
+}
+
+/* Telefoni stretti: 1 colonna KPI, odometro più piccolo, sigillo contenuto nel viewport. */
+@media (max-width: 520px) {
+  .cmx-kpis {
+    grid-template-columns: 1fr;
+  }
+  .cmx-odo {
+    font-size: 34px;
+  }
+  .cmx-seal-bg {
+    width: 320px;
+    height: 320px;
   }
 }
 

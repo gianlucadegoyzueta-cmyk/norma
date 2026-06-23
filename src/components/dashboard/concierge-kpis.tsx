@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
 /** Una riga del riepilogo (drill-down) che si apre al click su un KPI. */
@@ -144,7 +145,7 @@ function KpiSheet({ detail, onClose }: { detail: KpiDetail; onClose: () => void 
             aria-label="Chiudi"
             onClick={() => ref.current?.close()}
           >
-            <span aria-hidden>✕</span>
+            <X size={18} aria-hidden />
           </button>
         </header>
         {detail.intro && <p className="cmx-sheet-intro">{detail.intro}</p>}
