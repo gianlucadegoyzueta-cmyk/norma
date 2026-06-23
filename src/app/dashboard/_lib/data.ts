@@ -291,7 +291,7 @@ export async function getDashboardData(
       id: `checkin-${arrivalNeedingCheckin.id}`,
       emoji: "🛎️",
       bold: `Arrivo il ${dateLabel} a ${arrivalNeedingCheckin.property.name}`,
-      rest: " senza check-in completato. Ho pronto il link personale dell'ospite: copialo e mandaglielo, al resto penso io.",
+      rest: " senza check-in completato. Ho pronto il link personale dell'ospite: copialo e mandaglielo, alla schedina penso io secondo le tue regole.",
       meta: `${arrivalNeedingCheckin.guestsCount} ${arrivalNeedingCheckin.guestsCount === 1 ? "ospite" : "ospiti"} · check-in self-service`,
       primary: {
         label: "Copia link check-in",

@@ -203,11 +203,11 @@ export default async function SchedinePage() {
             </CardHeader>
             <CardContent className="grid gap-4">
               <p className="text-muted-foreground text-sm">
-                Quando attivo per una credenziale, Norma può inviare da sola le schedine già{" "}
-                <em>validate dal Test</em>; quelle che il Test boccia restano da rivedere e{" "}
-                <strong>non partono mai</strong>. L&apos;invio automatico richiede anche
-                l&apos;abilitazione lato server: finché non è attiva, questo interruttore esprime
-                solo la tua preferenza.
+                Con l&apos;auto-invio attivo per una credenziale, le schedine già{" "}
+                <em>validate dal Test</em> vengono inviate automaticamente all&apos;orario
+                programmato, su tuo mandato; quelle che il Test boccia restano da rivedere e{" "}
+                <strong>non partono mai</strong>. Richiede anche l&apos;abilitazione lato server:
+                finché non è attiva, questo interruttore esprime solo la tua preferenza.
               </p>
               {credentials.map((c) => (
                 <div

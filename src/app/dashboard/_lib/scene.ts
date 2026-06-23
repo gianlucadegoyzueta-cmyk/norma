@@ -58,7 +58,7 @@ export function buildSceneCopy(
   const sub: { text: string; bold?: string } =
     things > 0
       ? {
-          bold: `Stanotte ho sistemato ${things} ${noun}.`,
+          bold: `Stanotte ho preparato ${things} ${noun}.`,
           text: k > 0 ? " Il resto è in regola." : " Per oggi non serve altro.",
         }
       : k > 0
