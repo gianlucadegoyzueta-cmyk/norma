@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { CommandPalette } from "@/components/command-palette";
+import { CommandTrigger } from "@/components/command-trigger";
 import { AppSidebar } from "./app-sidebar";
 import { MobileSidebarDrawer } from "./mobile-sidebar-drawer";
 import { ShellBreadcrumb } from "./shell-breadcrumb";
@@ -45,12 +47,18 @@ export function AppShell({
           <div className="text-muted-foreground flex min-w-0 items-center gap-2 text-[13px]">
             {breadcrumb ?? <ShellBreadcrumb />}
           </div>
-          <div className="ml-auto flex items-center gap-2">{actions}</div>
+          <div className="ml-auto flex items-center gap-2">
+            <CommandTrigger />
+            {actions}
+          </div>
         </header>
         <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
           {children}
         </main>
       </div>
+      {/* ⌘K Command Palette: overlay globale presente su OGNI pagina autenticata. Prima era
+          montata solo nello skeleton di loading (site-header), quindi assente sull'app reale. */}
+      <CommandPalette />
     </div>
   );
 }
