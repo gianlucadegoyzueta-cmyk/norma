@@ -9,8 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { IstatExportButton } from "./IstatExportButton";
-import { IstatSubmitButton } from "./IstatSubmitButton";
-import { IstatAutoSubmitButton } from "./IstatAutoSubmitButton";
 import { regionMovementForProvincia } from "@/server/modules/istat/regional/routing";
 import { loadIstatSubmissionReadiness } from "@/server/modules/istat/submission-readiness-loader";
 import type { ReadinessStatus } from "@/server/modules/istat/domain/submission-readiness";
@@ -50,18 +48,6 @@ export default async function IstatPage({
     ctx.current.organizationId,
     period,
   );
-  const submission = await prisma.istatSubmission.findUnique({
-    where: { organizationId_period: { organizationId: ctx.current.organizationId, period } },
-    select: { submittedAt: true, arriviTotal: true, presenzeTotal: true },
-  });
-  const submittedLabel = submission
-    ? new Intl.DateTimeFormat("it-IT", { dateStyle: "medium" }).format(submission.submittedAt)
-    : null;
-  // Staleness: il report live diverge dallo snapshot salvato all'invio? (ospite cambiato dopo)
-  const submissionStale = submission
-    ? submission.arriviTotal !== report.totals.arrivi ||
-      submission.presenzeTotal !== report.totals.presenze
-    : false;
 
   // Ross1000 è per-struttura (a differenza del CSV per-provenienza, che è per-organizzazione).
   const properties = await prisma.property.findMany({
@@ -71,13 +57,22 @@ export default async function IstatPage({
   });
 
   // Prontezza all'invio per struttura: prepara il tracciato della regione e dice cosa manca.
-  // L'invio reale resta GATED (canale stub) → l'affordance "Invia" è sempre disabilitata.
+  // L'invio reale resta GATED (canale stub): oggi prepari qui e carichi tu il file.
   const readiness = await loadIstatSubmissionReadiness(
     prisma,
     ctx.current.organizationId,
     period,
     properties.map((p) => ({ id: p.id, name: p.name, provincia: p.comune.provincia })),
   );
+
+  // UN blocco unico per struttura: unisce lo STATO (readiness) all'AZIONE reale (file regionale).
+  const propById = new Map(properties.map((p) => [p.id, p]));
+  const perProperty = readiness.map((pr) => {
+    const p = propById.get(pr.propertyId);
+    const rm = p ? regionMovementForProvincia(p.comune.provincia) : null;
+    const canDownload = rm?.status === "FILE" && rm.serializerId === "ross1000-xml";
+    return { pr, ross1000Code: p?.ross1000Code ?? null, canDownload };
+  });
 
   return (
     <ConciergePage
@@ -108,15 +103,6 @@ export default async function IstatPage({
             Mostra
           </Button>
         </form>
-        <div className="flex flex-wrap items-center gap-2">
-          <IstatExportButton period={period} disabled={report.rows.length === 0} />
-          <IstatSubmitButton
-            period={period}
-            submittedLabel={submittedLabel}
-            stale={submissionStale}
-            disabled={report.rows.length === 0}
-          />
-        </div>
       </div>
 
       <div className="cmx-section" style={{ marginTop: 24 }}>
@@ -167,6 +153,17 @@ export default async function IstatPage({
         )}
       </div>
 
+      {/* Riepilogo di supporto (CSV per provenienza, livello organizzazione): defilato sotto la
+          tabella che esporta. Non è il metodo d'invio — quello è per-struttura, qui sotto. */}
+      {report.rows.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-muted-foreground text-xs">
+            Riepilogo per provenienza, utile se compili a mano:
+          </span>
+          <IstatExportButton period={period} disabled={report.rows.length === 0} />
+        </div>
+      )}
+
       <p className="text-muted-foreground mt-4 text-xs">
         {guestsConsidered} ospiti considerati nel mese.
         {approximated > 0
@@ -175,13 +172,14 @@ export default async function IstatPage({
       </p>
 
       <div className="cmx-section" style={{ marginTop: 32 }}>
-        <h2 className="text-sm font-medium">Prontezza all&rsquo;invio per struttura</h2>
+        <h2 className="text-sm font-medium">Invio per struttura</h2>
         <p className="text-muted-foreground mt-1 mb-3 text-xs">
-          Per ogni struttura: la regione di competenza, se il movimento del mese è completo e cosa
-          eventualmente manca. L&rsquo;invio automatico al portale è in arrivo: oggi prepari qui e
-          carichi tu il file. <strong>Norma prepara, l&rsquo;invio resta una tua decisione.</strong>
+          Per ogni struttura: la regione di competenza, lo stato del mese e il file da portare sul
+          portale. Dove il portale è integrato scarichi il file Ross1000; altrimenti usi i numeri
+          del riepilogo qui sopra e li inserisci a mano. L&rsquo;invio automatico è in arrivo.{" "}
+          <strong>Norma prepara, l&rsquo;invio resta una tua decisione.</strong>
         </p>
-        {readiness.length === 0 ? (
+        {perProperty.length === 0 ? (
           <div className="cmx-empty">
             <p className="cmx-empty-title">Nessuna struttura configurata</p>
             <p className="cmx-empty-text">
@@ -196,10 +194,9 @@ export default async function IstatPage({
           <Card style={{ borderRadius: 18 }}>
             <CardContent className="p-0">
               <ul className="divide-border/60 divide-y">
-                {readiness.map((pr) => {
+                {perProperty.map(({ pr, ross1000Code, canDownload }) => {
                   const badge = READINESS_BADGE[pr.readiness.status];
                   const region = pr.readiness.region;
-                  const hintId = `auto-submit-hint-${pr.propertyId}`;
                   return (
                     <li
                       key={pr.propertyId}
@@ -214,6 +211,7 @@ export default async function IstatPage({
                           {region
                             ? `${region.label} · ${region.system}`
                             : "Regione non riconosciuta"}
+                          {ross1000Code ? ` · codice ${ross1000Code}` : ""}
                         </p>
                         {pr.readiness.status === "INCOMPLETE" &&
                         pr.readiness.missingFields.length > 0 ? (
@@ -223,8 +221,8 @@ export default async function IstatPage({
                         ) : null}
                         {pr.readiness.status === "ASSISTED" && region ? (
                           <p className="text-muted-foreground mt-1 text-xs">
-                            Portale {region.system} non ancora integrato: usa i numeri del report e
-                            inseriscili a mano.
+                            Portale {region.system} non ancora integrato: usa i numeri del riepilogo
+                            e inseriscili a mano.
                           </p>
                         ) : null}
                         {pr.errored ? (
@@ -233,64 +231,17 @@ export default async function IstatPage({
                           </p>
                         ) : null}
                       </div>
-                      {pr.readiness.serializerId ? (
-                        <IstatAutoSubmitButton
-                          ready={pr.readiness.status === "READY"}
-                          hintId={hintId}
-                        />
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      <div className="cmx-section" style={{ marginTop: 32 }}>
-        <h2 className="text-sm font-medium">Ross1000 — file XML per struttura</h2>
-        <p className="text-muted-foreground mt-1 mb-3 text-xs">
-          Movimento turistico in formato Ross1000 (Lazio e altre ~13 regioni). Scarica il file .xml
-          di ogni struttura e caricalo sul portale regionale. Se mancano dati obbligatori il file
-          non viene generato: completa prima i dati indicati (mai inviamo dati inventati).
-        </p>
-        {properties.length === 0 ? (
-          <div className="cmx-empty">
-            <p className="cmx-empty-title">Nessuna struttura configurata</p>
-            <p className="cmx-empty-text">
-              Aggiungi una{" "}
-              <Link href="/properties" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
-                struttura
-              </Link>{" "}
-              per generare il file Ross1000.
-            </p>
-          </div>
-        ) : (
-          <Card style={{ borderRadius: 18 }}>
-            <CardContent className="p-0">
-              <ul className="divide-border/60 divide-y">
-                {properties.map((p) => {
-                  const rm = regionMovementForProvincia(p.comune.provincia);
-                  const canDownload = rm?.status === "FILE" && rm.serializerId === "ross1000-xml";
-                  return (
-                    <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{p.name}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {rm ? `${rm.label} · ${rm.system}` : "Regione non riconosciuta"}
-                          {p.ross1000Code ? ` · codice ${p.ross1000Code}` : ""}
-                        </p>
+                      <div className="flex flex-col items-end gap-1">
+                        {canDownload ? (
+                          <Ross1000ExportButton propertyId={pr.propertyId} period={period} />
+                        ) : (
+                          <span className="text-muted-foreground max-w-[16rem] text-right text-xs">
+                            {region
+                              ? `Portale ${region.system}: non integrato. Usa il riepilogo qui sopra e inseriscilo a mano.`
+                              : "Comune senza provincia riconosciuta: verifica i dati della struttura."}
+                          </span>
+                        )}
                       </div>
-                      {canDownload ? (
-                        <Ross1000ExportButton propertyId={p.id} period={period} />
-                      ) : (
-                        <span className="text-muted-foreground max-w-[16rem] text-right text-xs">
-                          {rm
-                            ? `Portale ${rm.system}: non integrato. Usa i numeri del report qui sopra e inseriscili a mano.`
-                            : "Comune senza provincia riconosciuta: verifica i dati della struttura."}
-                        </span>
-                      )}
                     </li>
                   );
                 })}
