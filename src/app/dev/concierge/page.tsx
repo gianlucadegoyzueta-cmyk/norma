@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 const FULL: DashboardData = {
   positionRegular: true,
+  pendingSchedine: 3,
   receiptRef: "2026/398755",
   acquiredYesterday: 2,
   hero: { thingsDone: 3 },
@@ -20,6 +21,7 @@ const FULL: DashboardData = {
     capacityNights: 90,
     propertyCount: 3,
     guestsThisMonth: 38,
+    pendingSchedine: 3,
     taxAccruedEuros: 312,
     taxTrend: "registro aggiornato",
     hoursSaved: 9,
@@ -57,8 +59,9 @@ const FULL: DashboardData = {
   agenda: [
     {
       when: "OGGI",
-      title: "Nessun obbligo in scadenza",
-      detail: "Posizione regolare su tutte le strutture.",
+      title: "Nessuna scadenza superata",
+      detail:
+        "3 schedine in attesa della tua conferma: nulla è scaduto, ma l'obbligo si chiude quando confermi l'invio.",
     },
     {
       when: "VEN 13",
@@ -87,6 +90,7 @@ const FULL: DashboardData = {
 
 const EMPTY: DashboardData = {
   positionRegular: true,
+  pendingSchedine: 0,
   receiptRef: null,
   acquiredYesterday: 0,
   hero: { thingsDone: 0 },
@@ -97,6 +101,7 @@ const EMPTY: DashboardData = {
     capacityNights: 90,
     propertyCount: 3,
     guestsThisMonth: 0,
+    pendingSchedine: 0,
     taxAccruedEuros: 0,
     taxTrend: "nessun importo maturato",
     hoursSaved: 0,
@@ -106,7 +111,7 @@ const EMPTY: DashboardData = {
     {
       when: "OGGI",
       title: "Nessun obbligo in scadenza",
-      detail: "Posizione regolare su tutte le strutture.",
+      detail: "Nessuna scadenza superata su tutte le strutture.",
     },
   ],
   diary: [],
