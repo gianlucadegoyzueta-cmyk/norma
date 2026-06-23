@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
-import type { SchedinaStatus } from "@prisma/client";
+import type { CredentialStatus, SchedinaStatus } from "@prisma/client";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaCredentialRepository, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
@@ -156,7 +156,7 @@ export default async function SchedinePage() {
                   <CredentialOutboxControls
                     credentialId={credId}
                     pendingCount={count}
-                    active={credStatus.get(credId) === "ACTIVE"}
+                    status={credStatus.get(credId) ?? "PENDING_REONBOARDING"}
                   />
                 </div>
               ))}
@@ -222,6 +222,7 @@ export default async function SchedinePage() {
                   </div>
                   <AutoSendToggle
                     credentialId={c.id}
+                    label={c.label}
                     initialEnabled={c.autoSend}
                     active={c.status === "ACTIVE"}
                   />

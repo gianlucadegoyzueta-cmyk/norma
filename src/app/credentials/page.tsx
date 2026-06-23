@@ -72,7 +72,7 @@ export default async function CredentialsPage() {
             {credentials.map((c) => {
               const s = STATUS[c.status] ?? { text: c.status, cmx: "cmx-badge-wait" };
               return (
-                <li key={c.id}>
+                <li key={c.id} id={`cred-${c.id}`} className="scroll-mt-24">
                   <div className="cmx-row">
                     <div className="cmx-row-main">
                       <p className="cmx-row-title truncate">{c.label}</p>
