@@ -100,9 +100,10 @@ export function OnboardingWizard({
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard"
+            title="Il progresso è già salvato per ogni passo: puoi riprendere quando vuoi."
             className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded-md px-2 py-1 text-sm transition-colors outline-none focus-visible:ring-2"
           >
-            Esci
+            Salva ed esci
           </Link>
         </div>
       </header>
