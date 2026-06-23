@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
+import { Analytics } from "@vercel/analytics/next";
 import { SupportWidget } from "@/components/support-widget";
 import "./globals.css";
 
@@ -64,6 +65,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       >
         {children}
         <SupportWidget />
+        {/* Vercel Web Analytics: cookieless, nessuna PII, nessun consent banner.
+            Scelta deliberata sull'app (gestisce dati ospiti) → niente session recording. */}
+        <Analytics />
       </body>
     </html>
   );
