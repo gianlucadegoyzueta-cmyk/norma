@@ -56,7 +56,7 @@ export function OnboardingWizard({
       {/* Stessa "carta" della superficie auth: grana + sigillo in filigrana, theme-safe. */}
       <svg
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.5] mix-blend-multiply dark:opacity-[0.18] dark:mix-blend-screen"
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.5] mix-blend-multiply"
       >
         <filter id="ob-grain">
           <feTurbulence

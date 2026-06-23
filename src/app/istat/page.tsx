@@ -206,7 +206,7 @@ export default async function IstatPage({
                         </p>
                         {pr.readiness.status === "INCOMPLETE" &&
                         pr.readiness.missingFields.length > 0 ? (
-                          <p className="text-warning-foreground dark:text-warning mt-1 text-xs">
+                          <p className="text-warning-foreground mt-1 text-xs">
                             Mancano: {pr.readiness.missingFields.join(", ")}.
                           </p>
                         ) : null}

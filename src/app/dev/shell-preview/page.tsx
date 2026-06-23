@@ -14,7 +14,7 @@ const STATUS: Record<Status, { label: string; dot: string; fg: string; bg: strin
   pronta: {
     label: "Pronta",
     dot: "bg-[var(--brand-salvia)]",
-    fg: "text-[var(--brand-salvia)]",
+    fg: "text-[var(--brand-salvia-ink)]",
     bg: "bg-[var(--brand-salvia-soft)]",
   },
   verificare: {
@@ -316,7 +316,7 @@ export default function ShellPreviewPage() {
                 </span>
 
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand-salvia-soft)] text-[11px] font-medium text-[var(--brand-salvia)]">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand-salvia-soft)] text-[11px] font-medium text-[var(--brand-salvia-ink)]">
                     {r.initials}
                   </span>
                   <span className="min-w-0">

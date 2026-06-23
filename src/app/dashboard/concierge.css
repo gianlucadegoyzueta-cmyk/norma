@@ -4,7 +4,7 @@
   nessuna libreria di animazione. Classi prefissate `cmx-` e radicate in `.cmx` per
   non collidere col resto dell'app.
 
-  Identità: carta chiara SEMPRE. Anche dentro `.dark` la scena resta su carta.
+  Identità: carta chiara SEMPRE (nessun dark mode — vietato dal brand #97).
 */
 
 .cmx {
@@ -16,6 +16,7 @@
   --terracotta: var(--brand-terracotta);
   --terracotta-dark: var(--brand-terracotta-dark);
   --salvia: var(--brand-salvia);
+  --salvia-ink: var(--brand-salvia-ink);
   --salvia-soft: var(--brand-salvia-soft);
   --hairline: var(--brand-hairline);
 
@@ -171,7 +172,7 @@
   font-size: 13px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--salvia);
+  color: var(--salvia-ink);
   margin-bottom: 6px;
 }
 .cmx-rule {
@@ -346,10 +347,10 @@
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
-  color: var(--salvia);
+  color: var(--salvia-ink);
 }
 .cmx-kpi .cmx-trend.cmx-due {
-  color: var(--terracotta);
+  color: var(--terracotta-dark);
 }
 /* KPI urgente (due=true): enfasi terracotta sul VALORE, non solo sul trend minuscolo. */
 .cmx-kpi-urgent .cmx-odo {
@@ -365,7 +366,8 @@
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--terracotta);
+  /* Testo piccolo (11px): terracotta-dark per AA su avorio. */
+  color: var(--terracotta-dark);
   opacity: 0;
   transition: opacity 0.25s;
 }
@@ -671,6 +673,13 @@
     box-shadow 0.25s,
     background 0.25s;
 }
+/* Focus ring visibile su QUALSIASI sfondo: anello avorio + alone inchiostro.
+   Sulla CTA terracotta (.cmx-go) il terracotta puro sarebbe invisibile, qui no. */
+.cmx-btn:focus-visible {
+  outline: 2px solid var(--avorio);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(33, 28, 21, 0.55);
+}
 .cmx-btn.cmx-go {
   background: var(--terracotta);
   color: var(--avorio);
@@ -705,7 +714,7 @@
 .cmx-hint {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--salvia);
+  color: var(--salvia-ink);
 }
 
 /* press + timbro + uscita */
@@ -720,8 +729,8 @@
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
-  color: var(--salvia);
-  border: 2px solid var(--salvia);
+  color: var(--salvia-ink);
+  border: 2px solid var(--salvia-ink);
   border-radius: 6px;
   padding: 5px 10px;
   letter-spacing: 0.08em;
@@ -852,7 +861,8 @@
   margin-left: 24px;
 }
 .cmx-ev .cmx-d .cmx-norma {
-  color: var(--terracotta);
+  /* Parola inline a 13.5px: terracotta-dark per AA su carta. */
+  color: var(--terracotta-dark);
   font-weight: 600;
 }
 
@@ -885,7 +895,7 @@
   min-width: 44px;
 }
 .cmx-diary .cmx-row .cmx-check {
-  color: var(--salvia);
+  color: var(--salvia-ink);
   font-weight: 700;
 }
 .cmx-diary .cmx-row.cmx-new {
@@ -942,7 +952,7 @@
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--salvia);
+  color: var(--salvia-ink);
   margin-right: 2px;
 }
 .cmx-sc {
