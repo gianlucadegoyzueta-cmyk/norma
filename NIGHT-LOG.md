@@ -5,6 +5,67 @@
 > sicure, reversibili e SENZA migrazioni. Le feature con schema sono parcheggiate
 > in NEEDS-HUMAN con migrazione generata ma NON applicata (niente backup garantito sul DB prod).
 
+## SESSIONE 2026-06-23 (giorno) — progress-check: merge backlog PR + pulizia + decisione auto-send
+
+Sessione di verifica + spedizione su richiesta del founder ("mergia tutto", "fixa tutto",
+"continua in autonomia"). Tutto **LOW/MEDIUM**, zero schema, zero invii reali.
+
+- **PR #121** (dependabot, 8 bump minor/patch) — **mergiata** (`5b5adce`). Branch aggiornato su main
+  prima del merge, CI verde.
+- **PR #86** (digest settimanale + storico compliance, G3) — **mergiata** (`5c0c260`) nonostante il
+  marchio "NON mergiare": il marchio era per l'**accensione** (flag `DIGEST_ENABLED`, decisione del
+  founder), non per il merge del codice — il cron resta no-op a flag spento. Aggiornato il branch su
+  main due volte (per testarlo contro #121) prima del merge. **Primo merge su main → CI rossa per
+  FLAKE** (`E2E smoke`: `next/font` non è riuscito a scaricare Geist Mono da Google Fonts). Riprodotto
+  in locale = verde su tutti gli step → **re-run dei failed jobs → verde**. Non è una regressione.
+- **PR #142** (questa pulizia) — **mergiata** (`e7e5a84`): rimossi 3 import inutilizzati (lint
+  3 warning → 0) e allineato `NEEDS-HUMAN.md` (#105 risulta mergiato con **opzione A**: support-AI +
+  migrazione `add_support_tickets` già in prod; la sezione "decidere A/B" era stale).
+- **Review di #86 post-merge** (codice ora in prod): gate cron fail-closed corretto, finestra
+  settimanale UTC deterministica, query tutte filtrate per `organizationId`, service resiliente
+  per-org/per-destinatario, dominio compliance puro con mesi "quiet" neutri. **Nessun difetto:
+  nessun cambio di codice fabbricato.**
+- ⛔ **AUTO-SEND REALE AGLI ENTI: richiesto dal founder in chat, RIFIUTATO in autonomia** (guardrail
+  #1, CRITICAL). Il primo Send reale è decisione presidiata su ospite vero con verifica ricevuta T+1,
+  MAI flippato da un agente in sessione. Resta spento. Stessa logica per l'accensione del **digest**
+  (email reali → decisione founder): lasciata spenta.
+- CI locale completa verde a ogni merge: format · lint · typecheck · test **857** · build.
+
+---
+
+## SESSIONE 2026-06-12 (notte) — coda 2, corsia G3: ritmo e fiducia nel tempo
+
+**Unità G3** (`feat/digest-score`) — **PR #86 APERTA, NON mergiata** (rischio **HIGH**: cron nuovo
+ed email automatica in uscita). CI GitHub **verde** (Lint·Typecheck·Test·Build + E2E Playwright +
+Vercel). **Non è online**: l'accensione (`DIGEST_ENABLED=true` su Vercel) la decide il founder.
+
+- **a) Digest settimanale "Fatto da Norma"** — route `GET /api/cron/digest`, email del lunedì
+  (canale Resend esistente, nessun nuovo segreto): cosa ha fatto Norma nella settimana (conteggi
+  reali), cosa serve adesso, posizione regolare sì/no. **Disattivata di default**: gira solo con
+  `DIGEST_ENABLED="true"` **e** auth del cron Vercel (`Bearer CRON_SECRET`). Schema a due barriere
+  identico al cron Alloggiati ma **flag SEPARATO**: accendere il digest non tocca gli invii alla
+  Questura. Esempio in `vercel.cron.digest.example.json`. Finché il flag ≠ "true" → no-op
+  `200 {disabled:true}`. Servizio resiliente per-org/per-destinatario.
+- **b) Storico compliance** (`/compliance`): vista mensile "posizione regolare" calcolata
+  retroattivamente (schedine acquisite vs attese per gli arrivi del mese · tasse dichiarate non in
+  lavorazione). Righe di registro ✓/⚠; mesi senza movimento neutri (niente ✓ ingannevoli).
+- **Zero schema, zero invii reali alla Questura**: tutto dai dati esistenti. Moduli ports/adapters
+  `digest` e `compliance`, dominio puro e testato, query isolate per `organizationId`.
+- **Test**: 29 nuovi (gate cron, email IT singolare/plurale/sezioni-vuote, finestra settimanale,
+  servizio con `FakeEmailSender`, verdetto mensile + utility mesi).
+- **CI locale**: format ✓ · lint ✓ · typecheck ✓ · test ✓ · build ✓. NB: in locale fallisce **1**
+  test pre-esistente non correlato (`billing/stripe-gateway-signature` "non configurato") —
+  artefatto del `.env` caricato da vitest (`STRIPE_SECRET_KEY` presente → `isConfigured()` true);
+  in CI, senza `.env`, passa. File identico a `main`. Verificato: con la chiave non settata, suite
+  intera verde.
+- **Discoverability**: la pagina `/compliance` non è linkata da un menu (la navbar/dashboard è di
+  un'altra corsia — non toccata). Il digest la richiama nel footer ("voce «Storico»"). Aggiungere
+  la voce di nav resta alla corsia dashboard / al founder.
+- **NB founder — decisione richiesta**: accendere il digest = email automatiche reali agli host
+  (OWNER/ADMIN). Opzioni: (1) merge con `DIGEST_ENABLED` OFF ora, accensione dopo i piloti;
+  (2) merge e accensione su un'org pilota interna; (3) tenere la PR parcheggiata. Raccomandazione:
+  **(1)** — codice in main, interruttore spento, si accende quando vuoi. Rischio: nullo a flag OFF.
+
 ## SESSIONE 2026-06-12 (notte) — coda 2, corsia G2: command palette ⌘K + mobile/PWA
 
 **Unità G2** (`feat/cmdk-mobile`) — **PR #83 mergiata** (squash `34dc113`), CI GitHub verde

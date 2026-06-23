@@ -16,12 +16,12 @@
 // =====================================================================================
 
 import { SchedinaStatus } from "@prisma/client";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { AlloggiatiSecret } from "../../../secrets";
 import { buildTracciatoRecord } from "../domain/tracciato";
 import type { CreateIntentInput } from "../ports/SchedinaRepository";
 import { AlloggiatiAuthError, AlloggiatiReceiptError } from "../soap/errors";
-import { ALLOGGIATI_ERROR, AlloggiatiMockServer } from "./mocks/AlloggiatiMockServer";
+import { AlloggiatiMockServer } from "./mocks/AlloggiatiMockServer";
 import { createAlloggiatiStack, type AlloggiatiStack } from "./mocks/harness";
 
 const ORG = "org_1";
