@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +10,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 /**
  * UI condivisa per le error boundary di rotta (error.tsx): messaggio gentile + "Riprova" (reset)
  * + ritorno alla dashboard. Client component (richiesto da error.tsx di Next).
+ * Cattura l'errore su Sentry (come global-error.tsx) così i crash di rotta non restano silenziati.
  */
 export function RouteError({
+  error,
   reset,
   title = "Qualcosa è andato storto",
   message = "Si è verificato un imprevisto durante il caricamento. Riprova: di solito basta un secondo tentativo.",
@@ -19,6 +23,10 @@ export function RouteError({
   title?: string;
   message?: string;
 }) {
+  useEffect(() => {
+    if (error) Sentry.captureException(error);
+  }, [error]);
+
   return (
     <main className="flex min-h-dvh items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md">
