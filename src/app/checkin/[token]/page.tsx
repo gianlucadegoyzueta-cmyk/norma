@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Globe } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { Card, CardContent } from "@/components/ui/card";
 import { prisma } from "@/server/db";
@@ -18,7 +19,10 @@ export const dynamic = "force-dynamic";
 
 function LangSwitcher({ active }: { active: string }) {
   return (
-    <nav className="flex flex-wrap gap-1" aria-label="Lingua">
+    <nav className="flex flex-wrap items-center gap-1" aria-label="Lingua">
+      {/* Globo: chiarisce a colpo d'occhio che è un cambio lingua (non tab/menu). Decorativo: il
+          nome accessibile lo dà già aria-label="Lingua" sulla nav. */}
+      <Globe aria-hidden className="text-muted-foreground mr-0.5 size-3.5" />
       {LOCALES.map((l) => (
         <a
           key={l}

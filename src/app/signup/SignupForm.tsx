@@ -9,9 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { describedById, Field, FormMessage } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
-
-// Tenuto in sincrono con validatePassword() lato server (qui è solo testo d'aiuto, no logica).
-const PASSWORD_HINT = "Almeno 8 caratteri, con lettere e numeri.";
+import { PASSWORD_RULES_HINT } from "@/lib/auth-constants";
 
 export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   const [state, action] = useActionState(registerWithPassword, {});
@@ -65,7 +63,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
               />
             </Field>
 
-            <Field id="signup-password" label="Password" hint={PASSWORD_HINT}>
+            <Field id="signup-password" label="Password" hint={PASSWORD_RULES_HINT}>
               <Input
                 id="signup-password"
                 name="password"
