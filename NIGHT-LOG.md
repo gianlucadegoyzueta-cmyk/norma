@@ -5,6 +5,39 @@
 > sicure, reversibili e SENZA migrazioni. Le feature con schema sono parcheggiate
 > in NEEDS-HUMAN con migrazione generata ma NON applicata (niente backup garantito sul DB prod).
 
+## SESSIONE 2026-06-12 (notte) — coda 2, corsia G3: ritmo e fiducia nel tempo
+
+**Unità G3** (`feat/digest-score`) — **PR #86 APERTA, NON mergiata** (rischio **HIGH**: cron nuovo
+ed email automatica in uscita). CI GitHub **verde** (Lint·Typecheck·Test·Build + E2E Playwright +
+Vercel). **Non è online**: l'accensione (`DIGEST_ENABLED=true` su Vercel) la decide il founder.
+
+- **a) Digest settimanale "Fatto da Norma"** — route `GET /api/cron/digest`, email del lunedì
+  (canale Resend esistente, nessun nuovo segreto): cosa ha fatto Norma nella settimana (conteggi
+  reali), cosa serve adesso, posizione regolare sì/no. **Disattivata di default**: gira solo con
+  `DIGEST_ENABLED="true"` **e** auth del cron Vercel (`Bearer CRON_SECRET`). Schema a due barriere
+  identico al cron Alloggiati ma **flag SEPARATO**: accendere il digest non tocca gli invii alla
+  Questura. Esempio in `vercel.cron.digest.example.json`. Finché il flag ≠ "true" → no-op
+  `200 {disabled:true}`. Servizio resiliente per-org/per-destinatario.
+- **b) Storico compliance** (`/compliance`): vista mensile "posizione regolare" calcolata
+  retroattivamente (schedine acquisite vs attese per gli arrivi del mese · tasse dichiarate non in
+  lavorazione). Righe di registro ✓/⚠; mesi senza movimento neutri (niente ✓ ingannevoli).
+- **Zero schema, zero invii reali alla Questura**: tutto dai dati esistenti. Moduli ports/adapters
+  `digest` e `compliance`, dominio puro e testato, query isolate per `organizationId`.
+- **Test**: 29 nuovi (gate cron, email IT singolare/plurale/sezioni-vuote, finestra settimanale,
+  servizio con `FakeEmailSender`, verdetto mensile + utility mesi).
+- **CI locale**: format ✓ · lint ✓ · typecheck ✓ · test ✓ · build ✓. NB: in locale fallisce **1**
+  test pre-esistente non correlato (`billing/stripe-gateway-signature` "non configurato") —
+  artefatto del `.env` caricato da vitest (`STRIPE_SECRET_KEY` presente → `isConfigured()` true);
+  in CI, senza `.env`, passa. File identico a `main`. Verificato: con la chiave non settata, suite
+  intera verde.
+- **Discoverability**: la pagina `/compliance` non è linkata da un menu (la navbar/dashboard è di
+  un'altra corsia — non toccata). Il digest la richiama nel footer ("voce «Storico»"). Aggiungere
+  la voce di nav resta alla corsia dashboard / al founder.
+- **NB founder — decisione richiesta**: accendere il digest = email automatiche reali agli host
+  (OWNER/ADMIN). Opzioni: (1) merge con `DIGEST_ENABLED` OFF ora, accensione dopo i piloti;
+  (2) merge e accensione su un'org pilota interna; (3) tenere la PR parcheggiata. Raccomandazione:
+  **(1)** — codice in main, interruttore spento, si accende quando vuoi. Rischio: nullo a flag OFF.
+
 ## SESSIONE 2026-06-12 (notte) — coda 2, corsia G2: command palette ⌘K + mobile/PWA
 
 **Unità G2** (`feat/cmdk-mobile`) — **PR #83 mergiata** (squash `34dc113`), CI GitHub verde
