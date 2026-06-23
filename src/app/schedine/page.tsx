@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
-import type { CredentialStatus, SchedinaStatus } from "@prisma/client";
+import type { SchedinaStatus } from "@prisma/client";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaCredentialRepository, PrismaSchedinaRepository } from "@/server/modules/alloggiati";

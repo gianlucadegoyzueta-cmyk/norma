@@ -14,30 +14,21 @@ migrate.yml già presente, che gira al merge su main).
 
 ---
 
-## DA DECIDERE PRIMA DEL MERGE DI #105 (app-redesign)
+## RISOLTO — #105 (app-redesign) mergiato con OPZIONE A
 
-### 0. #105 trascina la feature Support-AI + una migrazione schema (HIGH — decisione tua)
+### 0. ✅ #105 + feature Support-AI + migrazione `add_support_tickets` — in prod su `main`
 
-- **Contesto (osservato):** il branch `feat/app-redesign` (#105) è costruito **sopra**
-  `feat/support-ai` (PR #107, mai mergiata su main). Per questo, oltre alla pura presentazione,
-  #105 porta con sé l'intera feature assistente-AI host-facing: route `/api/support/chat`,
-  pagina `/support`, `SupportChat`, modulo `src/server/modules/support/*` (incl.
-  `PrismaTicketStore`) **e** la migrazione `prisma/migrations/20260620111627_add_support_tickets`
-  (nuovo `model SupportTicket`). Su `main` questa feature e questa migrazione **non esistono**.
-- **Perché non l'ho toccata da solo:** è oltre lo scope dichiarato (#105 = "redesign di
-  presentazione") **e** è classe HIGH (schema + nuova migrazione in prod). Le due opzioni sono
-  entrambe irreversibili/destructive in senso opposto, quindi serve la tua decisione:
-  - **A) Tieni la feature** → al merge di #105 partirà anche la migrazione `add_support_tickets`
-    su Supabase prod: richiede backup fresco (guardrail #2) prima del deploy.
-  - **B) Scorpora la feature** → #105 torna presentazione-pura: va rimosso il codice support
-    (`src/app/support`, `src/app/api/support`, `src/server/modules/support`, link sidebar
-    `/support`, voce NAV) **e** la migrazione, e la feature support-AI resta in PR #107 a sé.
-- **Cosa NON ho fatto:** non ho mergiato, non ho applicato migrazioni, non ho cancellato la
-  feature. Il branch è coerente e con CI verde **così com'è (opzione A)**. Se vuoi la B, è un
-  intervento separato e tracciabile.
-- **Raccomandazione:** decidere A/B prima di mergiare #105. Default suggerito: B (mantieni #105
-  presentazione-pura, mergia support-AI come PR #107 indipendente con il suo backup), così la
-  classe di rischio di #105 resta MEDIUM e non HIGH.
+- **Decisione presa (opzione A):** #105 è stato mergiato su `main` **tenendo** la feature
+  assistente-AI host-facing che portava con sé. Oggi su `main` (in prod) esistono: route
+  `/api/support/chat`, pagina `/support`, `SupportChat`, modulo `src/server/modules/support/*`
+  (incl. `PrismaTicketStore`) **e** la migrazione `prisma/migrations/20260620111627_add_support_tickets`
+  (`model SupportTicket`), già applicata. Niente più decisione pendente: la B (scorporo) **non**
+  è stata scelta.
+- **Nota storica:** la raccomandazione iniziale era la B (mantenere #105 presentazione-pura). È
+  stata superata dalla scelta di tenere tutto in A. Se in futuro si vuole rimuovere la feature
+  support-AI, è un intervento separato e tracciabile (rimuovere `src/app/support`,
+  `src/app/api/support`, `src/server/modules/support`, voce NAV/sidebar `/support` + migrazione
+  di drop con backup).
 
 ---
 
