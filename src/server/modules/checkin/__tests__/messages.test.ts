@@ -1,20 +1,18 @@
 import { describe, expect, it } from "vitest";
 import type { PersonErrorCode } from "@/app/stays/guest-validation";
-import { DEFAULT_LOCALE, isLocale, LOCALES, MESSAGES } from "../messages";
+import {
+  DEFAULT_LOCALE,
+  isLocale,
+  LOCALES,
+  MESSAGES,
+  TOURISM_TYPE_CODES,
+  TRANSPORT_MEANS_CODES,
+} from "../messages";
 
 // Tutti i codici di errore prodotti da validatePerson: ogni lingua DEVE coprirli, altrimenti un
-// ospite straniero vedrebbe un errore vuoto/undefined nel punto di conversione.
-const ERROR_CODES: PersonErrorCode[] = [
-  "lastNameRequired",
-  "firstNameRequired",
-  "sexRequired",
-  "birthDateInvalid",
-  "birthCountryRequired",
-  "citizenshipRequired",
-  "documentTypeRequired",
-  "documentNumberRequired",
-  "documentPlaceRequired",
-];
+// ospite straniero vedrebbe un errore vuoto/undefined nel punto di conversione. Derivati dal locale
+// di default così l'aggiunta di un nuovo codice impone subito la traduzione in tutte le lingue.
+const ERROR_CODES = Object.keys(MESSAGES[DEFAULT_LOCALE].fieldErrors) as PersonErrorCode[];
 
 describe("MESSAGES (i18n check-in)", () => {
   it("ogni lingua definisce le stesse chiavi di livello superiore (niente traduzioni mancanti)", () => {
@@ -42,6 +40,21 @@ describe("MESSAGES (i18n check-in)", () => {
         if (typeof value === "string") {
           expect(value.trim(), `${locale}.${key} non deve essere vuoto`).not.toBe("");
         }
+      }
+    }
+  });
+
+  it("ogni lingua traduce tutte le opzioni delle tendine viaggio (turismo + trasporto)", () => {
+    for (const locale of LOCALES) {
+      for (const code of TOURISM_TYPE_CODES) {
+        const label = MESSAGES[locale].tourismTypes[code];
+        expect(label, `${locale}.tourismTypes.${code}`).toBeTruthy();
+        expect(typeof label).toBe("string");
+      }
+      for (const code of TRANSPORT_MEANS_CODES) {
+        const label = MESSAGES[locale].transportMeans_options[code];
+        expect(label, `${locale}.transportMeans_options.${code}`).toBeTruthy();
+        expect(typeof label).toBe("string");
       }
     }
   });

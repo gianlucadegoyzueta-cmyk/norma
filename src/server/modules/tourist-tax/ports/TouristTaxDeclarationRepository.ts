@@ -62,6 +62,14 @@ export interface DeclarationPatch {
   remittanceMode?: TaxRemittanceMode;
   submittedAt?: Date | null;
   paidAt?: Date | null;
+  /**
+   * Snapshot commissione. I tre campi vanno SEMPRE insieme (o nessuno): se uno è presente,
+   * l'adapter pretende anche gli altri due e verifica l'invariante fee + netto == lordo.
+   * Oggi nessun chiamante li passa, ma il guardrail rende l'estensione futura sicura by default.
+   */
+  amountCents?: number;
+  normaFeeCents?: number;
+  comuneNetCents?: number;
 }
 
 export interface TouristTaxDeclarationRepository {

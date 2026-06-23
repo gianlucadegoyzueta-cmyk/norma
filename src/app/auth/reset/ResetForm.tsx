@@ -5,8 +5,7 @@ import { resetPassword } from "@/app/auth/reset/actions";
 import { describedById, Field, FormMessage } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
-
-const PASSWORD_HINT = "Almeno 8 caratteri, con lettere e numeri.";
+import { PASSWORD_RULES_HINT } from "@/lib/auth-constants";
 
 export function ResetForm({ token }: { token: string }) {
   const [state, action] = useActionState(resetPassword, {});
@@ -16,7 +15,7 @@ export function ResetForm({ token }: { token: string }) {
       <input type="hidden" name="token" value={token} />
       <FormMessage>{state.error}</FormMessage>
 
-      <Field id="reset-password" label="Nuova password" hint={PASSWORD_HINT}>
+      <Field id="reset-password" label="Nuova password" hint={PASSWORD_RULES_HINT}>
         <Input
           id="reset-password"
           name="password"

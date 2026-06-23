@@ -371,7 +371,7 @@ export function CheckinForm({
           <option value="">—</option>
           {TIPO_TURISMO_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {m.tourismTypes[o.value as keyof typeof m.tourismTypes] ?? o.label}
             </option>
           ))}
         </Select>
@@ -383,7 +383,8 @@ export function CheckinForm({
           <option value="">—</option>
           {MEZZO_TRASPORTO_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {m.transportMeans_options[o.value as keyof typeof m.transportMeans_options] ??
+                o.label}
             </option>
           ))}
         </Select>

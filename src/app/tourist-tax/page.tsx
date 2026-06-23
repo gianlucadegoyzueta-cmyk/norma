@@ -14,12 +14,15 @@ import { DeclarationActions } from "./DeclarationActions";
 export const metadata: Metadata = { title: "Tassa di soggiorno" };
 export const dynamic = "force-dynamic";
 
+// Badge per stato: significati diversi → look diversi (non tutti "wait").
+// DRAFT/SUBMITTED restano neutri (in lavorazione); READY usa il tono d'azione (cmx-badge-go);
+// PAID è positivo (cmx-badge-ok); CANCELLED usa il tono d'errore spento (cmx-badge-err).
 const STATUS_BADGE: Record<TaxDeclarationStatus, { text: string; cmx: string }> = {
   DRAFT: { text: "Bozza", cmx: "cmx-badge-wait" },
-  READY: { text: "Pronta", cmx: "cmx-badge-wait" },
+  READY: { text: "Pronta", cmx: "cmx-badge-go" },
   SUBMITTED: { text: "Inviata", cmx: "cmx-badge-wait" },
   PAID: { text: "Pagata", cmx: "cmx-badge-ok" },
-  CANCELLED: { text: "Annullata", cmx: "cmx-badge-wait" },
+  CANCELLED: { text: "Annullata", cmx: "cmx-badge-err" },
 };
 
 export default async function TouristTaxPage() {
@@ -42,6 +45,7 @@ export default async function TouristTaxPage() {
 
   return (
     <ConciergePage
+      dense
       kicker="VERSAMENTI · IMPOSTA DI SOGGIORNO"
       title="Tassa di soggiorno"
       intro="Preparo le dichiarazioni periodiche per comune: calcolo l'imposta, esporto e tengo traccia del versamento."
@@ -49,7 +53,7 @@ export default async function TouristTaxPage() {
       <section className="cmx-section" style={{ marginTop: 0 }}>
         <Card style={{ borderRadius: 18 }}>
           <CardHeader>
-            <CardTitle className="font-display">Nuova dichiarazione</CardTitle>
+            <CardTitle>Nuova dichiarazione</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4 text-sm">
@@ -80,8 +84,8 @@ export default async function TouristTaxPage() {
                   <Card style={{ borderRadius: 18 }}>
                     <CardHeader>
                       <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <CardTitle className="font-display text-base">
+                        <div className="min-w-0">
+                          <CardTitle className="text-base">
                             {d.comune.name} · {periodLabel(d.period)}
                           </CardTitle>
                           <p className="text-muted-foreground mt-1 text-sm">
@@ -100,7 +104,7 @@ export default async function TouristTaxPage() {
                           className="mb-4 grid gap-2 rounded-xl p-3 text-sm"
                           style={{
                             background: "var(--avorio, #f7f2e8)",
-                            border: "1px solid var(--hairline, #d4cabb)",
+                            border: "1px solid var(--hairline, #e0d8c8)",
                           }}
                         >
                           <div className="flex items-baseline justify-between gap-3">
@@ -120,7 +124,7 @@ export default async function TouristTaxPage() {
                           </div>
                           <div
                             className="flex items-baseline justify-between gap-3 border-t pt-2"
-                            style={{ borderColor: "var(--hairline, #d4cabb)" }}
+                            style={{ borderColor: "var(--hairline, #e0d8c8)" }}
                           >
                             <dt className="font-medium" style={{ color: "var(--inchiostro)" }}>
                               Netto da versare al comune

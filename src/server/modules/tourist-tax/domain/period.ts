@@ -33,20 +33,49 @@ export function periodBounds(periodStr: string): { start: Date; end: Date } {
     const y = Number(monthly[1]);
     const m = Number(monthly[2]);
     if (m < 1 || m > 12) throw new InvalidPeriodError(periodStr);
-    return { start: utc(y, m - 1, 1), end: utc(y, m, 1) };
+    // Round-trip: il primo del mese deve ricadere ESATTAMENTE nell'anno/mese richiesti. Difende
+    // da una normalizzazione di overflow di Date.UTC (es. anni bisestili) che sposterebbe il confine.
+    const start = utc(y, m - 1, 1);
+    assertBoundaryRoundTrip(start, y, m - 1, periodStr);
+    return { start, end: utc(y, m, 1) };
   }
   const quarterly = /^(\d{4})-Q([1-4])$/.exec(periodStr);
   if (quarterly) {
     const y = Number(quarterly[1]);
     const q = Number(quarterly[2]);
-    return { start: utc(y, (q - 1) * 3, 1), end: utc(y, q * 3, 1) };
+    const start = utc(y, (q - 1) * 3, 1);
+    assertBoundaryRoundTrip(start, y, (q - 1) * 3, periodStr);
+    return { start, end: utc(y, q * 3, 1) };
   }
   const annual = /^(\d{4})$/.exec(periodStr);
   if (annual) {
     const y = Number(annual[1]);
-    return { start: utc(y, 0, 1), end: utc(y + 1, 0, 1) };
+    const start = utc(y, 0, 1);
+    assertBoundaryRoundTrip(start, y, 0, periodStr);
+    return { start, end: utc(y + 1, 0, 1) };
   }
   throw new InvalidPeriodError(periodStr);
+}
+
+/**
+ * Verifica che una data di confine UTC corrisponda esattamente all'anno/mese attesi e cada il 1°
+ * giorno del mese (round-trip). Se Date.UTC ha normalizzato un overflow — incluso il caso bisestile
+ * (29 febbraio in un anno non bisestile) — i campi non combaciano e lanciamo InvalidPeriodError
+ * invece di restituire silenziosamente un confine sbagliato.
+ */
+function assertBoundaryRoundTrip(
+  d: Date,
+  expectedYear: number,
+  expectedMonthIndex: number,
+  periodStr: string,
+): void {
+  if (
+    d.getUTCFullYear() !== expectedYear ||
+    d.getUTCMonth() !== expectedMonthIndex ||
+    d.getUTCDate() !== 1
+  ) {
+    throw new InvalidPeriodError(periodStr);
+  }
 }
 
 /** Etichetta leggibile in italiano. */

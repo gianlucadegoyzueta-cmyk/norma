@@ -4,17 +4,9 @@
 import { prisma } from "@/server/db";
 import { aggregateMonth, type IstatMonthlyReport, type IstatStayRecord } from "./domain/aggregate";
 import { resolveProvenance } from "./domain/provenance";
-
-const PERIOD_RE = /^(\d{4})-(0[1-9]|1[0-2])$/;
-
-/** Confini del mese (UTC) come Date: [start, end). */
-function monthBounds(period: string): { start: Date; end: Date } {
-  const m = PERIOD_RE.exec(period);
-  if (!m) throw new Error(`Periodo ISTAT non valido (atteso YYYY-MM): ${period}`);
-  const year = Number(m[1]);
-  const month = Number(m[2]);
-  return { start: new Date(Date.UTC(year, month - 1, 1)), end: new Date(Date.UTC(year, month, 1)) };
-}
+// Helper di period UNICO del modulo ISTAT (DRY): un solo parser/validatore "YYYY-MM" per tutti i
+// tracciati regionali e per il report aggregato. NON accoppiato a tourist-tax.
+import { periodBounds } from "./ross1000/period";
 
 export interface IstatReportResult {
   report: IstatMonthlyReport;
@@ -32,7 +24,7 @@ export async function loadIstatReport(
   organizationId: string,
   period: string,
 ): Promise<IstatReportResult> {
-  const { start, end } = monthBounds(period);
+  const { start, end } = periodBounds(period);
 
   const guests = await prisma.guest.findMany({
     where: {

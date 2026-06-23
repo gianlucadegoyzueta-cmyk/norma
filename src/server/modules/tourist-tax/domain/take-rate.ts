@@ -51,6 +51,33 @@ export function assertValidTakeRateBps(bps: number): void {
   }
 }
 
+/** Violazione dell'invariante contabile della dichiarazione: fee + netto ≠ lordo. */
+export class FeeBreakdownInvariantError extends Error {
+  constructor(amountCents: number, normaFeeCents: number, comuneNetCents: number) {
+    super(
+      `Invariante commissione violata: normaFeeCents (${normaFeeCents}) + comuneNetCents ` +
+        `(${comuneNetCents}) = ${normaFeeCents + comuneNetCents} ≠ amountCents (${amountCents})`,
+    );
+    this.name = "FeeBreakdownInvariantError";
+  }
+}
+
+/**
+ * Asserisce l'invariante contabile dello snapshot di una dichiarazione: la commissione Norma
+ * e il netto al comune devono SEMPRE ricomporre il lordo. Va chiamata a ogni scrittura dei tre
+ * campi (`amountCents`, `normaFeeCents`, `comuneNetCents`): impedisce di persistere uno snapshot
+ * incoerente che porterebbe a versare al comune un importo sbagliato. PURA.
+ */
+export function assertFeeBreakdownInvariant(
+  amountCents: number,
+  normaFeeCents: number,
+  comuneNetCents: number,
+): void {
+  if (normaFeeCents + comuneNetCents !== amountCents) {
+    throw new FeeBreakdownInvariantError(amountCents, normaFeeCents, comuneNetCents);
+  }
+}
+
 /**
  * Calcola la commissione Norma su un importo lordo di tassa di soggiorno. PURA.
  *

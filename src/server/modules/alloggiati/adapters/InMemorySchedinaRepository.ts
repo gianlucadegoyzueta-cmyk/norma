@@ -61,11 +61,16 @@ export class InMemorySchedinaRepository implements SchedinaRepository {
     return row && row.organizationId === organizationId ? this.view(row) : null;
   }
 
-  async listPendingByCredential(credentialId: string): Promise<SchedinaRecord[]> {
+  async listPendingByCredential(
+    credentialId: string,
+    organizationId?: string,
+  ): Promise<SchedinaRecord[]> {
     return [...this.rows.values()]
       .filter(
         (r) =>
           r.credentialId === credentialId &&
+          // ISOLAMENTO: come l'adapter Prisma, se l'org è nota filtra anche per essa.
+          (!organizationId || r.organizationId === organizationId) &&
           r.status === SchedinaStatus.PENDING &&
           // esauriti i tentativi → non più auto-inviata (vedi MAX_SEND_ATTEMPTS)
           r.attempts < MAX_SEND_ATTEMPTS,
@@ -73,9 +78,17 @@ export class InMemorySchedinaRepository implements SchedinaRepository {
       .map((r) => this.view(r));
   }
 
-  async listUnverifiedByCredential(credentialId: string): Promise<SchedinaRecord[]> {
+  async listUnverifiedByCredential(
+    credentialId: string,
+    organizationId?: string,
+  ): Promise<SchedinaRecord[]> {
     return [...this.rows.values()]
-      .filter((r) => r.credentialId === credentialId && r.status === SchedinaStatus.UNVERIFIED)
+      .filter(
+        (r) =>
+          r.credentialId === credentialId &&
+          (!organizationId || r.organizationId === organizationId) &&
+          r.status === SchedinaStatus.UNVERIFIED,
+      )
       .map((r) => this.view(r));
   }
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
@@ -50,11 +51,16 @@ export default async function IstatPage({
   );
   const submission = await prisma.istatSubmission.findUnique({
     where: { organizationId_period: { organizationId: ctx.current.organizationId, period } },
-    select: { submittedAt: true },
+    select: { submittedAt: true, arriviTotal: true, presenzeTotal: true },
   });
   const submittedLabel = submission
     ? new Intl.DateTimeFormat("it-IT", { dateStyle: "medium" }).format(submission.submittedAt)
     : null;
+  // Staleness: il report live diverge dallo snapshot salvato all'invio? (ospite cambiato dopo)
+  const submissionStale = submission
+    ? submission.arriviTotal !== report.totals.arrivi ||
+      submission.presenzeTotal !== report.totals.presenze
+    : false;
 
   // Ross1000 è per-struttura (a differenza del CSV per-provenienza, che è per-organizzazione).
   const properties = await prisma.property.findMany({
@@ -74,6 +80,8 @@ export default async function IstatPage({
 
   return (
     <ConciergePage
+      dense
+      active="istat"
       kicker="STATISTICA · MOVIMENTO TURISTICO"
       title="ISTAT"
       intro="Arrivi e presenze del mese per provenienza, pronti da riportare sul portale regionale."
@@ -104,6 +112,7 @@ export default async function IstatPage({
           <IstatSubmitButton
             period={period}
             submittedLabel={submittedLabel}
+            stale={submissionStale}
             disabled={report.rows.length === 0}
           />
         </div>
@@ -172,7 +181,16 @@ export default async function IstatPage({
           carichi tu il file. <strong>Norma prepara, l&rsquo;invio resta una tua decisione.</strong>
         </p>
         {readiness.length === 0 ? (
-          <p className="text-muted-foreground text-xs">Nessuna struttura configurata.</p>
+          <div className="cmx-empty">
+            <p className="cmx-empty-title">Nessuna struttura configurata</p>
+            <p className="cmx-empty-text">
+              Aggiungi una{" "}
+              <Link href="/properties" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
+                struttura
+              </Link>{" "}
+              per preparare il movimento turistico.
+            </p>
+          </div>
         ) : (
           <Card style={{ borderRadius: 18 }}>
             <CardContent className="p-0">
@@ -198,7 +216,7 @@ export default async function IstatPage({
                         </p>
                         {pr.readiness.status === "INCOMPLETE" &&
                         pr.readiness.missingFields.length > 0 ? (
-                          <p className="text-warning-foreground dark:text-warning mt-1 text-xs">
+                          <p className="text-warning-foreground mt-1 text-xs">
                             Mancano: {pr.readiness.missingFields.join(", ")}.
                           </p>
                         ) : null}
@@ -237,7 +255,16 @@ export default async function IstatPage({
           non viene generato: completa prima i dati indicati (mai inviamo dati inventati).
         </p>
         {properties.length === 0 ? (
-          <p className="text-muted-foreground text-xs">Nessuna struttura configurata.</p>
+          <div className="cmx-empty">
+            <p className="cmx-empty-title">Nessuna struttura configurata</p>
+            <p className="cmx-empty-text">
+              Aggiungi una{" "}
+              <Link href="/properties" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
+                struttura
+              </Link>{" "}
+              per generare il file Ross1000.
+            </p>
+          </div>
         ) : (
           <Card style={{ borderRadius: 18 }}>
             <CardContent className="p-0">

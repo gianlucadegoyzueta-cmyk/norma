@@ -1,0 +1,17 @@
+---
+description: Stack AI generico — capacità disponibili in ogni progetto, da preferire al lavoro manuale
+alwaysApply: true
+---
+
+# Stack AI generico (vale in qualsiasi repo, gli script girano dal terminale)
+
+**Prima di fare a mano, usa la capacità giusta:**
+
+- **Secondo parere da altri modelli:** `~/.claude/bin/gemini-ask.sh "domanda"` (Gemini) · `~/.claude/bin/ollama-ask.sh "domanda"` (modello LOCALE, gratis/offline/privato) · `~/.claude/bin/brains.sh "domanda"` (chiede a tutti in parallelo).
+- **Ricerca codice per SIGNIFICATO (RAG locale):** `python3 ~/.claude/bin/code-index.py` (indicizza il repo una volta) poi `python3 ~/.claude/bin/code-search.py "concetto"`. Meglio di grep quando cerchi per concetto, non keyword.
+- **Docs di librerie/framework → MCP context7** (mai andare a memoria sulle API). **Web → MCP fetch/playwright.** **PR/issue → MCP github.**
+- **CLI moderni:** `ast-grep` (ricerca strutturale) · `fd` · `delta` (diff) · `lazygit` · `bat` · `eza`.
+
+**Classi di rischio (dichiarale sempre):** LOW docs/test → ok se CI verde · MEDIUM comportamento → giudizio onesto · HIGH schema/auth/dati personali → backup + rollback · CRITICAL invii reali, soldi, delete → SEMPRE umano.
+
+Mai espandere lo scope in silenzio. Modifiche minime e tracciabili. Chiusura: **Deciso · Evidenza · Prossima azione (UNA).**

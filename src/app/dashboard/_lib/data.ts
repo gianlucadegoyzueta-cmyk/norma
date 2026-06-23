@@ -48,7 +48,13 @@ export interface DashboardDiaryRow {
 }
 
 export interface DashboardData {
+  /** Nessuna scadenza superata (overdueCount === 0). NON significa "tutto adempiuto". */
   positionRegular: boolean;
+  /**
+   * Schedine preparate ma NON ancora confermate/inviate (PENDING/UNVERIFIED). Finché > 0
+   * l'obbligo non è assolto, anche se nulla è scaduto: il copy non deve dire "tutto in regola".
+   */
+  pendingSchedine: number;
   receiptRef: string | null;
   acquiredYesterday: number;
   hero: { thingsDone: number };
@@ -60,6 +66,8 @@ export interface DashboardData {
     capacityNights: number;
     propertyCount: number;
     guestsThisMonth: number;
+    /** Schedine in attesa di conferma (PENDING/UNVERIFIED): per non dire "tutti in regola". */
+    pendingSchedine: number;
     taxAccruedEuros: number;
     taxTrend: string;
     hoursSaved: number;
@@ -291,7 +299,7 @@ export async function getDashboardData(
       id: `checkin-${arrivalNeedingCheckin.id}`,
       emoji: "🛎️",
       bold: `Arrivo il ${dateLabel} a ${arrivalNeedingCheckin.property.name}`,
-      rest: " senza check-in completato. Ho pronto il link personale dell'ospite: copialo e mandaglielo, al resto penso io.",
+      rest: " senza check-in completato. Ho pronto il link personale dell'ospite: copialo e mandaglielo, poi ti preparo la schedina dai suoi dati.",
       meta: `${arrivalNeedingCheckin.guestsCount} ${arrivalNeedingCheckin.guestsCount === 1 ? "ospite" : "ospiti"} · check-in self-service`,
       primary: {
         label: "Copia link check-in",
@@ -322,7 +330,7 @@ export async function getDashboardData(
       id: "ical-drafts",
       emoji: "📅",
       bold: `${draftStaysNoGuests.length} ${draftStaysNoGuests.length === 1 ? "bozza importata" : "bozze importate"} dal calendario senza ospiti.`,
-      rest: " Completa i dati degli ospiti e preparo le schedine in automatico.",
+      rest: " Completa i dati degli ospiti e ti preparo le schedine, pronte da confermare.",
       meta: `import iCal · ${first.property.name}`,
       primary: { label: "Completa ospiti", action: { type: "link", href: `/stays/${first.id}` } },
       secondary: { label: "Vedi soggiorni", href: "/stays" },
@@ -350,13 +358,20 @@ export async function getDashboardData(
       ? {
           when: "OGGI",
           title: `${overdueCount} ${overdueCount === 1 ? "schedina" : "schedine"} oltre scadenza`,
-          detail: "Vanno gestite subito: una comunicazione tardiva ad Alloggiati è una violazione.",
+          detail:
+            "Da gestire subito: oltre le 24h dall'arrivo la comunicazione ad Alloggiati è tardiva. Apri e conferma.",
         }
-      : {
-          when: "OGGI",
-          title: "Nessun obbligo in scadenza",
-          detail: "Posizione regolare su tutte le strutture.",
-        },
+      : pendingSchedine > 0
+        ? {
+            when: "OGGI",
+            title: "Nessuna scadenza superata",
+            detail: `${pendingSchedine} ${pendingSchedine === 1 ? "schedina" : "schedine"} in attesa della tua conferma: nulla è scaduto, ma l'obbligo si chiude quando confermi l'invio.`,
+          }
+        : {
+            when: "OGGI",
+            title: "Nessun obbligo in scadenza",
+            detail: "Nessuna scadenza superata su tutte le strutture.",
+          },
   );
   for (const s of upcomingStays) {
     if (s.arrivalDate >= startOfToday && s.arrivalDate <= weekAhead) {
@@ -373,7 +388,7 @@ export async function getDashboardData(
         when: agendaWhen(s.departureDate, now),
         title: `Partenza ${s.property.name}`,
         detail: "Conteggio tassa di soggiorno",
-        norma: "aggiornato in automatico",
+        norma: "lo tengo aggiornato, pronto da confermare",
       });
     }
   }
@@ -387,6 +402,7 @@ export async function getDashboardData(
 
   return {
     positionRegular: overdueCount === 0,
+    pendingSchedine,
     receiptRef: latestAcquired?.receiptRef ?? null,
     acquiredYesterday: acquiredInWindow,
     hero: { thingsDone: digest.thingsDone },
@@ -397,6 +413,7 @@ export async function getDashboardData(
       capacityNights: occupancy.capacityNights,
       propertyCount,
       guestsThisMonth,
+      pendingSchedine,
       taxAccruedEuros: Math.round(taxAccruedCents / 100),
       taxTrend: taxAccruedCents > 0 ? "registro aggiornato" : "nessun importo maturato",
       hoursSaved,

@@ -79,10 +79,16 @@ export async function loadUmbriaReport(
     },
   });
 
-  const aggregateStays: UmbriaAggregateStay[] = stays.map((s) => ({
-    arrivalDate: s.arrivalDate,
-    departureDate: s.departureDate,
-    guests: s.guests.map((g): UmbriaGuest => {
+  const aggregateStays: UmbriaAggregateStay[] = [];
+  for (const s of stays) {
+    // Soggiorno ancora APERTO (nessuna partenza): durata ignota → aggregarlo INVENTEREBBE presenze.
+    // "Mai inventare dati" → segnaliamo ed escludiamo PRIMA dell'aggregazione; esito INCOMPLETE.
+    if (s.departureDate === null) {
+      missing.push({ field: "departureDate", scope: "STRUTTURA", refId: s.id });
+      continue;
+    }
+    const guests: UmbriaGuest[] = [];
+    for (const g of s.guests) {
       const isItaly = g.residenceCountry?.code === ITALIA_CODE;
       const prov = isItaly
         ? g.residenceComune?.provincia
@@ -91,13 +97,21 @@ export async function loadUmbriaReport(
         : g.residenceCountry?.name
           ? provenienzaEstero(g.residenceCountry.name)
           : null;
+      // Provenienza NON mappata (comune senza provincia, paese estero fuori tabella): SHORT-CIRCUIT.
+      // NON costruiamo un guest con codici vuoti (`provenienzaCode: ""` falserebbe l'aggregato/file).
+      // "Mai inventare dati" → segnaliamo e saltiamo il guest; esito INCOMPLETE.
       if (!prov) {
         missing.push({ field: "provenienza", scope: "GUEST", refId: g.id });
-        return { provenienzaCode: "", provenienzaDescrizione: "" };
+        continue;
       }
-      return { provenienzaCode: prov.code, provenienzaDescrizione: prov.descrizione };
-    }),
-  }));
+      guests.push({ provenienzaCode: prov.code, provenienzaDescrizione: prov.descrizione });
+    }
+    aggregateStays.push({
+      arrivalDate: s.arrivalDate,
+      departureDate: s.departureDate,
+      guests,
+    });
+  }
 
   if (missing.length > 0) {
     return { kind: "INCOMPLETE", missing };

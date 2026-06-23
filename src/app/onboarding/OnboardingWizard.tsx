@@ -56,7 +56,7 @@ export function OnboardingWizard({
       {/* Stessa "carta" della superficie auth: grana + sigillo in filigrana, theme-safe. */}
       <svg
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.5] mix-blend-multiply dark:opacity-[0.18] dark:mix-blend-screen"
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.5] mix-blend-multiply"
       >
         <filter id="ob-grain">
           <feTurbulence
@@ -100,9 +100,10 @@ export function OnboardingWizard({
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard"
+            title="Il progresso è già salvato per ogni passo: puoi riprendere quando vuoi."
             className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded-md px-2 py-1 text-sm transition-colors outline-none focus-visible:ring-2"
           >
-            Esci
+            Salva ed esci
           </Link>
         </div>
       </header>

@@ -99,13 +99,17 @@ export async function loadSiciliaReport(
   });
 
   let guestCount = 0;
-  const stays: SiciliaStay[] = rows.map((s): SiciliaStay => {
+  const stays: SiciliaStay[] = [];
+  for (const s of rows) {
     const arrivalIso = utc(s.arrivalDate);
-    // DepartureDate è obbligatoria per il PMS: se il soggiorno è ancora aperto, segnaliamo (mai inventata).
-    const departureIso = s.departureDate ? utc(s.departureDate) : null;
-    if (!departureIso) {
+    // DepartureDate è OBBLIGATORIA per il PMS. Soggiorno ancora aperto → segnaliamo e SHORT-CIRCUIT:
+    // NON costruiamo i guest con un fallback `departureDate ?? arrivalDate` (sarebbe una notte-zero
+    // INVENTATA). "Mai inventare dati": l'esito resta INCOMPLETE.
+    if (!s.departureDate) {
       missing.push({ field: "departureDate", scope: "STRUTTURA", refId: s.id });
+      continue;
     }
+    const departureIso = utc(s.departureDate);
 
     const guests: SiciliaGuest[] = s.guests.map((g): SiciliaGuest => {
       guestCount += 1;
@@ -135,15 +139,15 @@ export async function loadSiciliaReport(
         // BedOccupancy non è raccolto da Norma: default "occupa" (assunzione documentata).
         bedOccupancy: true,
         arrivalDate: arrivalIso,
-        departureDate: departureIso ?? arrivalIso,
+        departureDate: departureIso,
         // Checkout = ha già lasciato la struttura (data di partenza presente).
-        checkout: departureIso != null,
-        rooms: [{ roomId: "1", startDate: arrivalIso, endDate: departureIso ?? arrivalIso }],
+        checkout: true,
+        rooms: [{ roomId: "1", startDate: arrivalIso, endDate: departureIso }],
       };
     });
 
-    return { hotelCode: input.hotelCode, stayId: s.id, guests };
-  });
+    stays.push({ hotelCode: input.hotelCode, stayId: s.id, guests });
+  }
 
   if (missing.length > 0) {
     return { kind: "INCOMPLETE", missing };

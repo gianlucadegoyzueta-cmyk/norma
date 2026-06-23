@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { generateCheckinLinkAction } from "@/app/stays/[id]/checkin-actions";
 import type {
@@ -163,10 +163,12 @@ export function ConciergeBoard({
   proposals,
   agenda,
   diary,
+  kpisSlot,
 }: {
   proposals: DashboardProposal[];
   agenda: DashboardAgendaItem[];
   diary: DashboardDiaryRow[];
+  kpisSlot?: ReactNode;
 }) {
   const agendaRef = useRef<HTMLDivElement>(null);
   const [extraRows, setExtraRows] = useState<{ time: string; text: string }[]>([]);
@@ -191,10 +193,14 @@ export function ConciergeBoard({
   }
 
   return (
-    <div className="cmx-main">
-      <section aria-labelledby="cmx-h-proposte">
+    <>
+      {/* DECISIONI — il vero hero della pagina (#105): a tutta larghezza, prima di tutto.
+          Struttura semantica + heading collegato (#113). */}
+      <section className="cmx-decisions" aria-labelledby="cmx-h-proposte">
         <h2 className="cmx-col-h" id="cmx-h-proposte">
-          Norma propone — tu approvi
+          {proposals.length > 0
+            ? `Aspettano il tuo via libera (${proposals.length})`
+            : "Aspettano il tuo via libera"}
         </h2>
         {proposals.length === 0 ? (
           <div className="cmx-empty">
@@ -202,16 +208,22 @@ export function ConciergeBoard({
             — un check-in da mandare, schedine da confermare, un export pronto — lo trovi qui.
           </div>
         ) : (
-          proposals.map((p, i) => (
-            <ProposalCard key={p.id} proposal={p} i={i} onApproved={onApproved} />
-          ))
+          <div className="cmx-decision-grid">
+            {proposals.map((p, i) => (
+              <ProposalCard key={p.id} proposal={p} i={i} onApproved={onApproved} />
+            ))}
+          </div>
         )}
       </section>
 
-      <div>
+      {/* KPI come striscia di contesto (sotto le decisioni, non protagonisti). */}
+      {kpisSlot}
+
+      {/* SECONDARIO, leggero: cosa arriva · cosa ho fatto stanotte. */}
+      <div className="cmx-secondary">
         <section aria-labelledby="cmx-h-agenda">
           <h2 className="cmx-col-h" id="cmx-h-agenda">
-            Agenda della settimana
+            In arrivo
           </h2>
           <div className="cmx-agenda" ref={agendaRef}>
             <div className="cmx-tl" aria-hidden />
@@ -238,7 +250,7 @@ export function ConciergeBoard({
 
         <section className="cmx-diary" aria-labelledby="cmx-h-diario">
           <h2 className="cmx-col-h" id="cmx-h-diario" style={{ marginTop: 0 }}>
-            Fatto da Norma — oggi
+            Fatto stanotte
           </h2>
           {diary.length === 0 && extraRows.length === 0 ? (
             <div className="cmx-muted">
@@ -273,6 +285,6 @@ export function ConciergeBoard({
           )}
         </section>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { TaxDeclarationStatus, TaxRemittanceMode } from "@prisma/client";
 import { Button } from "@/components/ui/button";
@@ -39,8 +40,13 @@ export function DeclarationActions({
   status: TaxDeclarationStatus;
   remittanceMode: TaxRemittanceMode;
 }) {
+  const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
+  // Transizione in attesa di conferma esplicita: cambiare stato (es. "pagata"/"inviata") è
+  // quasi-irreversibile, quindi passa da una micro-conferma inline prima di persistere.
+  const [confirm, setConfirm] = useState<{ to: TaxDeclarationStatus; label: string } | null>(null);
 
   function triggerDownload(blob: Blob, filename: string) {
     const url = URL.createObjectURL(blob);
@@ -62,22 +68,31 @@ export function DeclarationActions({
 
   function onExport() {
     setMsg(null);
+    setOk(null);
     start(async () => {
       const res = await prepareRemittanceAction(id);
       if (!res.ok) return setMsg(res.error);
       const r = res.result;
-      if (r.kind === "EXPORT_READY") download(r.filename, r.mimeType, r.content);
-      else if (r.kind === "REDIRECT") window.open(r.url, "_blank", "noopener");
-      else setMsg(r.message); // NOT_IMPLEMENTED → spiega che si usa l'export manuale
+      if (r.kind === "EXPORT_READY") {
+        download(r.filename, r.mimeType, r.content);
+        setOk(`Scaricato ${r.filename}.`);
+      } else if (r.kind === "REDIRECT") {
+        const w = window.open(r.url, "_blank", "noopener");
+        if (w === null) {
+          setMsg("Il browser ha bloccato la finestra: abilita i popup o usa Esporta CSV.");
+        }
+      } else setMsg(r.message); // NOT_IMPLEMENTED → spiega che si usa l'export manuale
     });
   }
 
   function onExportPdf() {
     setMsg(null);
+    setOk(null);
     start(async () => {
       const res = await prepareDeclarationPdfAction(id);
       if (!res.ok) return setMsg(res.error);
       downloadBase64(res.filename, res.base64, "application/pdf");
+      setOk(`Scaricato ${res.filename}.`);
     });
   }
 
@@ -90,14 +105,21 @@ export function DeclarationActions({
     });
   }
 
-  function onStatus(to: TaxDeclarationStatus) {
+  function onStatus(to: TaxDeclarationStatus, label: string) {
     const fd = new FormData();
     fd.set("id", id);
     fd.set("to", to);
     setMsg(null);
+    setOk(null);
     start(async () => {
       const res = await changeDeclarationStatusAction(fd);
-      if (!res.ok) setMsg(res.error);
+      if (!res.ok) {
+        setMsg(res.error);
+        return;
+      }
+      setConfirm(null);
+      setOk(`Fatto: “${label}”.`);
+      router.refresh();
     });
   }
 
@@ -129,13 +151,55 @@ export function DeclarationActions({
             type="button"
             size="sm"
             variant={t.to === "DRAFT" ? "ghost" : "default"}
-            onClick={() => onStatus(t.to)}
+            // "Riapri" (→DRAFT) è reversibile: va diretto. Le transizioni in avanti
+            // (pronta/inviata/pagata) passano da una conferma esplicita.
+            onClick={() =>
+              t.to === "DRAFT" ? onStatus(t.to, t.label) : setConfirm({ to: t.to, label: t.label })
+            }
             disabled={pending}
           >
             {t.label}
           </Button>
         ))}
       </div>
+
+      {confirm && (
+        <div className="border-border grid gap-2 rounded-md border p-3">
+          <p className="text-muted-foreground text-xs">
+            {confirm.to === "PAID"
+              ? "Confermi il versamento? Questo chiude il ciclo della dichiarazione."
+              : confirm.to === "SUBMITTED"
+                ? "Confermi di aver inviato la dichiarazione all’ente?"
+                : `Confermi: “${confirm.label}”?`}{" "}
+            Lo stato lo aggiorni tu: Norma non invia né paga al posto tuo.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => onStatus(confirm.to, confirm.label)}
+              disabled={pending}
+            >
+              {pending ? "Aggiorno…" : confirm.label}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setConfirm(null)}
+              disabled={pending}
+            >
+              Annulla
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {ok && (
+        <p className="text-success text-xs" role="status">
+          {ok}
+        </p>
+      )}
       {msg && (
         <p className="text-muted-foreground text-xs" role="status">
           {msg}

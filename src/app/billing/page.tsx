@@ -70,9 +70,7 @@ function PlanCard({ plan, configured }: { plan: PlanDefinition; configured: bool
     <Card className={plan.recommended ? "border-primary" : undefined} style={{ borderRadius: 18 }}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="font-display">
-            {plan.interval === "year" ? "Annuale" : "Mensile"}
-          </CardTitle>
+          <CardTitle>{plan.interval === "year" ? "Annuale" : "Mensile"}</CardTitle>
           {plan.recommended && <span className="cmx-badge cmx-badge-go">Consigliato</span>}
         </div>
         <CardDescription>
@@ -99,28 +97,60 @@ function PlanCard({ plan, configured }: { plan: PlanDefinition; configured: bool
   );
 }
 
-export default async function BillingPage() {
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ checkout?: string }>;
+}) {
   const ctx = await getCurrentContext();
   if (!ctx) redirect("/login");
 
+  const { checkout } = await searchParams;
   const { access, subscription, ready, configured } = await loadBillingView(
     ctx.current.organizationId,
   );
   const headline = access ? stateHeadline(access) : null;
   const hasCustomer = Boolean(subscription?.stripeCustomerId);
+  // Risparmio annuale reale, derivato dai prezzi: niente claim a mano che può mentire.
+  const annualSaving = MONTHLY_PLAN.amountCents * 12 - ANNUAL_PLAN.amountCents;
+  const monthsFree = Math.round(annualSaving / MONTHLY_PLAN.amountCents);
 
   return (
     <ConciergePage
+      dense
+      active="billing"
       kicker="ABBONAMENTO · NORMA"
       title="Abbonamento"
       intro="Il piano di Norma e lo stato del tuo abbonamento."
     >
       <div className="cmx-section space-y-6" style={{ marginTop: 0 }}>
+        {checkout === "success" && (
+          <Card className="border-success/40 bg-success/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CheckCircle2 className="text-success" />
+                Pagamento ricevuto
+              </CardTitle>
+              <CardDescription>
+                Sto attivando il tuo abbonamento. Se qui sotto lo stato non è ancora «Attivo», si
+                aggiorna entro pochi istanti.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+        {checkout === "cancel" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Pagamento annullato</CardTitle>
+              <CardDescription>Nessun addebito. Puoi riprovare quando vuoi.</CardDescription>
+            </CardHeader>
+          </Card>
+        )}
         {!configured && (
           <Card className="border-warning/40 bg-warning/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Info className="text-warning-foreground dark:text-warning" />
+                <Info className="text-warning-foreground" />
                 Pagamenti non ancora configurati
               </CardTitle>
               <CardDescription>
@@ -135,7 +165,7 @@ export default async function BillingPage() {
           <Card className="border-warning/40 bg-warning/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <TriangleAlert className="text-warning-foreground dark:text-warning" />
+                <TriangleAlert className="text-warning-foreground" />
                 Billing in attesa di attivazione
               </CardTitle>
               <CardDescription>
@@ -179,7 +209,9 @@ export default async function BillingPage() {
         <section className="space-y-3">
           <h2 className="text-lg font-medium">Scegli il piano</h2>
           <p className="text-muted-foreground text-sm">
-            L&apos;annuale conviene: due mesi in regalo rispetto al mensile.
+            {annualSaving > 0
+              ? `Con l'annuale risparmi ${formatEuroCents(annualSaving)} l'anno rispetto al mensile — circa ${monthsFree} ${monthsFree === 1 ? "mese" : "mesi"} gratis.`
+              : "Scegli la cadenza che preferisci: cambi quando vuoi."}
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <PlanCard plan={ANNUAL_PLAN} configured={configured} />

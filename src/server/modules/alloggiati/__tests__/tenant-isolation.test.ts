@@ -23,13 +23,22 @@ type Row = Record<string, unknown>;
  * la riga e i test fallirebbero. `updateMany` muta le righe corrispondenti e ritorna `{ count }`
  * come Prisma.
  */
+/** Confronto di un campo: uguaglianza, o operatore Prisma `{ lt }` (usato da listPending su attempts). */
+function matchesField(rowVal: unknown, cond: unknown): boolean {
+  if (cond && typeof cond === "object" && "lt" in (cond as Row)) {
+    return (rowVal as number) < ((cond as Row).lt as number);
+  }
+  return rowVal === cond;
+}
+
 function matches(row: Row, where: Row): boolean {
-  return Object.entries(where).every(([k, v]) => row[k] === v);
+  return Object.entries(where).every(([k, v]) => matchesField(row[k], v));
 }
 
 function fakeModel(rows: Row[]) {
   return {
     findFirst: async ({ where }: { where: Row }) => rows.find((r) => matches(r, where)) ?? null,
+    findMany: async ({ where }: { where: Row }) => rows.filter((r) => matches(r, where)),
     updateMany: async ({ where, data }: { where: Row; data: Row }) => {
       const hit = rows.filter((r) => matches(r, where));
       for (const r of hit) Object.assign(r, data);
@@ -105,6 +114,98 @@ describe("Isolamento multi-tenant nei repository", () => {
       });
       expect(await repo.findById(schedina.id, "orgB")).toBeNull();
       expect((await repo.findById(schedina.id, "orgA"))?.id).toBe(schedina.id);
+    });
+  });
+
+  describe("list*ByCredential — isolamento org (difesa in profondità)", () => {
+    // Stessa credenziale, due org diverse: il filtro org deve separarle. Senza org (path cron
+    // mono-credenziale) si vedono tutte le righe della credenziale.
+    function rows(): Row[] {
+      return [
+        {
+          id: "pA",
+          organizationId: "orgA",
+          credentialId: "credX",
+          status: "PENDING",
+          attempts: 0,
+          dedupKey: "dk1",
+        },
+        {
+          id: "pB",
+          organizationId: "orgB",
+          credentialId: "credX",
+          status: "PENDING",
+          attempts: 0,
+          dedupKey: "dk2",
+        },
+        {
+          id: "uA",
+          organizationId: "orgA",
+          credentialId: "credX",
+          status: "UNVERIFIED",
+          attempts: 0,
+          dedupKey: "dk3",
+        },
+        {
+          id: "uB",
+          organizationId: "orgB",
+          credentialId: "credX",
+          status: "UNVERIFIED",
+          attempts: 0,
+          dedupKey: "dk4",
+        },
+      ];
+    }
+
+    it("Prisma listPendingByCredential con org → solo le righe di quell'org", async () => {
+      const prisma = { schedina: fakeModel(rows()) } as unknown as PrismaClient;
+      const repo = new PrismaSchedinaRepository(prisma);
+      expect((await repo.listPendingByCredential("credX", "orgA")).map((r) => r.id)).toEqual([
+        "pA",
+      ]);
+    });
+
+    it("Prisma listPendingByCredential senza org → tutte le PENDING della credenziale (path cron)", async () => {
+      const prisma = { schedina: fakeModel(rows()) } as unknown as PrismaClient;
+      const repo = new PrismaSchedinaRepository(prisma);
+      expect((await repo.listPendingByCredential("credX")).map((r) => r.id).sort()).toEqual([
+        "pA",
+        "pB",
+      ]);
+    });
+
+    it("Prisma listUnverifiedByCredential con org → solo quell'org", async () => {
+      const prisma = { schedina: fakeModel(rows()) } as unknown as PrismaClient;
+      const repo = new PrismaSchedinaRepository(prisma);
+      expect((await repo.listUnverifiedByCredential("credX", "orgB")).map((r) => r.id)).toEqual([
+        "uB",
+      ]);
+    });
+
+    it("InMemory rispetta lo stesso contratto org", async () => {
+      const repo = new InMemorySchedinaRepository();
+      const mk = (organizationId: string, n: string) =>
+        repo.createIntent({
+          organizationId,
+          credentialId: "credX",
+          guestId: `g${n}`,
+          deadlineAt: new Date("2026-01-02T00:00:00Z"),
+          dedup: {
+            struttura: "credX",
+            idAppartamento: null,
+            dataArrivo: "2026-01-01",
+            numeroDocumento: `D${n}`,
+            cognome: "ROSSI",
+            nome: "MARIO",
+            dataNascita: "1990-01-01",
+          },
+        });
+      await mk("orgA", "1");
+      await mk("orgB", "2");
+      const a = await repo.listPendingByCredential("credX", "orgA");
+      expect(a).toHaveLength(1);
+      expect(a[0].organizationId).toBe("orgA");
+      expect(await repo.listPendingByCredential("credX")).toHaveLength(2);
     });
   });
 

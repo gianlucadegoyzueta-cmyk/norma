@@ -31,6 +31,8 @@ export default async function CredentialsPage() {
 
   return (
     <ConciergePage
+      dense
+      active="credentials"
       kicker="VAULT · ALLOGGIATI WEB"
       title="Credenziali Alloggiati"
       intro={
@@ -70,7 +72,7 @@ export default async function CredentialsPage() {
             {credentials.map((c) => {
               const s = STATUS[c.status] ?? { text: c.status, cmx: "cmx-badge-wait" };
               return (
-                <li key={c.id}>
+                <li key={c.id} id={`cred-${c.id}`} className="scroll-mt-24">
                   <div className="cmx-row">
                     <div className="cmx-row-main">
                       <p className="cmx-row-title truncate">{c.label}</p>
@@ -93,7 +95,7 @@ export default async function CredentialsPage() {
       <section className="cmx-section">
         <Card style={{ borderRadius: 18 }}>
           <CardHeader>
-            <CardTitle className="font-display">Aggiungi credenziale</CardTitle>
+            <CardTitle>Aggiungi credenziale</CardTitle>
           </CardHeader>
           <CardContent>
             <CredentialForm />
@@ -105,7 +107,7 @@ export default async function CredentialsPage() {
       <section className="cmx-section">
         <Card style={{ borderRadius: 18 }}>
           <CardHeader>
-            <CardTitle className="font-display">I tuoi dati</CardTitle>
+            <CardTitle>I tuoi dati</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <p className="text-muted-foreground text-sm text-pretty">

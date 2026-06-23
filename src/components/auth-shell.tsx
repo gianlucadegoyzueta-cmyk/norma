@@ -22,7 +22,7 @@ export function AuthShell({
       {/* Grana di carta: rumore frattale tinto col foreground, opacità minima → si adatta al tema. */}
       <svg
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.5] mix-blend-multiply dark:opacity-[0.18] dark:mix-blend-screen"
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.5] mix-blend-multiply"
       >
         <filter id="auth-grain">
           <feTurbulence

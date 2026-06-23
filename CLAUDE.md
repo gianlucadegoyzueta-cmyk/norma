@@ -14,8 +14,11 @@ Tutto il resto serve i due pilastri: check-in self-service multilingua, import i
 properties, onboarding alimentano schedine e dichiarazioni. **CIN non è un pilastro né sta nel
 pitch** (adempimento una-tantum): NON si vende. Ma resta nel prodotto perché è load-bearing —
 `Property.cin` è richiesto dalla dichiarazione tassa di soggiorno (`tourist-tax/actions.ts`):
-NON rimuoverlo, NON deprecare il modulo. Verità editoriale: "Norma prepara, tu confermi con un
-click" — mai "invia da sola".
+NON rimuoverlo, NON deprecare il modulo. **Verità editoriale (rev. 2026-06-23): "Norma esegue per
+te" — invio automatico agli enti su mandato firmato una volta; "se sbagliamo noi, paghiamo noi"
+(garanzia commerciale a cap sul danno da nostro errore tecnico, MAI assunzione di responsabilità
+penale — vedi guardrail #1).** Positioning: **compliance garantita in automatico per affitti brevi**
+(l'auto-send è commodity: il fossato è la garanzia + reconcile/ricevute che la reggono).
 
 - **Stack:** Next.js App Router + TypeScript strict + PostgreSQL (Supabase, Frankfurt) + Prisma.
   Deploy su Vercel (progetto `norma`, team `norma-compliance`). Marketing site = repo separato `norma-marketing`.
@@ -34,8 +37,24 @@ click" — mai "invia da sola".
 
 ## Guardrail (non negoziabili)
 
-1. **MAI un Send reale alla Questura come prova.** Il primo invio di una schedina vera si fa
-   solo su ospite reale, con decisione esplicita di Gianluca. I metodi `Test` del WS sono ok.
+1. **Automazione con delega + safeguard** (rev. 2026-06-23 — sostituisce "mai invia da sola").
+   Norma invia in automatico agli enti (Alloggiati, tassa di soggiorno, ISTAT) **senza click
+   per-evento**, su un **mandato firmato una volta** (3 deleghe distinte per pilastro: Alloggiati =
+   esecutore tecnico sotto le credenziali del gestore; Tassa = intermediario dichiarante ex Cass.
+   SSUU 1527/2026; ISTAT = delega nativa Ross1000). L'host resta titolare. Attivo SOLO con gli **8
+   safeguard non negoziabili:** (1) consenso granulare per-pilastro, versionato e revocabile;
+   (2) DRY-RUN + Test-gate al go-live di OGNI account; (3) validazione pre-invio **bloccante** — vale
+   "mai inventare": dati `INCOMPLETE` → NON invia, segnala l'azione esatta; (4) reconcile T+1 con
+   alert dentro la finestra di ravvedimento; (5) outbox idempotente, `MAX_SEND_ATTEMPTS=5`;
+   (6) audit trail immutabile (payload + ricevuta + versione delega); (7) credenziali SOLO nel
+   `SecretsVault`; (8) wording legale per-pilastro rivisto da un legale prima di ogni promessa
+   pubblica. **Circuit breaker: nel dubbio, Norma NON invia e segnala.**
+   ⛔ **ECCEZIONE che resta decisione umana esplicita di Gianluca (classe CRITICAL): il PRIMISSIMO
+   Send reale ad Alloggiati si fa su struttura/ospite reale del FOUNDER, presidiato, con verifica
+   ricevuta T+1 — MAI sul primo cliente, MAI in autonomia.** I metodi `Test` del WS restano ok.
+   La **garanzia** è commerciale **con cap** (min tra danno e 12 mesi di canone, esclusi dati
+   falsi/colpa host), **MAI una polizza** (sanzioni inassicurabili, art. 12 Cod. Ass.); la
+   responsabilità penale ex art. 109/17 TULPS è **incedibile**.
 2. **Migrazioni prod solo con backup fresco.** Backup automatico giornaliero alle 9:30
    (`~/bin/norma-backup.sh` → `~/backups/norma/`, launchd `com.norma.backup`). Prima di una
    migrazione: esegui lo script a mano e verifica `backup.log`, poi `prisma migrate deploy`.
@@ -101,3 +120,15 @@ Prossima azione.
 - Docker: via **colima** (niente Docker Desktop). Se `docker ps` fallisce: `colima start`.
   Postgres locale per test migrazioni: `docker compose up -d db` (vedi docker-compose.yml).
 - Playwright: chromium già in cache condivisa (~/Library/Caches/ms-playwright).
+
+## Stack AI disponibile (globale — integrato 2026-06-18, vedi ~/.claude/STACK.md)
+
+Complementare al setup di questo repo (guard hook `scripts/hooks/guard.sh`, comandi flotta daily-ops/night-run/ship-unit). Da Claude Code/Cursor sono disponibili:
+
+- **Slash command globali**: `/ship` (pre-PR gate: typecheck+lint+test+rischio), `/risk` (classe LOW/MEDIUM/HIGH/CRITICAL), `/code-review`, `/stack-status`, `/eod`.
+- **Subagent**: `pr-reviewer` (applica le classi di rischio del kernel), `test-runner` (CI locale → rossi), `kernel-guardian` (aderenza kernel), `repo-cartographer`.
+- **Workflow** in `.claude/workflows/` (invoca con scriptPath): `code-review.mjs` (review diff multi-dimensione + verifica avversariale) · `dual-judge.mjs` (Claude+Gemini sulle decisioni dibattibili).
+- **Multi-cervello**: `~/.claude/bin/gemini-ask.sh "domanda"` per un secondo parere; `dual-judge` per consenso/divergenza su scelte critiche.
+- **MCP** (14 connettori): github, filesystem, context7, playwright, Linear, Notion, Slack, Apollo, n8n…
+
+Per norma il rischio resta sovrano: billing/auth/schema/PII = HIGH+, invii reali = CRITICAL (sempre umano).

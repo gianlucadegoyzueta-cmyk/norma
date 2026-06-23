@@ -10,9 +10,6 @@ const QUARTER_LABEL: Record<string, string> = {
   Q4: "IV trim",
 };
 
-/** Le cose VERE che Norma gestisce — parole che si auto-sostituiscono nell'hero. */
-const NORMA_HANDLES = ["le tue schedine", "la tassa di soggiorno", "l'ISTAT", "i tuoi check-in"];
-
 function greetingFor(now: Date): string {
   const hour = Number(
     new Intl.DateTimeFormat("it-IT", { hour: "2-digit", hour12: false, timeZone: ROME_TZ }).format(
@@ -47,57 +44,59 @@ export function buildSceneCopy(
   const { firstName, now, proposals } = opts;
   const k = proposals.length;
   const things = data.hero.thingsDone;
+  // "Posizione regolare" = nessuna scadenza superata E nulla in attesa di conferma. Con schedine
+  // PENDING/UNVERIFIED l'obbligo non è ancora assolto: lo stato resta "in lavorazione", non "regolare".
+  const pending = data.kpis.pendingSchedine;
+  const allClear = data.positionRegular && pending === 0;
 
-  // --- Hero: saluto · cosa Norma tiene in regola (rotante) · stato concreto di oggi ---
-  const lines: HeroSegment[][] = [];
+  // --- Hero ASCIUTTO (dual-judge, consenso alto): saluto serif a UNA riga + una sotto-riga
+  // di stato sans. Le decisioni NON si raccontano qui — vivono nel blocco "Aspettano il tuo
+  // via libera" sotto (regola anti-ridondanza: un fatto, un posto solo). La ricevuta Questura
+  // vive nel diario "Fatto stanotte", non in cima. Niente parola rotante.
   const greeting = greetingFor(now);
-  lines.push([{ text: firstName ? `${greeting} ${firstName}.` : `${greeting}.` }]);
-  lines.push([{ text: "Tengo in regola " }, { rotate: NORMA_HANDLES }, { text: "." }]);
+  const lines: HeroSegment[][] = [
+    [{ text: firstName ? `${greeting} ${firstName}.` : `${greeting}.` }],
+  ];
 
-  if (things > 0) {
-    const noun = things === 1 ? "cosa" : "cose";
-    if (k > 0) {
-      const dnoun = k === 1 ? "decisione" : "decisioni";
-      const verb = k === 1 ? "aspetta" : "aspettano";
-      lines.push([
-        { text: "Stanotte ho sistemato " },
-        { text: `${things} ${noun}`, hi: true },
-        { text: `; ${k} ${dnoun} ${verb} il tuo via libera.` },
-      ]);
-    } else {
-      lines.push([
-        { text: "Stanotte ho sistemato " },
-        { text: `${things} ${noun}`, hi: true },
-        { text: ". Per oggi non serve altro." },
-      ]);
-    }
-  } else if (k > 0) {
-    const dnoun = k === 1 ? "decisione" : "decisioni";
-    const intro = k === 1 ? "C'è " : "Ci sono ";
-    const rel = k === 1 ? "che aspetta" : "che aspettano";
-    lines.push([
-      { text: intro },
-      { text: `${k} ${dnoun}`, hi: true },
-      { text: ` ${rel} il tuo via libera.` },
-    ]);
-  } else {
-    lines.push([{ text: "Oggi è tutto in regola: nessuna scadenza da gestire." }]);
-  }
-
-  const sub =
-    data.acquiredYesterday > 0 && data.receiptRef
+  const noun = things === 1 ? "cosa" : "cose";
+  // "X da confermare" è VERO anche quando nulla è scaduto: non confonde "preparato" con "adempiuto".
+  const pendingNote =
+    pending > 0
+      ? ` ${pending} ${pending === 1 ? "schedina è" : "schedine sono"} in attesa della tua conferma.`
+      : "";
+  const sub: { text: string; bold?: string } =
+    things > 0
       ? {
-          bold: "Le schedine di ieri sono state acquisite dalla Questura",
-          text: `(ricevuta n. ${data.receiptRef}). Decidi tu, eseguo io.`,
+          bold: `Stanotte ho preparato ${things} ${noun}.`,
+          text:
+            pending > 0
+              ? pendingNote
+              : k > 0
+                ? " Niente è scaduto: aspetto il tuo via libera."
+                : " Per oggi non serve altro.",
         }
-      : { bold: "Decidi tu, eseguo io.", text: "Norma prepara, tu approvi con un tocco." };
+      : pending > 0
+        ? { bold: "Tutto pronto.", text: pendingNote }
+        : k > 0
+          ? { bold: "Tutto pronto.", text: " Niente è scaduto: aspetto solo il tuo via libera." }
+          : allClear
+            ? { bold: "Tutto in regola.", text: " Nessuna scadenza da gestire oggi." }
+            : {
+                bold: "Nessuna scadenza scaduta.",
+                text: " Resta solo da confermare il preparato.",
+              };
 
+  const positionLabel = !data.positionRegular
+    ? "da sistemare"
+    : pending > 0
+      ? `${pending} da confermare`
+      : "regolare";
   const kicker = `${new Intl.DateTimeFormat("it-IT", {
     weekday: "long",
     day: "numeric",
     month: "long",
     timeZone: ROME_TZ,
-  }).format(now)} · posizione ${data.positionRegular ? "regolare" : "da sistemare"}`;
+  }).format(now)} · posizione ${positionLabel}`;
 
   const monthName = new Intl.DateTimeFormat("it-IT", { month: "long", timeZone: ROME_TZ }).format(
     now,
@@ -133,7 +132,16 @@ export function buildSceneCopy(
     {
       value: guestsThisMonth,
       label: `ospiti registrati · ${monthName}`,
-      trend: guestsThisMonth > 0 ? "tutti in regola" : "nessuno questo mese",
+      // "tutti in regola" solo se nulla è scaduto E nulla è in attesa di conferma. Con schedine
+      // PENDING/UNVERIFIED lo stato è "X da confermare": l'obbligo non è ancora assolto.
+      trend:
+        guestsThisMonth === 0
+          ? "nessuno questo mese"
+          : pending > 0
+            ? `${pending} ${pending === 1 ? "schedina" : "schedine"} da confermare`
+            : data.positionRegular
+              ? "schedine in regola"
+              : "schedine da gestire",
       detail: {
         title: `Ospiti registrati · ${monthName}`,
         intro:
@@ -142,7 +150,17 @@ export function buildSceneCopy(
             : "Ancora nessun ospite registrato questo mese.",
         rows: [
           { label: "Ospiti nel mese", value: `${guestsThisMonth}` },
-          { label: "Stato schedine", value: guestsThisMonth > 0 ? "tutte in regola" : "—" },
+          {
+            label: "Stato schedine",
+            value:
+              guestsThisMonth === 0
+                ? "—"
+                : pending > 0
+                  ? `${pending} da confermare`
+                  : data.positionRegular
+                    ? "tutte in regola"
+                    : "da gestire",
+          },
         ],
         note: "Ogni ospite registrato diventa una schedina pronta per Alloggiati Web.",
         link: { label: "Vai ai soggiorni", href: "/stays" },
@@ -169,7 +187,8 @@ export function buildSceneCopy(
     },
     {
       value: hours,
-      label: "ore risparmiate nel mese",
+      prefix: "~",
+      label: "ore risparmiate · stima",
       trend: guestsThisMonth > 0 ? `stimate su ${guestsThisMonth} ospiti` : "stima sugli ospiti",
       detail: {
         title: "Ore risparmiate nel mese",

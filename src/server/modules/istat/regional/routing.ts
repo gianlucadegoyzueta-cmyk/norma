@@ -294,11 +294,21 @@ export const PROVINCIA_TO_REGIONE: Record<string, string> = {
   VI: "veneto",
 };
 
-/** Risolve il routing del movimento dalla sigla provincia del Comune. null se sigla sconosciuta. */
+/**
+ * Risolve il routing del movimento dalla sigla provincia del Comune.
+ *
+ * CONTRATTO (normalizzazione esplicita, "mai indovinare una regione"):
+ *  - input normalizzato con `trim()` + `toUpperCase()` PRIMA del lookup;
+ *  - `null` / `undefined` / stringa vuota / solo-spazi (`""`, `"  "`) → `null`;
+ *  - sigla con spazi attorno (`"rm "`) → matcha la provincia (`"RM"` → lazio);
+ *  - sigla non in tabella (`"XX"`, `"ZZ"`) → `null`;
+ *  - mai un fallback regionale arbitrario: una sigla non mappata NON viene instradata.
+ */
 export function regionMovementForProvincia(
   provinciaSigla: string | null | undefined,
 ): RegionMovement | null {
-  if (!provinciaSigla) return null;
-  const regionId = PROVINCIA_TO_REGIONE[provinciaSigla.trim().toUpperCase()];
+  const key = provinciaSigla?.trim().toUpperCase();
+  if (!key) return null; // null / undefined / "" / "   " → nessun routing inventato
+  const regionId = PROVINCIA_TO_REGIONE[key];
   return regionId ? (REGION_MOVEMENT[regionId] ?? null) : null;
 }
