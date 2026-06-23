@@ -44,10 +44,16 @@ export default async function PropertiesPage() {
       title="Immobili"
       intro={
         <>
-          Gli immobili di{" "}
-          <strong style={{ color: "var(--inchiostro)" }}>{ctx.current.organizationName}</strong>.
-          Collego ogni immobile a una credenziale Alloggiati per inviare le schedine; il Comune
-          dev&apos;essere nella provincia di competenza della credenziale.
+          L&apos;<strong>elenco dei singoli immobili</strong> di{" "}
+          <strong style={{ color: "var(--inchiostro)" }}>{ctx.current.organizationName}</strong> e
+          la loro configurazione: qui aggiungi un immobile e lo colleghi a una credenziale
+          Alloggiati per inviare le schedine (il Comune dev&apos;essere nella provincia di
+          competenza della credenziale). Per la vista d&apos;insieme della compliance su tutte le
+          strutture vai alle{" "}
+          <Link href="/agency" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
+            Strutture
+          </Link>
+          .
         </>
       }
     >

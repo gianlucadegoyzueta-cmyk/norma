@@ -78,10 +78,15 @@ export default async function AgencyPage({
       }
       intro={
         <>
-          La regia di{" "}
+          La <strong>vista d&apos;insieme</strong> di tutte le strutture di{" "}
           <strong style={{ color: "var(--inchiostro)" }}>{ctx.current.organizationName}</strong>:
-          tutta la compliance dei tuoi immobili in un colpo d&apos;occhio. Schedine da inviare,
-          check-in di oggi, tassa di soggiorno e prontezza ISTAT — per ogni struttura.
+          compliance di ogni immobile in un colpo d&apos;occhio — schedine da inviare, check-in di
+          oggi, tassa di soggiorno e prontezza ISTAT. Pensata per chi gestisce più immobili. Per
+          aggiungere o configurare un singolo immobile vai agli{" "}
+          <Link href="/properties" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
+            Immobili
+          </Link>
+          .
         </>
       }
     >
@@ -90,8 +95,8 @@ export default async function AgencyPage({
           <div className="cmx-empty">
             <p className="cmx-empty-title">Nessuna struttura, per ora</p>
             <p className="cmx-empty-text">
-              Aggiungi i tuoi immobili e qui vedrai la panoramica di compliance di tutta l&apos;
-              agenzia, struttura per struttura.{" "}
+              Aggiungi i tuoi immobili dalla pagina <strong>Immobili</strong> e qui vedrai la vista
+              d&apos;insieme della compliance di tutte le strutture, una per una.{" "}
               <Link href="/properties" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
                 Aggiungi un immobile
               </Link>

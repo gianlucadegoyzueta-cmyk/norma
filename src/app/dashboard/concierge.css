@@ -82,22 +82,10 @@
   z-index: 2;
   gap: 16px;
 }
-.cmx-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.cmx-brand svg {
-  height: 30px;
-  width: 30px;
-  color: var(--terracotta);
-}
-.cmx-brand span {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 23px;
-  letter-spacing: -0.02em;
-}
+/* Marchio Norma: il segno di brand UNICO e canonico è <SealMark/> (sigillo-monogramma,
+   src/components/ui/seal-mark.tsx), usato in sidebar, auth-shell e <Brand/>. La vecchia
+   resa `.cmx-brand` (svg+wordmark generici della testata .cmx-top pre-AppShell, #105) è stata
+   rimossa per evitare un doppio segno di brand incoerente: non reintrodurla. */
 .cmx-top-right {
   display: flex;
   align-items: center;
