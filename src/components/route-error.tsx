@@ -25,7 +25,7 @@ export function RouteError({
         <CardHeader className="items-center text-center">
           <span
             aria-hidden
-            className="bg-warning/15 text-warning-foreground dark:text-warning mb-2 flex size-12 items-center justify-center rounded-full"
+            className="bg-warning/15 text-warning-foreground mb-2 flex size-12 items-center justify-center rounded-full"
           >
             <AlertTriangle className="size-6" />
           </span>

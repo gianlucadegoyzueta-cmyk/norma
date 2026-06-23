@@ -43,7 +43,7 @@ export function StayForm({ properties }: { properties: Property[] }) {
           ))}
         </Select>
         {noCredential && (
-          <p className="text-warning-foreground dark:text-warning text-xs">
+          <p className="text-warning-foreground text-xs">
             Questo immobile non è collegato a una credenziale Alloggiati: potrai creare il soggiorno
             ma non generare le schedine finché non lo colleghi.
           </p>

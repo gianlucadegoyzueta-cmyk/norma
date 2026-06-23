@@ -50,7 +50,7 @@ function SendSummaryView({ summary }: { summary: SendSummary }) {
           </span>
         )}
         {unverified > 0 && (
-          <span className="text-warning-foreground dark:text-warning inline-flex items-center gap-1">
+          <span className="text-warning-foreground inline-flex items-center gap-1">
             <span aria-hidden>⏳</span>
             {unverified} da verificare
           </span>
@@ -163,11 +163,8 @@ export function CredentialOutboxControls({
                 aria-describedby={ackId}
               />
               <span id={ackId}>
-                <strong className="text-warning-foreground dark:text-warning">
-                  Test non eseguito
-                </strong>{" "}
-                in questa sessione. Consigliato: prima “Verifica (Test)”. Confermo di voler inviare
-                comunque.
+                <strong className="text-warning-foreground">Test non eseguito</strong> in questa
+                sessione. Consigliato: prima “Verifica (Test)”. Confermo di voler inviare comunque.
               </span>
             </label>
           )}

@@ -38,7 +38,7 @@ export function IstatSubmitButton({
     <div className="flex items-center gap-2">
       {submittedLabel &&
         (stale ? (
-          <span className="text-warning-foreground dark:text-warning text-xs font-medium">
+          <span className="text-warning-foreground text-xs font-medium">
             Invio registrato il {submittedLabel} · numeri cambiati dopo
           </span>
         ) : (

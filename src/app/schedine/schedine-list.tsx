@@ -112,7 +112,7 @@ export function SchedineList({
                 <div className="flex items-center gap-3">
                   {/* Ospite */}
                   <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand-salvia-soft)] text-[11px] font-medium text-[var(--brand-salvia)]">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand-salvia-soft)] text-[11px] font-medium text-[var(--brand-salvia-ink)]">
                       {initials(s.guestName)}
                     </span>
                     <div className="min-w-0">

@@ -133,7 +133,7 @@ export function AppSidebar({
           onClick={onNavigate}
           className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--brand-avorio)]"
         >
-          <span className="flex size-8 items-center justify-center rounded-full bg-[var(--brand-salvia-soft)] text-[12px] font-medium text-[var(--brand-salvia)]">
+          <span className="flex size-8 items-center justify-center rounded-full bg-[var(--brand-salvia-soft)] text-[12px] font-medium text-[var(--brand-salvia-ink)]">
             {u.initials}
           </span>
           <span className="min-w-0 flex-1">

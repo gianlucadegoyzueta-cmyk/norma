@@ -56,7 +56,7 @@ export default async function CheckinPage({
       {/* Grana di carta appena percettibile, coerente con la superficie auth (theme-safe). */}
       <svg
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.5] mix-blend-multiply dark:opacity-[0.18] dark:mix-blend-screen"
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.5] mix-blend-multiply"
       >
         <filter id="checkin-grain">
           <feTurbulence
