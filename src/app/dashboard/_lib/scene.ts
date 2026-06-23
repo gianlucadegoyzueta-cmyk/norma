@@ -44,6 +44,10 @@ export function buildSceneCopy(
   const { firstName, now, proposals } = opts;
   const k = proposals.length;
   const things = data.hero.thingsDone;
+  // "Posizione regolare" = nessuna scadenza superata E nulla in attesa di conferma. Con schedine
+  // PENDING/UNVERIFIED l'obbligo non è ancora assolto: lo stato resta "in lavorazione", non "regolare".
+  const pending = data.kpis.pendingSchedine;
+  const allClear = data.positionRegular && pending === 0;
 
   // --- Hero ASCIUTTO (dual-judge, consenso alto): saluto serif a UNA riga + una sotto-riga
   // di stato sans. Le decisioni NON si raccontano qui — vivono nel blocco "Aspettano il tuo
@@ -55,22 +59,44 @@ export function buildSceneCopy(
   ];
 
   const noun = things === 1 ? "cosa" : "cose";
+  // "X da confermare" è VERO anche quando nulla è scaduto: non confonde "preparato" con "adempiuto".
+  const pendingNote =
+    pending > 0
+      ? ` ${pending} ${pending === 1 ? "schedina è" : "schedine sono"} in attesa della tua conferma.`
+      : "";
   const sub: { text: string; bold?: string } =
     things > 0
       ? {
           bold: `Stanotte ho preparato ${things} ${noun}.`,
-          text: k > 0 ? " Il resto è in regola." : " Per oggi non serve altro.",
+          text:
+            pending > 0
+              ? pendingNote
+              : k > 0
+                ? " Niente è scaduto: aspetto il tuo via libera."
+                : " Per oggi non serve altro.",
         }
-      : k > 0
-        ? { bold: "Tutto pronto.", text: " Niente è scaduto: aspetto solo il tuo via libera." }
-        : { bold: "Tutto in regola.", text: " Nessuna scadenza da gestire oggi." };
+      : pending > 0
+        ? { bold: "Tutto pronto.", text: pendingNote }
+        : k > 0
+          ? { bold: "Tutto pronto.", text: " Niente è scaduto: aspetto solo il tuo via libera." }
+          : allClear
+            ? { bold: "Tutto in regola.", text: " Nessuna scadenza da gestire oggi." }
+            : {
+                bold: "Nessuna scadenza scaduta.",
+                text: " Resta solo da confermare il preparato.",
+              };
 
+  const positionLabel = !data.positionRegular
+    ? "da sistemare"
+    : pending > 0
+      ? `${pending} da confermare`
+      : "regolare";
   const kicker = `${new Intl.DateTimeFormat("it-IT", {
     weekday: "long",
     day: "numeric",
     month: "long",
     timeZone: ROME_TZ,
-  }).format(now)} · posizione ${data.positionRegular ? "regolare" : "da sistemare"}`;
+  }).format(now)} · posizione ${positionLabel}`;
 
   const monthName = new Intl.DateTimeFormat("it-IT", { month: "long", timeZone: ROME_TZ }).format(
     now,
@@ -106,7 +132,16 @@ export function buildSceneCopy(
     {
       value: guestsThisMonth,
       label: `ospiti registrati · ${monthName}`,
-      trend: guestsThisMonth > 0 ? "tutti in regola" : "nessuno questo mese",
+      // "tutti in regola" solo se nulla è scaduto E nulla è in attesa di conferma. Con schedine
+      // PENDING/UNVERIFIED lo stato è "X da confermare": l'obbligo non è ancora assolto.
+      trend:
+        guestsThisMonth === 0
+          ? "nessuno questo mese"
+          : pending > 0
+            ? `${pending} ${pending === 1 ? "schedina" : "schedine"} da confermare`
+            : data.positionRegular
+              ? "schedine in regola"
+              : "schedine da gestire",
       detail: {
         title: `Ospiti registrati · ${monthName}`,
         intro:
@@ -115,7 +150,17 @@ export function buildSceneCopy(
             : "Ancora nessun ospite registrato questo mese.",
         rows: [
           { label: "Ospiti nel mese", value: `${guestsThisMonth}` },
-          { label: "Stato schedine", value: guestsThisMonth > 0 ? "tutte in regola" : "—" },
+          {
+            label: "Stato schedine",
+            value:
+              guestsThisMonth === 0
+                ? "—"
+                : pending > 0
+                  ? `${pending} da confermare`
+                  : data.positionRegular
+                    ? "tutte in regola"
+                    : "da gestire",
+          },
         ],
         note: "Ogni ospite registrato diventa una schedina pronta per Alloggiati Web.",
         link: { label: "Vai ai soggiorni", href: "/stays" },
