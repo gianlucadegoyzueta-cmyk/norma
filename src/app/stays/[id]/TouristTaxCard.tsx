@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { EstimateOutcome } from "@/server/modules/tourist-tax/services/estimate.service";
 import { formatEuroCents } from "@/server/modules/tourist-tax/services/estimate.service";
@@ -72,8 +71,8 @@ export function TouristTaxCard({
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                {g.exempt && <Badge variant="secondary">Esente</Badge>}
-                {g.reduced && <Badge variant="warning">−{g.reductionPct}%</Badge>}
+                {g.exempt && <span className="cmx-badge cmx-badge-wait">Esente</span>}
+                {g.reduced && <span className="cmx-badge cmx-badge-wait">−{g.reductionPct}%</span>}
                 <span className="text-sm tabular-nums">{formatEuroCents(g.amountCents)}</span>
               </div>
             </li>

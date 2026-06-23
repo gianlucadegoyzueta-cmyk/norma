@@ -2,7 +2,6 @@
 
 import { useActionState } from "react";
 import { AlertTriangle, CheckCircle2, Loader2, RefreshCw, Trash2, XCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { removeImportAction, syncImportAction } from "./actions";
@@ -39,10 +38,10 @@ export function ICalImportRow({
           <div className="flex items-center gap-2">
             <span className="font-medium">{data.sourceLabel}</span>
             {data.lastSync.kind === "error" && (
-              <Badge variant="destructive">
+              <span className="cmx-badge cmx-badge-err inline-flex items-center gap-1">
                 <AlertTriangle className="size-3" />
                 Errore
-              </Badge>
+              </span>
             )}
           </div>
           <p className="text-muted-foreground mt-0.5 truncate text-xs" title={data.url}>

@@ -8,7 +8,6 @@ import { ConciergePage } from "@/components/concierge/concierge-page";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { IstatExportButton } from "./IstatExportButton";
 import { IstatSubmitButton } from "./IstatSubmitButton";
 import { IstatAutoSubmitButton } from "./IstatAutoSubmitButton";
@@ -17,15 +16,17 @@ import { loadIstatSubmissionReadiness } from "@/server/modules/istat/submission-
 import type { ReadinessStatus } from "@/server/modules/istat/domain/submission-readiness";
 import { Ross1000ExportButton } from "./Ross1000ExportButton";
 
-/** Mappa lo stato di prontezza al variant del Badge + etichetta IT (presentazionale). */
-const READINESS_BADGE: Record<
-  ReadinessStatus,
-  { variant: "success" | "warning" | "secondary"; label: string }
-> = {
-  READY: { variant: "success", label: "Pronta" },
-  INCOMPLETE: { variant: "warning", label: "Dati mancanti" },
-  ASSISTED: { variant: "secondary", label: "Inserimento manuale" },
-  UNROUTED: { variant: "secondary", label: "Regione da verificare" },
+/**
+ * Mappa lo stato di prontezza alla classe badge "cmx" + etichetta IT (presentazionale).
+ * Sistema unico con le altre liste (schedine, tassa di soggiorno, billing): vedi
+ * `cmx-badge-*` in `concierge-page.css`. READY = verde (ok), gli stati di attesa/azione
+ * umana = neutro (wait), così "Pronta" rende identica ovunque.
+ */
+const READINESS_BADGE: Record<ReadinessStatus, { cmx: string; label: string }> = {
+  READY: { cmx: "cmx-badge-ok", label: "Pronta" },
+  INCOMPLETE: { cmx: "cmx-badge-wait", label: "Dati mancanti" },
+  ASSISTED: { cmx: "cmx-badge-wait", label: "Inserimento manuale" },
+  UNROUTED: { cmx: "cmx-badge-wait", label: "Regione da verificare" },
 };
 
 export const metadata: Metadata = { title: "ISTAT" };
@@ -207,7 +208,7 @@ export default async function IstatPage({
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="truncate text-sm font-medium">{pr.propertyName}</p>
-                          <Badge variant={badge.variant}>{badge.label}</Badge>
+                          <span className={`cmx-badge ${badge.cmx}`}>{badge.label}</span>
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-xs">
                           {region
