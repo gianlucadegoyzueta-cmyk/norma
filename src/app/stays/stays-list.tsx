@@ -136,7 +136,7 @@ export function StaysList({ stays }: { stays: StayRow[] }) {
               >
                 {/* Immobile */}
                 <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-salvia-soft)] text-[var(--brand-salvia)]">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-salvia-soft)] text-[var(--brand-salvia-ink)]">
                     <Building2 className="size-4" aria-hidden />
                   </span>
                   <span className="min-w-0">

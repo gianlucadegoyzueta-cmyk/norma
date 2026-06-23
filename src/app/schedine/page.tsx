@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
-import type { SchedinaStatus } from "@prisma/client";
+import type { CredentialStatus, SchedinaStatus } from "@prisma/client";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaCredentialRepository, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
@@ -156,7 +156,7 @@ export default async function SchedinePage() {
                   <CredentialOutboxControls
                     credentialId={credId}
                     pendingCount={count}
-                    active={credStatus.get(credId) === "ACTIVE"}
+                    status={credStatus.get(credId) ?? "PENDING_REONBOARDING"}
                   />
                 </div>
               ))}
@@ -203,11 +203,11 @@ export default async function SchedinePage() {
             </CardHeader>
             <CardContent className="grid gap-4">
               <p className="text-muted-foreground text-sm">
-                Quando attivo per una credenziale, Norma può inviare da sola le schedine già{" "}
-                <em>validate dal Test</em>; quelle che il Test boccia restano da rivedere e{" "}
-                <strong>non partono mai</strong>. L&apos;invio automatico richiede anche
-                l&apos;abilitazione lato server: finché non è attiva, questo interruttore esprime
-                solo la tua preferenza.
+                Con l&apos;auto-invio attivo per una credenziale, le schedine già{" "}
+                <em>validate dal Test</em> vengono inviate automaticamente all&apos;orario
+                programmato, su tuo mandato; quelle che il Test boccia restano da rivedere e{" "}
+                <strong>non partono mai</strong>. Richiede anche l&apos;abilitazione lato server:
+                finché non è attiva, questo interruttore esprime solo la tua preferenza.
               </p>
               {credentials.map((c) => (
                 <div
@@ -222,6 +222,7 @@ export default async function SchedinePage() {
                   </div>
                   <AutoSendToggle
                     credentialId={c.id}
+                    label={c.label}
                     initialEnabled={c.autoSend}
                     active={c.status === "ACTIVE"}
                   />

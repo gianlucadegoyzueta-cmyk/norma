@@ -150,7 +150,7 @@ export default async function BillingPage({
           <Card className="border-warning/40 bg-warning/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Info className="text-warning-foreground dark:text-warning" />
+                <Info className="text-warning-foreground" />
                 Pagamenti non ancora configurati
               </CardTitle>
               <CardDescription>
@@ -165,7 +165,7 @@ export default async function BillingPage({
           <Card className="border-warning/40 bg-warning/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <TriangleAlert className="text-warning-foreground dark:text-warning" />
+                <TriangleAlert className="text-warning-foreground" />
                 Billing in attesa di attivazione
               </CardTitle>
               <CardDescription>

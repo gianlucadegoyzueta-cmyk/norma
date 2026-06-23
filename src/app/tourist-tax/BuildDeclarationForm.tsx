@@ -53,8 +53,13 @@ export function BuildDeclarationForm({ comuni }: { comuni: Array<{ id: string; n
             required
             placeholder="2026-05 · 2026-Q2 · 2026"
             pattern="\d{4}(-\d{2}|-Q[1-4])?"
+            title="Usa mese (2026-05), trimestre (2026-Q2) o anno (2026)."
+            aria-describedby="period-hint"
             className="w-48"
           />
+          <p id="period-hint" className="text-muted-foreground text-xs">
+            Mese 2026-05, trimestre 2026-Q2 o anno 2026.
+          </p>
         </div>
         <Button type="submit" disabled={pending || comuni.length === 0}>
           {pending ? "Calcolo…" : "Calcola dichiarazione"}

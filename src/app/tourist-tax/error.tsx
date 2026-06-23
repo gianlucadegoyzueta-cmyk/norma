@@ -1,6 +1,6 @@
 "use client";
 
-import { AuthRouteError } from "@/components/auth-route-error";
+import { RouteError } from "@/components/route-error";
 
 export default function Error({
   error,
@@ -10,10 +10,10 @@ export default function Error({
   reset: () => void;
 }) {
   return (
-    <AuthRouteError
+    <RouteError
       error={error}
       reset={reset}
-      message="Non siamo riusciti a caricare la registrazione."
+      message="Non siamo riusciti a caricare la tassa di soggiorno. Riprova: i tuoi dati sono al sicuro."
     />
   );
 }

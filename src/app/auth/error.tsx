@@ -3,10 +3,11 @@
 import { AuthRouteError } from "@/components/auth-route-error";
 
 export default function Error({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AuthRouteError reset={reset} />;
+  return <AuthRouteError error={error} reset={reset} />;
 }

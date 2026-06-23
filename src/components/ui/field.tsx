@@ -61,10 +61,15 @@ export function FormMessage({
   variant?: "error" | "success";
 }) {
   if (!children) return null;
+  // Errore: role="alert" implica già aria-live="assertive" → NON aggiungere un aria-live="polite"
+  // esplicito (contraddittorio: alcuni screen reader annullano l'urgenza). Successo: role="status"
+  // con annuncio cortese. aria-atomic per leggere sempre l'intero messaggio, non solo il delta.
+  const isError = variant === "error";
   return (
     <div
-      role={variant === "error" ? "alert" : "status"}
-      aria-live="polite"
+      role={isError ? "alert" : "status"}
+      aria-live={isError ? undefined : "polite"}
+      aria-atomic="true"
       className={cn(
         "rounded-md border px-3 py-2 text-sm",
         variant === "error"

@@ -72,11 +72,19 @@ export function SchedineList({
       <div className="cmx-empty">
         <p className="cmx-empty-title">Nessuna schedina, per ora</p>
         <p className="cmx-empty-text">
-          Quando aggiungi un soggiorno, preparo qui le schedine pronte da confermare. Inizia da un{" "}
+          Le schedine nascono dai soggiorni. Il percorso completo è in tre passi:{" "}
+          <Link href="/credentials" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
+            1. Credenziali
+          </Link>{" "}
+          ·{" "}
+          <Link href="/properties" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
+            2. Immobile
+          </Link>{" "}
+          ·{" "}
           <Link href="/stays" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
-            soggiorno
+            3. Soggiorno
           </Link>
-          .
+          . Da lì preparo qui le schedine, pronte da confermare.
         </p>
       </div>
     );
@@ -96,9 +104,15 @@ export function SchedineList({
         {schedine.map((s) => {
           const overdue = isOverdue(s, now);
           const stayId = stayIdBySchedina.get(s.id);
+          // Sintesi leggibile per screen reader: nome + struttura + stato + scadenza in una frase,
+          // così la riga densa non va decifrata dai frammenti sparsi (WCAG 1.3.1).
+          const rowLabel = `${s.guestName}, ${s.propertyName}. Stato: ${
+            schedinaStatusDisplay(s.status).label
+          }. Scadenza ${overdue ? "scaduta" : "entro"} ${dateTimeFmt.format(s.deadlineAt)}.`;
           return (
             <li key={s.id}>
               <div
+                aria-label={rowLabel}
                 className={cn(
                   "border-border/60 relative border-b px-4 py-3 last:border-0",
                   overdue && "bg-[var(--brand-terracotta)]/[0.04]",
@@ -112,7 +126,7 @@ export function SchedineList({
                 <div className="flex items-center gap-3">
                   {/* Ospite */}
                   <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand-salvia-soft)] text-[11px] font-medium text-[var(--brand-salvia)]">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand-salvia-soft)] text-[11px] font-medium text-[var(--brand-salvia-ink)]">
                       {initials(s.guestName)}
                     </span>
                     <div className="min-w-0">

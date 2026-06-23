@@ -4,7 +4,7 @@
   nessuna libreria di animazione. Classi prefissate `cmx-` e radicate in `.cmx` per
   non collidere col resto dell'app.
 
-  Identità: carta chiara SEMPRE. Anche dentro `.dark` la scena resta su carta.
+  Identità: carta chiara SEMPRE (nessun dark mode — vietato dal brand #97).
 */
 
 .cmx {
@@ -16,6 +16,7 @@
   --terracotta: var(--brand-terracotta);
   --terracotta-dark: var(--brand-terracotta-dark);
   --salvia: var(--brand-salvia);
+  --salvia-ink: var(--brand-salvia-ink);
   --salvia-soft: var(--brand-salvia-soft);
   --hairline: var(--brand-hairline);
 
@@ -30,8 +31,11 @@
 .cmx-grain {
   position: fixed;
   inset: 0;
+  /* Decorativa: non deve mai intercettare click né coprire contenuto/nav.
+     pointer-events:none la rende inerte; z-index:0 la confina sotto il contenuto
+     (z-index:2) e sotto la bottom-nav (z-40) invece che sopra a z-50. */
   pointer-events: none;
-  z-index: 50;
+  z-index: 0;
   /* "Concierge sobrio": grana ridotta a un sussurro, non più velo a tutto schermo sui dati. */
   opacity: 0.22;
   mix-blend-mode: multiply;
@@ -78,22 +82,10 @@
   z-index: 2;
   gap: 16px;
 }
-.cmx-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.cmx-brand svg {
-  height: 30px;
-  width: 30px;
-  color: var(--terracotta);
-}
-.cmx-brand span {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 23px;
-  letter-spacing: -0.02em;
-}
+/* Marchio Norma: il segno di brand UNICO e canonico è <SealMark/> (sigillo-monogramma,
+   src/components/ui/seal-mark.tsx), usato in sidebar, auth-shell e <Brand/>. La vecchia
+   resa `.cmx-brand` (svg+wordmark generici della testata .cmx-top pre-AppShell, #105) è stata
+   rimossa per evitare un doppio segno di brand incoerente: non reintrodurla. */
 .cmx-top-right {
   display: flex;
   align-items: center;
@@ -171,7 +163,7 @@
   font-size: 13px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--salvia);
+  color: var(--salvia-ink);
   margin-bottom: 6px;
 }
 .cmx-rule {
@@ -346,10 +338,10 @@
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
-  color: var(--salvia);
+  color: var(--salvia-ink);
 }
 .cmx-kpi .cmx-trend.cmx-due {
-  color: var(--terracotta);
+  color: var(--terracotta-dark);
 }
 /* KPI urgente (due=true): enfasi terracotta sul VALORE, non solo sul trend minuscolo. */
 .cmx-kpi-urgent .cmx-odo {
@@ -365,17 +357,22 @@
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--terracotta);
-  opacity: 0;
+  /* Testo piccolo (11px): terracotta-dark per AA su avorio. */
+  color: var(--terracotta-dark);
+  /* Affordance persistente (anche su touch/tastiera, dove non c'è hover): visibile a riposo,
+     piena su hover/focus. */
+  opacity: 0.85;
   transition: opacity 0.25s;
 }
-.cmx-kpi:hover .cmx-kpi-cta {
+.cmx-kpi:hover .cmx-kpi-cta,
+.cmx-kpi:focus-visible .cmx-kpi-cta {
   opacity: 1;
 }
 .cmx-kpi-arrow {
   transition: transform 0.25s var(--ease);
 }
-.cmx-kpi:hover .cmx-kpi-arrow {
+.cmx-kpi:hover .cmx-kpi-arrow,
+.cmx-kpi:focus-visible .cmx-kpi-arrow {
   transform: translateX(4px);
 }
 .cmx-odo {
@@ -385,6 +382,8 @@
   font-weight: 700;
   font-size: 40px;
   letter-spacing: -0.025em;
+  /* Cifre allineate: l'odometro è il caso d'uso dei numeri tabulari. */
+  font-variant-numeric: tabular-nums;
   height: 44px;
   overflow: hidden;
 }
@@ -416,6 +415,7 @@
   height: 44px;
   line-height: 44px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ===== FOGLIO DI DETTAGLIO KPI (<dialog>) ===== */
@@ -671,6 +671,13 @@
     box-shadow 0.25s,
     background 0.25s;
 }
+/* Focus ring visibile su QUALSIASI sfondo: anello avorio + alone inchiostro.
+   Sulla CTA terracotta (.cmx-go) il terracotta puro sarebbe invisibile, qui no. */
+.cmx-btn:focus-visible {
+  outline: 2px solid var(--avorio);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(33, 28, 21, 0.55);
+}
 .cmx-btn.cmx-go {
   background: var(--terracotta);
   color: var(--avorio);
@@ -705,7 +712,7 @@
 .cmx-hint {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--salvia);
+  color: var(--salvia-ink);
 }
 
 /* press + timbro + uscita */
@@ -720,8 +727,8 @@
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
-  color: var(--salvia);
-  border: 2px solid var(--salvia);
+  color: var(--salvia-ink);
+  border: 2px solid var(--salvia-ink);
   border-radius: 6px;
   padding: 5px 10px;
   letter-spacing: 0.08em;
@@ -852,7 +859,8 @@
   margin-left: 24px;
 }
 .cmx-ev .cmx-d .cmx-norma {
-  color: var(--terracotta);
+  /* Parola inline a 13.5px: terracotta-dark per AA su carta. */
+  color: var(--terracotta-dark);
   font-weight: 600;
 }
 
@@ -885,7 +893,7 @@
   min-width: 44px;
 }
 .cmx-diary .cmx-row .cmx-check {
-  color: var(--salvia);
+  color: var(--salvia-ink);
   font-weight: 700;
 }
 .cmx-diary .cmx-row.cmx-new {
@@ -942,7 +950,7 @@
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--salvia);
+  color: var(--salvia-ink);
   margin-right: 2px;
 }
 .cmx-sc {
@@ -1006,6 +1014,37 @@
   }
   .cmx-odo {
     font-size: 42px;
+  }
+  /* Affordance di scroll sui pill: sfumatura ai bordi quando la barra eccede la larghezza. */
+  .cmx-quicknav-pills {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 14px,
+      black calc(100% - 14px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 14px,
+      black calc(100% - 14px),
+      transparent 100%
+    );
+  }
+}
+
+/* Telefoni stretti: 1 colonna KPI, odometro più piccolo, sigillo contenuto nel viewport. */
+@media (max-width: 520px) {
+  .cmx-kpis {
+    grid-template-columns: 1fr;
+  }
+  .cmx-odo {
+    font-size: 34px;
+  }
+  .cmx-seal-bg {
+    width: 320px;
+    height: 320px;
   }
 }
 

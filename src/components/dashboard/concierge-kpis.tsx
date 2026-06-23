@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 
 /** Una riga del riepilogo (drill-down) che si apre al click su un KPI. */
 export interface KpiDetailRow {
@@ -113,14 +114,23 @@ function useTilt() {
 /** Foglio di dettaglio (drill-down) di un KPI: <dialog> nativo, chiusura Esc/click-fuori. */
 function KpiSheet({ detail, onClose }: { detail: KpiDetail; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   useEffect(() => {
     const el = ref.current;
+    // Memorizza l'elemento attivo (il KPI di origine) per ripristinare il focus alla chiusura.
+    const opener = document.activeElement as HTMLElement | null;
     if (el && !el.open) el.showModal();
+    return () => {
+      // Al close il focus torna esplicitamente al KPI che ha aperto il foglio (WCAG 2.4.3).
+      if (opener && typeof opener.focus === "function") opener.focus();
+    };
   }, []);
   return (
     <dialog
       ref={ref}
       className="cmx-sheet"
+      aria-modal="true"
+      aria-labelledby={titleId}
       onClose={onClose}
       onClick={(e) => {
         if (e.target === ref.current) ref.current?.close();
@@ -128,14 +138,14 @@ function KpiSheet({ detail, onClose }: { detail: KpiDetail; onClose: () => void 
     >
       <div className="cmx-sheet-inner">
         <header className="cmx-sheet-head">
-          <h2>{detail.title}</h2>
+          <h2 id={titleId}>{detail.title}</h2>
           <button
             type="button"
             className="cmx-sheet-x"
             aria-label="Chiudi"
             onClick={() => ref.current?.close()}
           >
-            ✕
+            <X size={18} aria-hidden />
           </button>
         </header>
         {detail.intro && <p className="cmx-sheet-intro">{detail.intro}</p>}
