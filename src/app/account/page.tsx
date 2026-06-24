@@ -4,10 +4,13 @@ import { redirect } from "next/navigation";
 import { ArrowRight, Bell, CreditCard, KeyRound, Settings2, TriangleAlert } from "lucide-react";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { PrismaNotificationPreferenceRepository } from "@/server/modules/notifications";
 import { ConciergePage } from "@/components/concierge/concierge-page";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProfileForm } from "./ProfileForm";
+import { NotificationPreferencesForm } from "./NotificationPreferencesForm";
+import { BiometricLockToggle } from "./BiometricLockToggle";
 
 export const metadata: Metadata = { title: "Impostazioni" };
 export const dynamic = "force-dynamic";
@@ -25,6 +28,9 @@ export default async function AccountPage() {
   const credentialCount = await prisma.alloggiatiCredential.count({
     where: { organizationId: ctx.current.organizationId },
   });
+  // Consenso notifiche per-pilastro. Degrada al default opt-in se la tabella non esiste ancora
+  // (migrazione PR2 non applicata): l'UI funziona comunque.
+  const consent = await new PrismaNotificationPreferenceRepository(prisma).get(ctx.user.id);
 
   return (
     <ConciergePage
@@ -79,6 +85,8 @@ export default async function AccountPage() {
             <p className="text-muted-foreground mt-2 text-xs">
               Ti invieremo un link via email per procedere in sicurezza.
             </p>
+            {/* Blocco biometrico: visibile solo in app nativa (no-op su web). */}
+            <BiometricLockToggle />
           </CardContent>
         </Card>
       </section>
@@ -141,11 +149,8 @@ export default async function AccountPage() {
               Promemoria scadenze Alloggiati e ISTAT, avvisi di invio fallito.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex items-center justify-between gap-3">
-            <p className="text-muted-foreground text-sm">
-              Qui gestirai i promemoria via email per le scadenze e gli avvisi di invio — in arrivo.
-            </p>
-            <span className="cmx-badge cmx-badge-wait shrink-0">In arrivo</span>
+          <CardContent>
+            <NotificationPreferencesForm initial={consent} />
           </CardContent>
         </Card>
         <Card style={{ borderRadius: 18 }}>
