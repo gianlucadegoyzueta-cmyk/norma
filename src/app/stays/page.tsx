@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Plus } from "lucide-react";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaPropertyRepository } from "@/server/modules/properties";
@@ -40,6 +41,13 @@ export default async function StaysPage() {
     hasCredential: p.credential !== null,
   }));
 
+  // Riepilogo derivato dai dati GIÀ caricati (nessuna query in più): soggiorni totali, quelli
+  // con ospiti ancora da inserire e quelli con schedine in attesa d'invio. Mai inventato:
+  // un chip "azione" appare solo quando il suo conteggio è > 0, così la barra resta sobria.
+  const total = stays.length;
+  const toComplete = stays.filter((s) => s.guestsAdded < s.guestsCount).length;
+  const toSend = stays.filter((s) => s.schedine.pending > 0).length;
+
   return (
     <ConciergePage
       dense
@@ -55,13 +63,83 @@ export default async function StaysPage() {
       }
     >
       <section aria-labelledby="stays-heading" className="cmx-section" style={{ marginTop: 0 }}>
-        <h2 id="stays-heading" className="cmx-section-title">
-          I tuoi soggiorni
-        </h2>
-        <StaysList stays={stays} />
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 id="stays-heading" className="cmx-section-title" style={{ margin: 0 }}>
+            I tuoi soggiorni
+            {total > 0 && (
+              <span className="text-muted-foreground ml-2 text-base font-normal">
+                · {total} {total === 1 ? "soggiorno" : "soggiorni"}
+              </span>
+            )}
+          </h2>
+          {formProperties.length > 0 && (
+            <a
+              href="#nuovo-soggiorno"
+              className="cmx-badge cmx-badge-go inline-flex items-center gap-1.5"
+            >
+              <Plus className="size-3.5" aria-hidden />
+              Aggiungi soggiorno
+            </a>
+          )}
+        </div>
+
+        {/* Barra riepilogo: chip statistici densi sopra la lista. Solo dati già a disposizione.
+            Mostra ciò che richiede un'azione (ospiti da inserire, schedine da inviare); se è
+            tutto a posto lo dice con un badge, così la riga non resta mai vuota né rumorosa. */}
+        {total > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-1.5">
+            {toComplete > 0 && (
+              <span className="inline-flex items-baseline gap-1.5">
+                <span className="text-foreground text-lg font-semibold tabular-nums">
+                  {toComplete}
+                </span>
+                <span className="text-muted-foreground text-xs">da completare</span>
+              </span>
+            )}
+            {toSend > 0 && (
+              <span className="inline-flex items-baseline gap-1.5">
+                <span className="text-foreground text-lg font-semibold tabular-nums">{toSend}</span>
+                <span className="text-muted-foreground text-xs">con schedine da inviare</span>
+              </span>
+            )}
+            {toComplete === 0 && toSend === 0 && (
+              <span className="cmx-badge cmx-badge-ok">Tutto in regola</span>
+            )}
+          </div>
+        )}
+
+        {stays.length === 0 ? (
+          <div className="cmx-empty">
+            <p className="cmx-empty-title">Nessun soggiorno ancora</p>
+            <p className="cmx-empty-text">
+              {formProperties.length === 0 ? (
+                <>
+                  Per iniziare aggiungi prima un{" "}
+                  <Link href="/properties" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
+                    immobile
+                  </Link>
+                  , poi crea il primo soggiorno.
+                </>
+              ) : (
+                <>
+                  Crea il primo qui sotto:{" "}
+                  <a
+                    href="#nuovo-soggiorno"
+                    style={{ color: "var(--terracotta)", fontWeight: 600 }}
+                  >
+                    aggiungi un soggiorno
+                  </a>
+                  , scegli l&apos;immobile e le date, poi aggiungi gli ospiti.
+                </>
+              )}
+            </p>
+          </div>
+        ) : (
+          <StaysList stays={stays} />
+        )}
       </section>
 
-      <section className="cmx-section">
+      <section id="nuovo-soggiorno" className="cmx-section" style={{ marginTop: 24 }}>
         <Card style={{ borderRadius: 18 }}>
           <CardHeader>
             <CardTitle>Nuovo soggiorno</CardTitle>
