@@ -1386,3 +1386,14 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Mobile (≤560px): il nome della struttura ha PRIORITÀ. Tolgo la barra di occupazione (resta il
+   numero %) così nomi come "Farnesina 11C" non si troncano in "Farne…" per far posto alla barra. */
+@media (max-width: 560px) {
+  .cmx .cmx-prop-occ {
+    width: auto;
+  }
+  .cmx .cmx-occbar {
+    display: none;
+  }
+}
