@@ -422,7 +422,9 @@
   top: 0;
   display: flex;
   flex-direction: column;
-  transition: transform 1.6s var(--ease);
+  /* Niente roll all'avvio: la cifra è nitida e corretta dal primo paint (init già al target
+     in JS). Un roll al mount fotografava numeri sbagliati e non vale il rischio "finto". */
+  transition: none;
 }
 .cmx-digit .cmx-col span {
   height: 44px;
@@ -1104,5 +1106,283 @@
     animation: none;
     stroke-dashoffset: 0;
     opacity: 1;
+  }
+}
+
+/* ============================================================================
+   CONCIERGE MAX v2 — layout DENSO a pannelli (densità alla Linear · calore alla
+   Mercury). In coda: gli override vincono per cascata/specificità. Obiettivo:
+   riempire lo schermo, niente vuoti. Header compatto → striscia KPI → workspace
+   a 2 colonne di pannelli.
+   ============================================================================ */
+
+/* Contenitore più largo: usa l'orizzontale invece di una colonna stretta. */
+.cmx .cmx-wrap {
+  max-width: 1320px;
+}
+
+/* --- Header compatto a sinistra: basta splash centrato che mangia il primo schermo --- */
+.cmx .cmx-hero {
+  max-width: none;
+  text-align: left;
+  margin: 0 0 20px;
+}
+.cmx .cmx-kicker {
+  margin-bottom: 8px;
+}
+.cmx .cmx-rule {
+  margin: 0 0 13px;
+}
+.cmx .cmx-hero h1 {
+  font-size: clamp(23px, 2.3vw, 30px);
+  line-height: 1.1;
+}
+.cmx .cmx-sub {
+  margin: 11px 0 0;
+  max-width: 72ch;
+  font-size: 15.5px;
+}
+/* Sigillo guilloche defilato a destra (non più dietro un titolo centrato). */
+.cmx .cmx-seal-bg {
+  left: auto;
+  right: -160px;
+  transform: none;
+  opacity: 0.05;
+}
+
+/* --- Pannello: cella base del dashboard (carta calda + hairline) --- */
+.cmx .cmx-panel {
+  background: var(--carta);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  padding: 18px 20px 20px;
+  box-shadow: 0 1px 2px rgba(33, 28, 21, 0.03);
+}
+.cmx .cmx-col > * + * {
+  margin-top: 16px;
+}
+.cmx .cmx-panel-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.cmx .cmx-panel-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  color: var(--inchiostro);
+  margin: 0;
+}
+.cmx .cmx-panel-link {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--terracotta-dark);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.cmx .cmx-panel-link:hover {
+  color: var(--terracotta);
+}
+
+/* --- Workspace: 2 colonne asimmetriche, pannelli impilati in ciascuna --- */
+.cmx .cmx-grid {
+  display: grid;
+  grid-template-columns: 1.62fr 1fr;
+  gap: 16px;
+  align-items: start;
+  margin-top: 16px;
+}
+.cmx .cmx-col {
+  min-width: 0;
+}
+
+/* Decisioni dentro il pannello: niente doppio bordo, card impilate e compatte. */
+.cmx .cmx-panel.cmx-decisions {
+  margin: 0;
+}
+.cmx .cmx-decisions .cmx-decision-grid {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.cmx .cmx-decisions .cmx-prop {
+  border-radius: 12px;
+}
+
+/* KPI: striscia in cima al workspace. */
+.cmx .cmx-kpis {
+  margin: 0 0 4px;
+}
+/* La cifra KPI è ora un numero pieno (non più l'odometro a finestra 44px): niente clip. */
+.cmx .cmx-odo {
+  height: auto;
+  overflow: visible;
+  line-height: 1;
+}
+.cmx .cmx-num {
+  line-height: 1;
+}
+
+/* Agenda è un figlio DIV dentro il pannello → tolgo il suo box (lo dà il pannello). */
+.cmx .cmx-panel .cmx-agenda {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+}
+/* Il diario È il pannello (cmx-panel cmx-diary): riasserisco la chrome del pannello
+   sopra il vecchio box tratteggiato. */
+.cmx .cmx-panel.cmx-diary {
+  margin-top: 16px;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  padding: 18px 20px 20px;
+  background: var(--carta);
+}
+.cmx .cmx-col .cmx-panel.cmx-diary:first-child {
+  margin-top: 0;
+}
+
+/* --- Lista "Le tue strutture" --- */
+.cmx .cmx-prop-list {
+  display: flex;
+  flex-direction: column;
+}
+.cmx .cmx-prop-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.cmx .cmx-prop-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.cmx .cmx-prop-row:first-child {
+  padding-top: 0;
+}
+.cmx .cmx-statusdot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cmx .cmx-status-ok {
+  background: var(--salvia);
+}
+.cmx .cmx-status-wait {
+  background: var(--terracotta);
+}
+.cmx .cmx-status-err {
+  background: #c0392b;
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.12);
+}
+.cmx .cmx-prop-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.cmx .cmx-prop-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--inchiostro);
+  text-decoration: none;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cmx .cmx-prop-name:hover {
+  color: var(--terracotta-dark);
+}
+.cmx .cmx-prop-city {
+  font-size: 12px;
+  color: var(--soft);
+}
+.cmx .cmx-prop-occ {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 96px;
+}
+.cmx .cmx-occbar {
+  position: relative;
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--hairline);
+  overflow: hidden;
+}
+.cmx .cmx-occfill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--salvia), var(--terracotta));
+  border-radius: 3px;
+}
+.cmx .cmx-occnum {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--soft);
+  width: 30px;
+  text-align: right;
+}
+.cmx .cmx-prop-aside {
+  text-align: right;
+  white-space: nowrap;
+}
+.cmx .cmx-prop-next {
+  font-size: 12px;
+  color: var(--salvia-ink);
+}
+
+/* --- Strip "Posizione · 12 mesi" --- */
+.cmx .cmx-cal {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 4px;
+}
+.cmx .cmx-cal-cell {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.cmx .cmx-cal-regular {
+  background: var(--salvia-soft);
+  color: var(--salvia-ink);
+}
+.cmx .cmx-cal-attention {
+  background: rgba(188, 75, 43, 0.16);
+  color: var(--terracotta-dark);
+}
+.cmx .cmx-cal-quiet {
+  background: var(--hairline);
+  color: var(--soft);
+}
+.cmx .cmx-cal-note {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: var(--soft);
+}
+.cmx .cmx-cal-note b {
+  color: var(--inchiostro);
+}
+
+/* Sotto i 1024px: una colonna sola. */
+@media (max-width: 1024px) {
+  .cmx .cmx-grid {
+    grid-template-columns: 1fr;
   }
 }

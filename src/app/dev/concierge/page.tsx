@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { ConciergeScene } from "@/components/dashboard/concierge-scene";
 import type { DashboardData } from "@/app/dashboard/_lib/data";
 import { buildSceneCopy } from "@/app/dashboard/_lib/scene";
+import type { PropertyStatus } from "@/components/dashboard/concierge-properties";
+import type { ComplianceMonth } from "@/components/dashboard/concierge-compliance";
 import "@/app/dashboard/concierge.css";
 
 // Anteprima visiva NON di produzione: rende la scena Concierge con dati di esempio per
@@ -117,6 +119,97 @@ const EMPTY: DashboardData = {
   diary: [],
 };
 
+const MOCK_PROPERTIES: PropertyStatus[] = [
+  {
+    id: "p1",
+    name: "Farnesina 11C",
+    city: "Roma",
+    occupancyPct: 82,
+    pendingSchedine: 2,
+    status: "wait",
+    nextLabel: "arrivo VEN 13",
+  },
+  {
+    id: "p2",
+    name: "Carpe Diem",
+    city: "Roma",
+    occupancyPct: 67,
+    pendingSchedine: 1,
+    status: "wait",
+    nextLabel: "partenza SAB 14",
+  },
+  {
+    id: "p3",
+    name: "Trastevere Loft",
+    city: "Roma",
+    occupancyPct: 74,
+    pendingSchedine: 0,
+    status: "ok",
+    nextLabel: "in regola",
+  },
+];
+
+const EMPTY_PROPERTIES: PropertyStatus[] = [
+  {
+    id: "p1",
+    name: "Farnesina 11C",
+    city: "Roma",
+    occupancyPct: 0,
+    pendingSchedine: 0,
+    status: "ok",
+  },
+  { id: "p2", name: "Carpe Diem", city: "Roma", occupancyPct: 0, pendingSchedine: 0, status: "ok" },
+  {
+    id: "p3",
+    name: "Trastevere Loft",
+    city: "Roma",
+    occupancyPct: 0,
+    pendingSchedine: 0,
+    status: "ok",
+  },
+];
+
+/** 12 mesi, da luglio (un anno fa) a giugno: iniziali del mese IT. */
+const cm = (label: string, status: ComplianceMonth["status"], title: string): ComplianceMonth => ({
+  label,
+  status,
+  title,
+});
+const MOCK_COMPLIANCE = {
+  months: [
+    cm("L", "regular", "Luglio · in regola"),
+    cm("A", "regular", "Agosto · in regola"),
+    cm("S", "regular", "Settembre · in regola"),
+    cm("O", "regular", "Ottobre · in regola"),
+    cm("N", "attention", "Novembre · 1 schedina tardiva"),
+    cm("D", "regular", "Dicembre · in regola"),
+    cm("G", "regular", "Gennaio · in regola"),
+    cm("F", "regular", "Febbraio · in regola"),
+    cm("M", "regular", "Marzo · in regola"),
+    cm("A", "regular", "Aprile · in regola"),
+    cm("M", "regular", "Maggio · in regola"),
+    cm("G", "attention", "Giugno · 3 schedine da confermare"),
+  ],
+  summary: "ultimo anno quasi tutto in regola",
+};
+const EMPTY_COMPLIANCE = {
+  months: [
+    cm("L", "quiet", "Luglio · nessun movimento"),
+    cm("A", "quiet", "Agosto · nessun movimento"),
+    cm("S", "quiet", "Settembre · nessun movimento"),
+    cm("O", "quiet", "Ottobre · nessun movimento"),
+    cm("N", "quiet", "Novembre · nessun movimento"),
+    cm("D", "quiet", "Dicembre · nessun movimento"),
+    cm("G", "quiet", "Gennaio · nessun movimento"),
+    cm("F", "quiet", "Febbraio · nessun movimento"),
+    cm("M", "quiet", "Marzo · nessun movimento"),
+    cm("A", "quiet", "Aprile · nessun movimento"),
+    cm("M", "quiet", "Maggio · nessun movimento"),
+    cm("G", "quiet", "Giugno · ancora nessun movimento"),
+  ],
+  summary: "appena registri il primo ospite, comincio a riempirlo",
+};
+
 export default async function ConciergePreviewPage({
   searchParams,
 }: {
@@ -124,7 +217,8 @@ export default async function ConciergePreviewPage({
 }) {
   if (process.env.NODE_ENV === "production") notFound();
   const { state, name } = await searchParams;
-  const data = state === "empty" ? EMPTY : FULL;
+  const isEmpty = state === "empty";
+  const data = isEmpty ? EMPTY : FULL;
   const now = new Date("2026-06-11T09:00:00Z");
   // `?name=none` simula l'utente senza nome (fallback saluto elegante senza nome).
   const firstName = name === "none" ? null : "Gianluca";
@@ -141,6 +235,8 @@ export default async function ConciergePreviewPage({
       proposals={data.proposals}
       agenda={data.agenda}
       diary={data.diary}
+      properties={isEmpty ? EMPTY_PROPERTIES : MOCK_PROPERTIES}
+      compliance={isEmpty ? EMPTY_COMPLIANCE : MOCK_COMPLIANCE}
     />
   );
 }
