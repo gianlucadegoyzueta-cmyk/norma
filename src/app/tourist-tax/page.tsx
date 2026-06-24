@@ -43,6 +43,17 @@ export default async function TouristTaxPage() {
     }),
   ]);
 
+  // Summary bar: numeri derivati SOLO da dati già caricati (declarations), niente query extra.
+  // "In attesa di versamento" = dichiarazioni non ancora pagate né annullate (DRAFT/READY/SUBMITTED).
+  // "Totale maturato" = imposta riscossa, esclusi gli annullati (non rappresentano un dovuto reale).
+  const totalCount = declarations.length;
+  const awaitingPaymentCount = declarations.filter(
+    (d) => d.status !== "PAID" && d.status !== "CANCELLED",
+  ).length;
+  const accruedCents = declarations
+    .filter((d) => d.status !== "CANCELLED")
+    .reduce((sum, d) => sum + d.amountCents, 0);
+
   return (
     <ConciergePage
       dense
@@ -68,6 +79,43 @@ export default async function TouristTaxPage() {
         <h2 id="declarations-heading" className="cmx-section-title">
           Dichiarazioni
         </h2>
+        {declarations.length > 0 && (
+          <dl
+            className="mb-3 flex flex-wrap gap-x-8 gap-y-3 rounded-xl px-4 py-3"
+            style={{
+              background: "var(--avorio, #f7f2e8)",
+              border: "1px solid var(--hairline, #e0d8c8)",
+            }}
+          >
+            <div className="grid gap-0.5">
+              <dt className="text-muted-foreground text-xs">Dichiarazioni</dt>
+              <dd
+                className="font-display text-lg leading-none font-medium tabular-nums"
+                style={{ color: "var(--inchiostro)" }}
+              >
+                {totalCount}
+              </dd>
+            </div>
+            <div className="grid gap-0.5">
+              <dt className="text-muted-foreground text-xs">In attesa di versamento</dt>
+              <dd
+                className="font-display text-lg leading-none font-medium tabular-nums"
+                style={{ color: "var(--inchiostro)" }}
+              >
+                {awaitingPaymentCount}
+              </dd>
+            </div>
+            <div className="grid gap-0.5">
+              <dt className="text-muted-foreground text-xs">Totale maturato</dt>
+              <dd
+                className="font-display text-lg leading-none font-medium tabular-nums"
+                style={{ color: "var(--inchiostro)" }}
+              >
+                {formatEuroCents(accruedCents)}
+              </dd>
+            </div>
+          </dl>
+        )}
         {declarations.length === 0 ? (
           <div className="cmx-empty">
             <p className="cmx-empty-title">Nessuna dichiarazione, per ora</p>
@@ -99,7 +147,7 @@ export default async function TouristTaxPage() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      {d.normaTakeRateBps > 0 && (
+                      {d.normaTakeRateBps > 0 ? (
                         <dl
                           className="mb-4 grid gap-2 rounded-xl p-3 text-sm"
                           style={{
@@ -134,6 +182,26 @@ export default async function TouristTaxPage() {
                               style={{ color: "var(--inchiostro)" }}
                             >
                               {formatEuroCents(d.comuneNetCents)}
+                            </dd>
+                          </div>
+                        </dl>
+                      ) : (
+                        <dl
+                          className="mb-4 grid gap-2 rounded-xl p-3 text-sm"
+                          style={{
+                            background: "var(--avorio, #f7f2e8)",
+                            border: "1px solid var(--hairline, #e0d8c8)",
+                          }}
+                        >
+                          <div className="flex items-baseline justify-between gap-3">
+                            <dt className="font-medium" style={{ color: "var(--inchiostro)" }}>
+                              Importo totale
+                            </dt>
+                            <dd
+                              className="font-display text-base font-medium"
+                              style={{ color: "var(--inchiostro)" }}
+                            >
+                              {formatEuroCents(d.amountCents)}
                             </dd>
                           </div>
                         </dl>
