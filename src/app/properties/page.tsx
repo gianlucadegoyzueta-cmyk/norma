@@ -8,6 +8,7 @@ import { PrismaCredentialRepository } from "@/server/modules/alloggiati";
 import { CinService, PrismaCinRepository, propertyNeedsCin } from "@/server/modules/cin";
 import { PrismaPropertyRepository } from "@/server/modules/properties";
 import { ConciergePage } from "@/components/concierge/concierge-page";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CinInlineForm } from "./CinInlineForm";
 import { PropertyForm } from "./PropertyForm";
@@ -36,6 +37,14 @@ export default async function PropertiesPage() {
     cinService.listProperties(orgId).then((rows) => new Map(rows.map((r) => [r.id, r]))),
   ]);
 
+  // Riepilogo leggero sempre in testa (no salti di layout negli stati parziali): tre numeri
+  // chiave da dati GIÀ caricati — totale immobili, quanti senza credenziale, quanti senza CIN.
+  const withoutCredential = properties.filter((p) => !p.credential).length;
+  const withoutCin = properties.filter((p) => {
+    const cin = cinByPropertyId.get(p.id);
+    return cin ? propertyNeedsCin(cin.cinStatus) : true;
+  }).length;
+
   return (
     <ConciergePage
       dense
@@ -57,11 +66,50 @@ export default async function PropertiesPage() {
         </>
       }
     >
-      <section
-        aria-labelledby="properties-heading"
-        className="cmx-section"
-        style={{ marginTop: 0 }}
-      >
+      {/* Riepilogo sempre presente: niente salti di layout quando l'elenco è vuoto o parziale.
+          Tre numeri sobri da dati già caricati (totale, senza credenziale, senza CIN). */}
+      <div className="cmx-section flex flex-wrap gap-x-6 gap-y-2" style={{ marginTop: 0 }}>
+        {(
+          [
+            { label: "immobili", value: properties.length },
+            { label: "senza credenziale", value: withoutCredential },
+            { label: "senza CIN", value: withoutCin },
+          ] as const
+        ).map((stat) => (
+          <div key={stat.label} className="flex flex-col leading-tight">
+            <span className="text-foreground text-lg font-semibold tabular-nums">{stat.value}</span>
+            <span className="text-muted-foreground text-[11px] tracking-[0.04em] uppercase">
+              {stat.label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Onboarding guidato: senza una credenziale Alloggiati non si può aggiungere un immobile
+          (definisce provincia e Comuni). Indirizziamo subito al primo passo invece di un form muto. */}
+      {credentials.length === 0 && (
+        <section className="cmx-section">
+          <Card style={{ borderRadius: 18 }}>
+            <CardHeader>
+              <CardTitle>Inizia qui</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <p className="text-muted-foreground text-sm">
+                Il primo passo è collegare una credenziale Alloggiati: definisce la provincia e i
+                Comuni disponibili per i tuoi immobili, e da lì Norma prepara le schedine pronte da
+                confermare.
+              </p>
+              <div>
+                <Link href="/credentials">
+                  <Button size="sm">Aggiungi una credenziale</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      <section aria-labelledby="properties-heading" className="cmx-section">
         <h2 id="properties-heading" className="cmx-section-title">
           I tuoi immobili
         </h2>
@@ -138,12 +186,11 @@ export default async function PropertiesPage() {
           <CardContent>
             {credentials.length === 0 ? (
               <div className="text-muted-foreground text-sm">
-                Per aggiungere un immobile serve almeno una credenziale Alloggiati (definisce la
-                provincia e i Comuni disponibili).{" "}
+                Disponibile dopo aver collegato una credenziale Alloggiati (vedi{" "}
                 <Link href="/credentials" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
-                  Aggiungi una credenziale
+                  Inizia qui
                 </Link>
-                .
+                , sopra): definisce provincia e Comuni dell&apos;immobile.
               </div>
             ) : (
               <PropertyForm credentials={credentials} comuni={comuni} />
