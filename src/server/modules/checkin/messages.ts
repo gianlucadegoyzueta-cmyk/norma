@@ -109,6 +109,10 @@ export interface CheckinMessages {
   successTitle: string;
   successBody: string;
   addAnother: string;
+  /** Scanner documento (solo app nativa): bottone + esiti pre-compilazione. */
+  scanDocument: string;
+  scanFilled: string;
+  scanFailed: string;
   invalidTitle: string;
   invalidBody: string;
   errorGeneric: string;
@@ -191,6 +195,9 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     successTitle: "Check-in completato",
     successBody: "Grazie! I tuoi dati sono stati inviati al tuo host. Buon soggiorno.",
     addAnother: "Aggiungi un'altra persona",
+    scanDocument: "Scansiona il documento",
+    scanFilled: "Campi pre-compilati dal documento: controlla e completa.",
+    scanFailed: "Documento non riconosciuto: inserisci i dati a mano.",
     invalidTitle: "Link non valido",
     invalidBody:
       "Questo link di check-in non è valido o è scaduto. Chiedi al tuo host un nuovo link.",
@@ -288,6 +295,9 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     successTitle: "Check-in completed",
     successBody: "Thank you! Your details have been sent to your host. Enjoy your stay.",
     addAnother: "Add another person",
+    scanDocument: "Scan your document",
+    scanFilled: "Fields pre-filled from your document: review and complete.",
+    scanFailed: "Document not recognised: please enter your details manually.",
     invalidTitle: "Invalid link",
     invalidBody: "This check-in link is invalid or has expired. Ask your host for a new link.",
     errorGeneric: "Please check the fields and try again.",
@@ -384,6 +394,9 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     successTitle: "Check-in abgeschlossen",
     successBody: "Danke! Ihre Daten wurden an Ihren Gastgeber gesendet. Schönen Aufenthalt.",
     addAnother: "Weitere Person hinzufügen",
+    scanDocument: "Dokument scannen",
+    scanFilled: "Felder aus dem Dokument vorausgefüllt: bitte prüfen und ergänzen.",
+    scanFailed: "Dokument nicht erkannt: bitte Daten manuell eingeben.",
     invalidTitle: "Ungültiger Link",
     invalidBody:
       "Dieser Check-in-Link ist ungültig oder abgelaufen. Bitten Sie Ihren Gastgeber um einen neuen Link.",
@@ -481,6 +494,9 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     successTitle: "Enregistrement terminé",
     successBody: "Merci ! Vos informations ont été envoyées à votre hôte. Bon séjour.",
     addAnother: "Ajouter une autre personne",
+    scanDocument: "Scanner le document",
+    scanFilled: "Champs pré-remplis depuis le document : vérifiez et complétez.",
+    scanFailed: "Document non reconnu : saisissez vos données manuellement.",
     invalidTitle: "Lien non valide",
     invalidBody:
       "Ce lien d'enregistrement n'est pas valide ou a expiré. Demandez un nouveau lien à votre hôte.",
@@ -578,6 +594,9 @@ export const MESSAGES: Record<Locale, CheckinMessages> = {
     successTitle: "Check-in completado",
     successBody: "¡Gracias! Tus datos se han enviado a tu anfitrión. Feliz estancia.",
     addAnother: "Añadir otra persona",
+    scanDocument: "Escanea el documento",
+    scanFilled: "Campos rellenados desde el documento: revisa y completa.",
+    scanFailed: "Documento no reconocido: introduce los datos manualmente.",
     invalidTitle: "Enlace no válido",
     invalidBody:
       "Este enlace de check-in no es válido o ha caducado. Pide a tu anfitrión un nuevo enlace.",
