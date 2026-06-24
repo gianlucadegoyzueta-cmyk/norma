@@ -58,41 +58,49 @@ export const NAV_GROUPS: NavGroup[] = [
       },
     ],
   },
+  // Pilastro 1 — Alloggiati: il lavoro ricorrente del cliente. L'azione (outbox schedine)
+  // per prima, il soggiorno la alimenta.
   {
-    heading: "Adempimenti",
+    heading: "Alloggiati",
     items: [
-      {
-        key: "stays",
-        href: "/stays",
-        label: "Soggiorni",
-        Icon: CalendarCheck,
-        keywords: "prenotazioni ospiti arrivi",
-      },
       {
         key: "schedine",
         href: "/schedine",
         label: "Schedine",
         Icon: ScrollText,
-        keywords: "alloggiati invii outbox",
+        keywords: "alloggiati invii outbox polizia questura",
       },
+      {
+        key: "stays",
+        href: "/stays",
+        label: "Soggiorni",
+        Icon: CalendarCheck,
+        keywords: "prenotazioni ospiti arrivi check-in",
+      },
+    ],
+  },
+  // Pilastro 2 — Turismo: ISTAT primario, tassa di soggiorno secondaria.
+  {
+    heading: "Turismo",
+    items: [
       {
         key: "istat",
         href: "/istat",
         label: "Movimento ISTAT",
         Icon: BarChart3,
-        keywords: "movimento turistico statistiche istat",
+        keywords: "movimento turistico statistiche istat ross1000",
       },
       {
         key: "tourist-tax",
         href: "/tourist-tax",
         label: "Tassa di soggiorno",
         Icon: Coins,
-        keywords: "imposta tax",
+        keywords: "imposta tax soggiorno",
       },
     ],
   },
   {
-    heading: "Struttura",
+    heading: "Configurazione",
     items: [
       {
         key: "properties",
@@ -150,12 +158,15 @@ function section(key: string): NavSection {
   return s;
 }
 
-/** Le 4 sezioni chiave della bottom-bar mobile (uso quotidiano dell'host). */
+/**
+ * Le 4 sezioni chiave della bottom-bar mobile: dashboard + i DUE pilastri (schedine, ISTAT) +
+ * i soggiorni che li alimentano. La tassa è secondaria (resta in sidebar e ⌘K, non in bottom-bar).
+ */
 export const MOBILE_SECTIONS: NavSection[] = [
   section("dashboard"),
-  section("stays"),
   section("schedine"),
-  section("tourist-tax"),
+  section("istat"),
+  section("stays"),
 ];
 
 /** Voce attiva per il pathname corrente (match per prefisso più lungo). */
