@@ -7,6 +7,7 @@ import { getOnboardingState } from "@/server/modules/onboarding/state";
 import { LogOut } from "lucide-react";
 import { ConciergeScene } from "@/components/dashboard/concierge-scene";
 import { getDashboardData, type DashboardProposal } from "./_lib/data";
+import { getDashboardPanels } from "./_lib/panels";
 import { buildSceneCopy } from "./_lib/scene";
 import "./concierge.css";
 
@@ -18,9 +19,10 @@ export default async function DashboardPage() {
 
   const orgId = ctx.current.organizationId;
   const now = new Date();
-  const [data, onboarding] = await Promise.all([
+  const [data, onboarding, panels] = await Promise.all([
     getDashboardData(prisma, orgId, now),
     getOnboardingState(prisma, orgId),
+    getDashboardPanels(prisma, orgId, now),
   ]);
 
   // Primo nome REALE dell'utente: se manca (solo email), saluto elegante senza nome.
@@ -63,6 +65,8 @@ export default async function DashboardPage() {
       proposals={proposals}
       agenda={data.agenda}
       diary={data.diary}
+      properties={panels.properties}
+      compliance={panels.compliance}
       signOutSlot={
         <form action={signOutAction}>
           <button
