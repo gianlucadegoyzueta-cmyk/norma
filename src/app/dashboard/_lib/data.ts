@@ -1,6 +1,8 @@
 import "server-only";
 import type { PrismaClient } from "@prisma/client";
 import { OPEN_SCHEDINA_STATUSES } from "@/lib/schedina-status";
+import { currentPeriod } from "@/server/modules/istat/report";
+import { loadIstatSubmissionReadiness } from "@/server/modules/istat/submission-readiness-loader";
 import { periodOf } from "@/server/modules/tourist-tax/domain/period";
 import {
   buildConciergeDigest,
@@ -55,6 +57,17 @@ export interface DashboardData {
    * l'obbligo non è assolto, anche se nulla è scaduto: il copy non deve dire "tutto in regola".
    */
   pendingSchedine: number;
+  /** Schedine aperte (PENDING/UNVERIFIED) la cui deadline è già passata. Sottoinsieme urgente. */
+  overdueSchedine: number;
+  /** Prontezza ISTAT del mese corrente per struttura (pilastro Turismo, KPI dashboard). */
+  istat: {
+    ready: number;
+    incomplete: number;
+    assisted: number;
+    unrouted: number;
+    total: number;
+    monthLabel: string;
+  };
   receiptRef: string | null;
   acquiredYesterday: number;
   hero: { thingsDone: number };
@@ -137,6 +150,7 @@ export async function getDashboardData(
     latestReconciledInWindow,
     recentIstat,
     upcomingStays,
+    istatProps,
   ] = await Promise.all([
     prisma.schedina.count({
       where: {
@@ -229,7 +243,49 @@ export async function getDashboardData(
       },
       take: 12,
     }),
+    // Strutture (con provincia) per la prontezza ISTAT del mese: alimenta il KPI del pilastro Turismo.
+    prisma.property.findMany({
+      where: { organizationId: orgId },
+      select: { id: true, name: true, comune: { select: { provincia: true } } },
+      orderBy: { name: "asc" },
+    }),
   ]);
+
+  // ---- Prontezza ISTAT del mese (riusa il loader di /istat, niente logica nuova) ----
+  const istatPeriod = currentPeriod(now);
+  const istatReadiness =
+    istatProps.length > 0
+      ? await loadIstatSubmissionReadiness(
+          prisma,
+          orgId,
+          istatPeriod,
+          istatProps.map((p) => ({ id: p.id, name: p.name, provincia: p.comune.provincia })),
+        )
+      : [];
+  let istatReady = 0;
+  let istatIncomplete = 0;
+  let istatAssisted = 0;
+  let istatUnrouted = 0;
+  for (const r of istatReadiness) {
+    switch (r.readiness.status) {
+      case "READY":
+        istatReady++;
+        break;
+      case "INCOMPLETE":
+        istatIncomplete++;
+        break;
+      case "ASSISTED":
+        istatAssisted++;
+        break;
+      case "UNROUTED":
+        istatUnrouted++;
+        break;
+    }
+  }
+  const istatMonthLabel = new Intl.DateTimeFormat("it-IT", {
+    month: "long",
+    timeZone: ROME_TZ,
+  }).format(now);
 
   // ---- KPI ----
   const occupancy = occupancyBreakdown(monthStays, { monthStart, monthEnd, propertyCount });
@@ -403,6 +459,15 @@ export async function getDashboardData(
   return {
     positionRegular: overdueCount === 0,
     pendingSchedine,
+    overdueSchedine: overdueCount,
+    istat: {
+      ready: istatReady,
+      incomplete: istatIncomplete,
+      assisted: istatAssisted,
+      unrouted: istatUnrouted,
+      total: istatReadiness.length,
+      monthLabel: istatMonthLabel,
+    },
     receiptRef: latestAcquired?.receiptRef ?? null,
     acquiredYesterday: acquiredInWindow,
     hero: { thingsDone: digest.thingsDone },
