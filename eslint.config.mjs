@@ -19,6 +19,9 @@ const eslintConfig = [
       "coverage/**",
       "next-env.d.ts",
       ".claude/**",
+      // `mobile/` è un progetto Capacitor separato, con le sue dipendenze/toolchain: si lint-a
+      // e builda dalla sua cartella, non dalla CI di Next.
+      "mobile/**",
     ],
   },
   // `prettier` disabilita le regole stilistiche di ESLint che entrerebbero in

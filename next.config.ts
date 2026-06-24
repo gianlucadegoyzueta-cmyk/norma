@@ -31,6 +31,13 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+      {
+        // Apple richiede l'Apple App Site Association servito come application/json. Il file è
+        // senza estensione (public/.well-known/apple-app-site-association): forziamo il
+        // Content-Type per far funzionare gli Universal Links iOS.
+        source: "/.well-known/apple-app-site-association",
+        headers: [{ key: "Content-Type", value: "application/json" }],
+      },
     ];
   },
 };

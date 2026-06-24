@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1"
+    />
+    <meta name="theme-color" content="#f7f2e8" />
+    <title>Norma</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        background: #f7f2e8; /* avorio */
+        color: #211c15; /* inchiostro */
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+        gap: 16px;
+      }
+      .seal {
+        width: 88px;
+        height: 88px;
+        border-radius: 22px;
+        box-shadow: 0 8px 24px rgba(33, 28, 21, 0.12);
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin: 8px 0 0;
+      }
+      p {
+        margin: 0;
+        color: #5b5347; /* inchiostro soft */
+        max-width: 28ch;
+        line-height: 1.5;
+      }
+      button {
+        margin-top: 8px;
+        background: #bc4b2b; /* terracotta */
+        color: #f7f2e8;
+        border: 0;
+        border-radius: 12px;
+        padding: 12px 22px;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      button:active {
+        background: #9e3d22;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Fallback mostrato SOLO se l'app live (server.url) non è raggiungibile. -->
+    <img class="seal" src="icon.png" alt="Norma" />
+    <h1>Connessione assente</h1>
+    <p>Norma ha bisogno di internet per funzionare. Controlla la rete e riprova.</p>
+    <button onclick="location.reload()">Riprova</button>
+  </body>
+</html>

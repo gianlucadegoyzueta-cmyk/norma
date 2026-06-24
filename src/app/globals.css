@@ -227,3 +227,22 @@
     transform: none;
   }
 }
+
+/*
+  Safe-area (notch iOS + barra gesti). Con `viewport-fit=cover` (vedi layout.tsx) la webview usa
+  tutto lo schermo: queste utility aggiungono il padding necessario solo dove serve (header
+  fissi, barre/CTA in fondo). Sul web desktop env(safe-area-inset-*) vale 0 → nessun effetto.
+*/
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.safe-x {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+.min-h-dvh-safe {
+  min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
