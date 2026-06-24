@@ -10,6 +10,7 @@ import { ConciergePage } from "@/components/concierge/concierge-page";
 import { Card, CardContent } from "@/components/ui/card";
 import { ICalImportRow, type ICalImportRowData } from "./ICalImportRow";
 import { ICalWizard } from "./ICalWizard";
+import { Ross1000ConfigForm } from "./Ross1000ConfigForm";
 
 export const metadata: Metadata = { title: "Immobile" };
 export const dynamic = "force-dynamic";
@@ -47,6 +48,9 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
       name: true,
       address: true,
       comune: { select: { name: true, provincia: true } },
+      ross1000Code: true,
+      camereDisponibili: true,
+      lettiDisponibili: true,
     },
   });
   if (!property) notFound();
@@ -121,6 +125,31 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             <div className="border-border/60 border-t pt-4">
               <ICalWizard propertyId={property.id} />
             </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section id="ricettiva" className="cmx-section scroll-mt-24" style={{ marginTop: 32 }}>
+        <h2 className="cmx-section-title">Configurazione ricettiva (ISTAT · Ross1000)</h2>
+        <Card style={{ borderRadius: 18 }}>
+          <CardContent className="grid gap-4 py-5">
+            <p className="text-muted-foreground max-w-prose text-sm">
+              Il <strong>codice struttura</strong> assegnato dall&apos;ente e la capacità (camere e
+              letti) alimentano il file del movimento turistico. Senza questi dati Norma non può
+              preparare l&apos;invio ISTAT: la struttura resta segnata come «dati mancanti» in{" "}
+              <Link href="/istat" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
+                ISTAT
+              </Link>
+              . Lascia un campo vuoto se non lo conosci ancora.
+            </p>
+            <Ross1000ConfigForm
+              propertyId={property.id}
+              initial={{
+                ross1000Code: property.ross1000Code,
+                camereDisponibili: property.camereDisponibili,
+                lettiDisponibili: property.lettiDisponibili,
+              }}
+            />
           </CardContent>
         </Card>
       </section>

@@ -11,7 +11,11 @@ import { Button } from "@/components/ui/button";
 import { IstatExportButton } from "./IstatExportButton";
 import { regionMovementForProvincia } from "@/server/modules/istat/regional/routing";
 import { loadIstatSubmissionReadiness } from "@/server/modules/istat/submission-readiness-loader";
-import type { ReadinessStatus } from "@/server/modules/istat/domain/submission-readiness";
+import {
+  PROPERTY_CONFIG_FIELDS,
+  type MissingDetail,
+  type ReadinessStatus,
+} from "@/server/modules/istat/domain/submission-readiness";
 import { Ross1000ExportButton } from "./Ross1000ExportButton";
 
 /**
@@ -26,6 +30,51 @@ const READINESS_BADGE: Record<ReadinessStatus, { cmx: string; label: string }> =
   ASSISTED: { cmx: "cmx-badge-wait", label: "Inserimento manuale" },
   UNROUTED: { cmx: "cmx-badge-wait", label: "Regione da verificare" },
 };
+
+/**
+ * Raggruppa i dati mancanti (INCOMPLETE) per DOVE si correggono, così ogni gruppo può avere il suo
+ * deep-link: config struttura (codice/camere/letti → `/properties/[id]#ricettiva`), dato ospite
+ * (→ `/stays/[stayId]#ospite-[guestId]`), dato di un soggiorno (es. partenza → `/stays/[stayId]`).
+ * `scope` da solo non basta: un campo STRUTTURA con refId è di un soggiorno, non della config.
+ */
+type IstatBuckets = {
+  struttura: string[];
+  perGuest: { guestId: string; stayId: string | null; labels: string[] }[];
+  perStay: { stayId: string; labels: string[] }[];
+};
+
+function bucketMissingDetail(
+  detail: readonly MissingDetail[],
+  stayIdByGuest: Map<string, string>,
+): IstatBuckets {
+  const struttura: string[] = [];
+  const perGuest = new Map<string, { stayId: string | null; labels: string[] }>();
+  const perStay = new Map<string, string[]>();
+  for (const m of detail) {
+    if (PROPERTY_CONFIG_FIELDS.has(m.field)) {
+      struttura.push(m.label);
+    } else if (m.scope === "GUEST" && m.refId) {
+      const cur = perGuest.get(m.refId) ?? {
+        stayId: stayIdByGuest.get(m.refId) ?? null,
+        labels: [],
+      };
+      cur.labels.push(m.label);
+      perGuest.set(m.refId, cur);
+    } else if (m.refId) {
+      // STRUTTURA con refId = stayId (es. data di partenza): dato del soggiorno, non della config.
+      const cur = perStay.get(m.refId) ?? [];
+      cur.push(m.label);
+      perStay.set(m.refId, cur);
+    } else {
+      struttura.push(m.label);
+    }
+  }
+  return {
+    struttura: [...new Set(struttura)],
+    perGuest: [...perGuest.entries()].map(([guestId, v]) => ({ guestId, ...v })),
+    perStay: [...perStay.entries()].map(([stayId, labels]) => ({ stayId, labels })),
+  };
+}
 
 export const metadata: Metadata = { title: "ISTAT" };
 export const dynamic = "force-dynamic";
@@ -77,6 +126,36 @@ export default async function IstatPage({
   // Riepilogo leggero sempre in testa (no salti di layout): tre numeri del mese selezionato da
   // dati già caricati — arrivi, presenze e quante strutture sono pronte all'invio.
   const readyCount = perProperty.filter((x) => x.pr.readiness.status === "READY").length;
+
+  // Deep-link dei dati OSPITE mancanti all'ospite esatto: raccogli i guestId (refId scope GUEST)
+  // dalle readiness INCOMPLETE e risolvi lo stayId (come `stayIdBySchedina` in /schedine). Query di
+  // pagina, nessun cambio al dominio.
+  const guestRefIds = [
+    ...new Set(
+      perProperty.flatMap((x) =>
+        x.pr.readiness.missingDetail
+          .filter((m) => m.scope === "GUEST" && m.refId)
+          .map((m) => m.refId as string),
+      ),
+    ),
+  ];
+  const stayIdByGuest = new Map<string, string>();
+  if (guestRefIds.length > 0) {
+    const rows = await prisma.guest.findMany({
+      where: { organizationId: ctx.current.organizationId, id: { in: guestRefIds } },
+      select: { id: true, stayId: true },
+    });
+    for (const g of rows) stayIdByGuest.set(g.id, g.stayId);
+  }
+  const bucketsByProperty = new Map<string, IstatBuckets>();
+  for (const x of perProperty) {
+    if (x.pr.readiness.status === "INCOMPLETE" && x.pr.readiness.missingDetail.length > 0) {
+      bucketsByProperty.set(
+        x.pr.propertyId,
+        bucketMissingDetail(x.pr.readiness.missingDetail, stayIdByGuest),
+      );
+    }
+  }
 
   return (
     <ConciergePage
@@ -237,16 +316,60 @@ export default async function IstatPage({
                             : "Regione non riconosciuta"}
                           {ross1000Code ? ` · codice ${ross1000Code}` : ""}
                         </p>
-                        {pr.readiness.status === "INCOMPLETE" &&
-                        pr.readiness.missingFields.length > 0 ? (
-                          <p className="text-warning-foreground mt-1 text-xs">
-                            Mancano: {pr.readiness.missingFields.join(", ")}.
-                          </p>
-                        ) : null}
+                        {(() => {
+                          // Dati mancanti raggruppati per dove si correggono, ognuno col suo deep-link.
+                          const b = bucketsByProperty.get(pr.propertyId);
+                          if (!b) return null;
+                          return (
+                            <div className="mt-1 grid gap-1">
+                              {b.struttura.length > 0 ? (
+                                <p className="text-warning-foreground text-xs">
+                                  Dati struttura mancanti: {b.struttura.join(", ")}.{" "}
+                                  <Link
+                                    href={`/properties/${pr.propertyId}#ricettiva`}
+                                    className="font-medium underline underline-offset-2"
+                                  >
+                                    Completa la struttura →
+                                  </Link>
+                                </p>
+                              ) : null}
+                              {b.perGuest.map((g) => (
+                                <p key={g.guestId} className="text-warning-foreground text-xs">
+                                  Dati ospite mancanti: {g.labels.join(", ")}.{" "}
+                                  {g.stayId ? (
+                                    <Link
+                                      href={`/stays/${g.stayId}#ospite-${g.guestId}`}
+                                      className="font-medium underline underline-offset-2"
+                                    >
+                                      Completa l&rsquo;ospite →
+                                    </Link>
+                                  ) : null}
+                                </p>
+                              ))}
+                              {b.perStay.map((s) => (
+                                <p key={s.stayId} className="text-warning-foreground text-xs">
+                                  Dati soggiorno mancanti: {s.labels.join(", ")}.{" "}
+                                  <Link
+                                    href={`/stays/${s.stayId}`}
+                                    className="font-medium underline underline-offset-2"
+                                  >
+                                    Apri il soggiorno →
+                                  </Link>
+                                </p>
+                              ))}
+                            </div>
+                          );
+                        })()}
                         {pr.readiness.status === "ASSISTED" && region ? (
                           <p className="text-muted-foreground mt-1 text-xs">
                             Portale {region.system} non ancora integrato: usa i numeri del riepilogo
                             e inseriscili a mano.
+                          </p>
+                        ) : null}
+                        {pr.readiness.status === "UNROUTED" ? (
+                          <p className="text-warning-foreground mt-1 text-xs">
+                            Provincia non riconosciuta dal routing regionale: verifica il Comune
+                            della struttura.
                           </p>
                         ) : null}
                         {pr.errored ? (

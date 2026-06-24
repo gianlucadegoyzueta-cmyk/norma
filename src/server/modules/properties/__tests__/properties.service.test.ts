@@ -110,4 +110,72 @@ describe("PropertiesService", () => {
       PropertiesError,
     );
   });
+
+  describe("updateRoss1000Config", () => {
+    it("salva codice + capacità, normalizzando il codice (trim, vuoto → null)", async () => {
+      const { id } = await service.createProperty(validInput());
+      await service.updateRoss1000Config({
+        organizationId: "org_1",
+        propertyId: id,
+        ross1000Code: "  012345  ",
+        camereDisponibili: 3,
+        lettiDisponibili: 6,
+      });
+      expect(repo.getRoss1000Config(id)).toEqual({
+        ross1000Code: "012345",
+        camereDisponibili: 3,
+        lettiDisponibili: 6,
+      });
+
+      await service.updateRoss1000Config({
+        organizationId: "org_1",
+        propertyId: id,
+        ross1000Code: "   ",
+        camereDisponibili: null,
+        lettiDisponibili: null,
+      });
+      expect(repo.getRoss1000Config(id)).toEqual({
+        ross1000Code: null,
+        camereDisponibili: null,
+        lettiDisponibili: null,
+      });
+    });
+
+    it("rifiuta capacità non intere o negative", async () => {
+      const { id } = await service.createProperty(validInput());
+      await expect(
+        service.updateRoss1000Config({
+          organizationId: "org_1",
+          propertyId: id,
+          ross1000Code: null,
+          camereDisponibili: -1,
+          lettiDisponibili: null,
+        }),
+      ).rejects.toThrow(PropertiesError);
+      await expect(
+        service.updateRoss1000Config({
+          organizationId: "org_1",
+          propertyId: id,
+          ross1000Code: null,
+          camereDisponibili: null,
+          lettiDisponibili: 2.5,
+        }),
+      ).rejects.toThrow(PropertiesError);
+    });
+
+    it("rifiuta l'aggiornamento di un immobile di un'altra organizzazione (isolamento)", async () => {
+      const { id } = await service.createProperty(validInput());
+      await expect(
+        service.updateRoss1000Config({
+          organizationId: "org_2",
+          propertyId: id,
+          ross1000Code: "999",
+          camereDisponibili: null,
+          lettiDisponibili: null,
+        }),
+      ).rejects.toThrow(PropertiesError);
+      // i dati dell'org legittima restano intatti
+      expect(repo.getRoss1000Config(id)).toBeNull();
+    });
+  });
 });

@@ -5,6 +5,7 @@ import type {
   PropertyComune,
   PropertyListItem,
   PropertyRepository,
+  UpdateRoss1000ConfigInput,
 } from "../ports";
 
 const SELECT = {
@@ -49,6 +50,19 @@ export class PrismaPropertyRepository implements PropertyRepository {
       credential: r.credential,
       alloggiatiApartmentId: r.alloggiatiApartmentId,
     }));
+  }
+
+  async updateRoss1000Config(input: UpdateRoss1000ConfigInput): Promise<{ updated: boolean }> {
+    // updateMany scoped per organizationId: isolamento by query (un immobile di un'altra org → count 0).
+    const res = await this.prisma.property.updateMany({
+      where: { id: input.propertyId, organizationId: input.organizationId },
+      data: {
+        ross1000Code: input.ross1000Code,
+        camereDisponibili: input.camereDisponibili,
+        lettiDisponibili: input.lettiDisponibili,
+      },
+    });
+    return { updated: res.count > 0 };
   }
 
   async getComuneProvincia(comuneId: string): Promise<string | null> {
