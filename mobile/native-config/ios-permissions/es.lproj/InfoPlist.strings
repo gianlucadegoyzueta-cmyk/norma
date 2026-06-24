@@ -1,0 +1,2 @@
+"NSCameraUsageDescription" = "Norma usa la camara para escanear el documento del huesped en el check-in y rellenar los campos. No se conserva ninguna foto del documento.";
+"NSFaceIDUsageDescription" = "Norma usa Face ID / Touch ID para proteger el acceso a la app, si activas el bloqueo biometrico en los ajustes.";

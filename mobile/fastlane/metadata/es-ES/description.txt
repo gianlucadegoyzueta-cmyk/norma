@@ -1,0 +1,12 @@
+Norma ayuda a quien gestiona alquileres de corta estancia en Italia a mantener al dia sus obligaciones, desde el movil.
+
+• Check-in online multiidioma: envia un enlace a tus huespedes, que introducen sus datos antes de la llegada (italiano, ingles, aleman, frances, espanol).
+• Registro de viajeros (Alloggiati): Norma prepara las comunicaciones para la Policia del Estado (Alloggiati Web, art. 109 TULPS); tu revisas y confirmas.
+• Tasa turistica: importe debido, informes y exportaciones (CSV/PDF) para el pago al ayuntamiento.
+• Movimiento turistico / ISTAT: archivos listos para los portales regionales (p. ej. Ross1000).
+• Escaner de documento: enfoca el documento del huesped y los campos se rellenan — tu confirmacion es siempre necesaria.
+• Recordatorios: vigila los plazos de ambas obligaciones.
+
+Norma prepara los datos y te ayuda a cumplir los plazos: las confirmaciones quedan bajo tu control.
+
+Se requiere una cuenta de Norma. Algunas funciones forman parte de la suscripcion.

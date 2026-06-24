@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Apple Privacy Manifest per l'app Norma.
+  Da COPIARE in `ios/App/App/PrivacyInfo.xcprivacy` dopo `npx cap add ios` (Xcode lo include
+  automaticamente nel target App). Vedi native-config/README.md.
+
+  Norma è un guscio che carica l'app web: i dati degli ospiti sono raccolti e trattati dal
+  servizio web lato server, non dal codice nativo. Questo manifest dichiara le pratiche del
+  BINARIO (tracking + API a motivazione richiesta). La Privacy Nutrition Label su App Store
+  Connect va comunque compilata per riflettere i dati trattati dal servizio (vedi README).
+
+  ⚠️ I "required reason API" dipendono dai plugin Capacitor effettivamente inclusi: Xcode
+  segnala in fase di validazione quelli mancanti. UserDefaults (CA92.1) è usato da Capacitor.
+-->
+<plist version="1.0">
+<dict>
+  <key>NSPrivacyTracking</key>
+  <false/>
+  <key>NSPrivacyTrackingDomains</key>
+  <array/>
+  <key>NSPrivacyCollectedDataTypes</key>
+  <array/>
+  <key>NSPrivacyAccessedAPITypes</key>
+  <array>
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>CA92.1</string>
+      </array>
+    </dict>
+  </array>
+</dict>
+</plist>

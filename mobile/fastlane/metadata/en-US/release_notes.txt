@@ -1,0 +1,1 @@
+First release: multilingual online check-in, Alloggiati guest registration preparation, tourist tax and ISTAT files, document scanner and deadline reminders.

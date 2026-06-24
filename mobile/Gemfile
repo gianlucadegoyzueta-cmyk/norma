@@ -1,0 +1,5 @@
+source "https://rubygems.org"
+
+# Fastlane per build/upload iOS (TestFlight) e Android (Play). Esegui `bundle install` sul Mac,
+# poi `bundle exec fastlane ios beta` / `bundle exec fastlane android beta`.
+gem "fastlane"
