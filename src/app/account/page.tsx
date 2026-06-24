@@ -141,8 +141,11 @@ export default async function AccountPage() {
               Promemoria scadenze Alloggiati e ISTAT, avvisi di invio fallito.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <span className="cmx-badge cmx-badge-wait">In arrivo</span>
+          <CardContent className="flex items-center justify-between gap-3">
+            <p className="text-muted-foreground text-sm">
+              Qui gestirai i promemoria via email per le scadenze e gli avvisi di invio — in arrivo.
+            </p>
+            <span className="cmx-badge cmx-badge-wait shrink-0">In arrivo</span>
           </CardContent>
         </Card>
         <Card style={{ borderRadius: 18 }}>
@@ -152,8 +155,11 @@ export default async function AccountPage() {
             </CardTitle>
             <CardDescription>Lingua, fuso orario, formato delle date.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <span className="cmx-badge cmx-badge-wait">In arrivo</span>
+          <CardContent className="flex items-center justify-between gap-3">
+            <p className="text-muted-foreground text-sm">
+              Qui sceglierai lingua, fuso orario e formato delle date — in arrivo.
+            </p>
+            <span className="cmx-badge cmx-badge-wait shrink-0">In arrivo</span>
           </CardContent>
         </Card>
       </section>
@@ -171,7 +177,29 @@ export default async function AccountPage() {
               clic.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="grid gap-4">
+            <div
+              className="grid gap-2.5 rounded-xl border p-4"
+              style={{ borderColor: "var(--hairline)", background: "var(--carta)" }}
+            >
+              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                Cosa è collegato a questo account
+              </p>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground text-sm">Organizzazione</span>
+                <span className="text-sm font-medium">{ctx.current.organizationName}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground text-sm">Email</span>
+                <span className="text-sm font-medium">{user?.email}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground text-sm">Credenziali collegate</span>
+                <span className="text-sm font-medium tabular-nums">
+                  {credentialCount} {credentialCount === 1 ? "configurata" : "configurate"}
+                </span>
+              </div>
+            </div>
             <Link href="/support">
               <Button variant="outline" size="sm">
                 Richiedi l&apos;eliminazione
