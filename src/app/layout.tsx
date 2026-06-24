@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { SupportWidget } from "@/components/support-widget";
+import { NativeBootstrap } from "@/components/native/NativeBootstrap";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -64,6 +65,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} min-h-dvh antialiased`}
       >
         {children}
+        {/* Strato nativo (Capacitor): no-op sul web, attiva push/deep-link/biometria nell'app. */}
+        <NativeBootstrap />
         <SupportWidget />
         {/* Vercel Web Analytics: cookieless, nessuna PII, nessun consent banner.
             Scelta deliberata sull'app (gestisce dati ospiti) → niente session recording. */}

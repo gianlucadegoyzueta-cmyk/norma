@@ -124,3 +124,40 @@ migrate.yml già presente, che gira al merge su main).
 - **Giorno-calendario in UTC (ISTAT) vs Europe/Rome (Alloggiati/CSV):** i moduli ISTAT (ross1000/spot/umbria) bucketizzano i giorni in UTC; assumono `arrivalDate/departureDate` a mezzanotte UTC. Un soggiorno importato da iCal con orario vicino a mezzanotte UTC può finire nel giorno/mese sbagliato. Fix futuro: derivare il giorno in Europe/Rome (come `stays/domain/generation.ts`).
 - **`closedDays` non cablato:** il dominio (ross1000/spot/umbria) sa azzerare l'occupazione nei giorni di chiusura, ma i loader non passano i giorni di chiusura (Norma non li traccia). Capacità pronta, inerte finché non c'è una sorgente di chiusura/disponibilità.
 - **Doppio submit del check-in → `Guest` orfano (LOW, pre-esistente):** `addGuests` non deduplica; se l'ospite invia due volte si crea un secondo `Guest` (conteggio gonfiato). NON crea schedine doppie (la dedup-key le assorbe) né invii. Fix futuro: dedup ospite per (soggiorno, n° documento) — ora possibile perché il documento è obbligatorio — o guardia anti-re-submit nel form. Tocca `addGuests` (usato anche dai flussi host) → da fare con un test dedicato.
+
+#### 10. App mobile (iOS/Android) — guscio Capacitor in `mobile/`
+
+Lo scaffold dell'app nativa è pronto (PR1): guscio Capacitor che carica l'app live
+(`app.norma.casa`) e aggiunge push (registrazione client), deep link, splash/status bar,
+biometria opt-in. Riusa il 100% del prodotto. Cosa serve da te / da ambiente Mac:
+
+- **Account store (a tuo nome):** Apple Developer (99 €/anno) e Google Play Console (25 €
+  una-tantum). Senza, niente pubblicazione.
+- **Setup nativo (solo su Mac, l'env remoto è Linux):** `cd mobile && npm install &&
+npx cap add ios && npx cap add android && npx cap sync` (richiede Xcode + Android Studio).
+- **Asset store:** sostituire i placeholder `mobile/assets/{icon,splash}.png` (512px) con icona
+  **1024×1024** e splash **2732×2732** su avorio `#f7f2e8`.
+- **Deep link — valori reali:**
+  - iOS: in `public/.well-known/apple-app-site-association` sostituire `TEAMID` con l'App ID
+    Prefix (Team ID Apple).
+  - Android: in `public/.well-known/assetlinks.json` inserire il **SHA-256** del certificato di
+    firma (da Play Console → App integrity, o `keytool -list -v -keystore <keystore>`).
+- **Firma:** certificati/profili iOS + keystore Android + API key App Store/Play per Fastlane.
+  **Mai nel repo** (keychain locale / secret CI). Le lane `mobile/fastlane/Fastfile` sono da
+  completare con questi dati.
+- **Privacy store:** Apple Privacy Nutrition Label + `PrivacyInfo.xcprivacy`; Google Data Safety.
+  Stringhe permessi: Notifiche (PR1), `NSCameraUsageDescription` per lo scanner documento (PR3).
+- **OAuth Google nella webview:** registrare lo scheme/redirect dell'app nel Google Cloud Console
+  se si userà il login Google da dispositivo.
+
+**Follow-up codice (PR successive, NON in questo branch):**
+
+- **PR2 (HIGH — migrazione + segreti):** consegna push server-side. Tabella `DeviceToken`
+  (con **backup fresco**, guardrail #2) + porta `PushSender` accanto a `EmailSender` + endpoint
+  `POST /api/devices`; agganci a reminder ISTAT e alert reconcile T+1 Alloggiati; chiavi APNs
+  (Apple) + FCM (Google) nei segreti. Rispettare il consenso granulare per-pilastro (safeguard #1).
+- **PR3 (MEDIUM):** scansione documento al check-in (`@capacitor/camera` + ML Kit MRZ) che
+  pre-compila i campi documento in `CheckinForm.tsx` (solo se `isNative()`).
+- **Minori:** crash reporting nativo (`@sentry/capacitor`, escluso da PR1 per non confliggere con
+  `@sentry/nextjs` già nel browser) e UI in `/account` per il toggle del blocco biometrico
+  (`setBiometricLock`, già esposto in `src/lib/native`).

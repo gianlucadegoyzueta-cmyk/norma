@@ -1,0 +1,13 @@
+# Identificatori app condivisi tra le lane.
+# Completare con i valori reali quando gli account store sono attivi (vedi NEEDS-HUMAN.md).
+
+app_identifier("casa.norma.app")
+
+# iOS / App Store Connect
+# apple_id("account@norma.casa")            # Apple ID dello sviluppatore
+# itc_team_id("XXXXXXXX")                   # Team ID App Store Connect
+# team_id("XXXXXXXXXX")                     # Apple Developer Team ID
+
+# Android / Google Play
+# json_key_file("fastlane/play-service-account.json")  # NON committare: secret CI / locale
+package_name("casa.norma.app")

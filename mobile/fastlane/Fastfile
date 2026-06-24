@@ -1,0 +1,33 @@
+# Fastlane per Norma Mobile (Capacitor).
+#
+# SCHELETRO da completare quando gli account store sono attivi (vedi ../README.md e
+# ../../NEEDS-HUMAN.md). I segreti di firma NON vanno nel repo: usare keychain locale,
+# variabili d'ambiente o secret del CI.
+#
+# Prerequisito: aver eseguito `npx cap add ios` / `npx cap add android` e `npx cap sync`,
+# così esistono le cartelle native `ios/App` e `android`.
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Build e upload su TestFlight"
+  lane :beta do
+    # Allinea il web/config nativo prima della build.
+    sh("npm", "run", "cap:sync")
+    # Esempio (scommentare e configurare match/cert + profili):
+    # build_app(workspace: "ios/App/App.xcworkspace", scheme: "App")
+    # upload_to_testflight(skip_waiting_for_build_processing: true)
+    UI.message("TODO: configurare firma (match) e upload_to_testflight")
+  end
+end
+
+platform :android do
+  desc "Build e upload su Play Internal testing"
+  lane :beta do
+    sh("npm", "run", "cap:sync")
+    # Esempio (scommentare e configurare keystore + service account):
+    # gradle(project_dir: "android", task: "bundle", build_type: "Release")
+    # upload_to_play_store(track: "internal", aab: "android/app/build/outputs/bundle/release/app-release.aab")
+    UI.message("TODO: configurare keystore e upload_to_play_store")
+  end
+end

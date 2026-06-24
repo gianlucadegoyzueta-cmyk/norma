@@ -1,0 +1,47 @@
+name: Mobile CI
+
+# Smoke test del guscio Capacitor (cartella mobile/). Verifica che config e plugin si
+# installino e che `cap sync` non rompa. La build iOS richiede macOS e si fa in locale/release;
+# qui (Linux) ci limitiamo a install + sync, che è sufficiente a intercettare config rotte.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/mobile-ci.yml"
+  pull_request:
+    paths:
+      - "mobile/**"
+      - ".github/workflows/mobile-ci.yml"
+
+concurrency:
+  group: mobile-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capacitor:
+    name: Install · cap sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Capacitor sync (verifica config + plugin)
+        # Senza piattaforme native aggiunte, `cap sync` allinea comunque la config web e
+        # valida capacitor.config.ts (esce 0). Le piattaforme native si aggiungono sul Mac.
+        run: npx cap sync

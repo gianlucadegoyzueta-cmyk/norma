@@ -12,3 +12,11 @@ prisma/migrations
 test-results
 playwright-report
 docs/design/
+# Progetto Capacitor: artefatti generati/nativi (i sorgenti restano formattati)
+mobile/node_modules
+mobile/ios
+mobile/android
+mobile/www/icon.png
+mobile/assets
+# File senza estensione (Apple App Site Association): Prettier non sa inferire il parser
+public/.well-known/apple-app-site-association

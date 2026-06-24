@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID.casa.norma.app",
+        "paths": ["/checkin/*", "/auth/reset", "/auth/reset/*"]
+      }
+    ]
+  }
+}
