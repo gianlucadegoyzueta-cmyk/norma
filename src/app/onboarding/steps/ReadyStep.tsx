@@ -1,10 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { CalendarPlus, LayoutDashboard, Link2 } from "lucide-react";
+import { CalendarPlus, Check, LayoutDashboard, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { finishOnboardingAction } from "../actions";
+
+// Recap dei passi conclusi: dà la prova visiva che il percorso è completo prima della CTA.
+const RECAP = ["Credenziali collegate", "Tabelle preparate", "Primo immobile registrato"];
 
 /**
  * Step finale. L'host ha già il primo immobile: da qui lo porto nel funnel dati-in, che è la
@@ -35,6 +38,21 @@ export function ReadyStep({ onBack }: { onBack: () => void }) {
           <strong className="text-foreground">confermi con un click</strong>.
         </p>
       </div>
+
+      {/* Recap visivo: tre check che confermano cosa è già fatto, prima di scegliere come proseguire. */}
+      <ul className="border-border bg-card grid w-full gap-2.5 rounded-lg border p-4 text-left">
+        {RECAP.map((label) => (
+          <li key={label} className="flex items-center gap-2.5 text-sm">
+            <span
+              aria-hidden
+              className="bg-success/12 text-success flex size-5 shrink-0 items-center justify-center rounded-full"
+            >
+              <Check className="size-3" />
+            </span>
+            {label}
+          </li>
+        ))}
+      </ul>
 
       <div className="grid w-full gap-2">
         {/* Azione principale: collegare il calendario dell'immobile = funnel dati-in automatico. */}
