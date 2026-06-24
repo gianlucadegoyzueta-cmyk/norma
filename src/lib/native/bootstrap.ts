@@ -9,7 +9,7 @@
  *  - tasto "indietro" Android e apertura link esterni in un browser di sistema;
  *  - blocco biometrico opzionale (opt-in, default off).
  */
-import { isNative, isBiometricLockEnabled } from "./index";
+import { isNative, isBiometricLockEnabled, getPlatform } from "./index";
 
 let started = false;
 
@@ -68,6 +68,22 @@ async function setupDeepLinks(): Promise<void> {
   }
 }
 
+/** Invia il device token al backend per la consegna push (POST /api/devices). Best-effort. */
+async function registerDeviceToken(token: string): Promise<void> {
+  const platform = getPlatform();
+  if (platform === "web") return;
+  try {
+    await fetch("/api/devices", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ token, platform: platform === "ios" ? "IOS" : "ANDROID" }),
+    });
+  } catch {
+    /* offline o non loggato: si ritenterà alla prossima registrazione */
+  }
+}
+
 async function setupPush(): Promise<void> {
   try {
     const { PushNotifications } = await import("@capacitor/push-notifications");
@@ -76,8 +92,8 @@ async function setupPush(): Promise<void> {
     await PushNotifications.register();
 
     PushNotifications.addListener("registration", (token) => {
-      // PR2: invieremo questo token a POST /api/devices per la consegna server-side.
-      console.info("[norma-native] push token", token.value);
+      // Registra il token sul backend (PR2). Best-effort: un errore non deve rompere l'app.
+      void registerDeviceToken(token.value);
     });
     PushNotifications.addListener("registrationError", (err) => {
       console.warn("[norma-native] push registration error", err);

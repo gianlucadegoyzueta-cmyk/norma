@@ -188,6 +188,8 @@ model User {
   accounts            Account[]
   sessions            Session[]
   passwordResetTokens PasswordResetToken[]
+  deviceTokens        DeviceToken[]
+  notificationPreference NotificationPreference?
 }
 
 /// Token monouso per il reset password ("password dimenticata"). NON riusa VerificationToken
@@ -754,4 +756,42 @@ model SupportTicket {
   status         String   @default("open") // open | closed
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+// ----------------------- NOTIFICHE PUSH (app mobile) -----------------------
+
+/// Piattaforma del device registrato per le notifiche push.
+enum DevicePlatform {
+  IOS
+  ANDROID
+}
+
+/// Token di push di un device dell'HOST (non dell'ospite): è ciò a cui APNs/FCM consegnano.
+/// NON è PII ospite. Un utente può avere più device. `token` è unico (upsert idempotente dalla
+/// registrazione lato app). La consegna reale è gated da PUSH_ENABLED + chiavi APNs/FCM.
+model DeviceToken {
+  id         String         @id @default(cuid())
+  userId     String
+  platform   DevicePlatform
+  token      String         @unique
+  createdAt  DateTime       @default(now())
+  lastSeenAt DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Consenso dell'host alle notifiche push, GRANULARE PER PILASTRO (safeguard #1: versionato e
+/// revocabile). Default opt-in sugli alert operativi; l'host può spegnere un singolo pilastro.
+/// `consentVersion` permette di forzare un re-consenso se cambia il wording legale.
+model NotificationPreference {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  alloggiati     Boolean  @default(true)
+  turismo        Boolean  @default(true)
+  consentVersion Int      @default(1)
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
