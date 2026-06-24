@@ -161,3 +161,29 @@ npx cap add ios && npx cap add android && npx cap sync` (richiede Xcode + Androi
 - **Minori:** crash reporting nativo (`@sentry/capacitor`, escluso da PR1 per non confliggere con
   `@sentry/nextjs` già nel browser) e UI in `/account` per il toggle del blocco biometrico
   (`setBiometricLock`, già esposto in `src/lib/native`).
+
+#### 11. App mobile — PR2: consegna push lato server (HIGH, migrazione)
+
+Binari per inviare notifiche push agli host (es. "schedina da confermare", scadenze turismo).
+Branch `claude/mobile-push-pr2` (stacked sul guscio PR1). Nessuna push reale parte senza chiavi.
+
+- **⛔ NON mergiare la PR2 finché** (classe HIGH — guardrail #2 + AGENT_LAWS):
+  1. **backup fresco verificato** (`~/bin/norma-backup.sh`, controlla `backup.log`);
+  2. **migrazione validata sul Mac** con DB locale: `npm run db:migrate` (genera/conferma
+     `20260624120000_add_push_notifications`; quella nel repo è hand-authored perché l'ambiente
+     remoto non può girare Prisma engine);
+  3. **chiavi caricate nei segreti** (Vercel): `FCM_SERVICE_ACCOUNT_JSON` (+ APNs Auth Key nel
+     progetto Firebase) e `PUSH_ENABLED=true` SOLO quando vuoi accendere la consegna.
+  - Il merge su `main` fa partire `migrate.yml` → applica a PROD: ecco perché serve il backup PRIMA.
+- **Rollback migrazione** (additiva, nessun dato preesistente): `DROP TABLE "NotificationPreference";
+DROP TABLE "DeviceToken"; DROP TYPE "DevicePlatform";`
+- **Trigger AGGANCIATO in PR2 (gated):** il reminder mensile ISTAT (`istat-reminder.service.ts`,
+  pilastro Turismo) ora invia **anche** una push all'OWNER, additiva all'email, best-effort e
+  gated a valle (`PUSH_ENABLED` + consenso). Con il gate OFF non cambia nulla in prod.
+- **⛔ Trigger NON agganciato — frozen area #1 (AGENT_LAWS):** l'alert reconcile T+1 **Alloggiati**
+  (`Schedina.deadlineAt`) NON è stato toccato: "invio reale Alloggiati + cron invio/reconcile
+  (PR #56)" è CONGELATO per decisione founder 2026-06-10. Si aggancia SOLO con tua decisione
+  esplicita di scongelamento.
+- **Cosa resta fuori (per scelta):** l'invio reale FCM/APNs (oggi stub gated `FcmPushSender`,
+  attende le chiavi) e il toggle UI del consenso in `/account` (l'azione
+  `setNotificationPreferenceAction` e il modello `NotificationPreference` ci sono già).
