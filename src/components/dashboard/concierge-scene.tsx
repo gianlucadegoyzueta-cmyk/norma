@@ -8,6 +8,8 @@ import type {
   DashboardDiaryRow,
   DashboardProposal,
 } from "@/app/dashboard/_lib/data";
+import type { PropertyStatus } from "@/components/dashboard/concierge-properties";
+import type { ComplianceMonth } from "@/components/dashboard/concierge-compliance";
 
 export interface ConciergeSceneProps {
   orgName: string;
@@ -20,6 +22,10 @@ export interface ConciergeSceneProps {
   proposals: DashboardProposal[];
   agenda: DashboardAgendaItem[];
   diary: DashboardDiaryRow[];
+  /** Stato per-struttura (lista "Le tue strutture"). Opzionale: assente = pannello non reso. */
+  properties?: PropertyStatus[];
+  /** Posizione compliance a 12 mesi. Opzionale: assente = pannello non reso. */
+  compliance?: { months: ComplianceMonth[]; summary: string };
   /** Slot a destra della topbar (es. form di logout). */
   signOutSlot?: ReactNode;
 }
@@ -39,6 +45,8 @@ export function ConciergeScene({
   proposals,
   agenda,
   diary,
+  properties,
+  compliance,
   signOutSlot,
 }: ConciergeSceneProps) {
   return (
@@ -100,6 +108,8 @@ export function ConciergeScene({
             proposals={proposals}
             agenda={agenda}
             diary={diary}
+            properties={properties}
+            compliance={compliance}
             kpisSlot={<ConciergeKpis kpis={kpis} />}
           />
         </div>

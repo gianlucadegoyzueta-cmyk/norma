@@ -32,60 +32,24 @@ export interface KpiSpec {
   detail?: KpiDetail;
 }
 
-/** Altezza di una riga dell'odometro (deve combaciare con `.cmx-odo`/`.cmx-digit` nel CSS). */
-const ROW = 44;
-
 function prefersReducedMotion(): boolean {
   return (
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 }
 
-/** Odometro a rulli: per ogni cifra una colonna 0-9 che scorre alla cifra finale. */
+/**
+ * Cifra grande del KPI: numero pieno, nitido e corretto dal primo paint. (Prima era un
+ * "odometro a rulli" con colonne 0-9 a scorrimento: bello sulla carta ma pixel-fragile —
+ * un disallineamento di riga mostrava cifre sbagliate. Per un dashboard serio conta che il
+ * numero sia GIUSTO, sempre.) `tabular-nums` tiene le cifre allineate.
+ */
 function Odometer({ value, prefix, suffix }: { value: number; prefix?: string; suffix?: string }) {
-  const digits = String(Math.max(0, Math.round(value))).split("");
-  const [offsets, setOffsets] = useState<number[]>(() => digits.map(() => 0));
-
-  useEffect(() => {
-    if (prefersReducedMotion()) {
-      setOffsets(digits.map((d) => -ROW * Number(d)));
-      return;
-    }
-    const timers = digits.map((d, idx) =>
-      setTimeout(
-        () => {
-          setOffsets((prev) => {
-            const next = [...prev];
-            next[idx] = -ROW * Number(d);
-            return next;
-          });
-        },
-        1300 + idx * 140,
-      ),
-    );
-    return () => timers.forEach(clearTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
-
   return (
     <div className="cmx-odo">
       {prefix && <span className="cmx-pre">{prefix}</span>}
-      {digits.map((_, idx) => (
-        <span className="cmx-digit" key={idx} aria-hidden>
-          <span className="cmx-col" style={{ transform: `translateY(${offsets[idx]}px)` }}>
-            {Array.from({ length: 10 }, (_, k) => (
-              <span key={k}>{k}</span>
-            ))}
-          </span>
-        </span>
-      ))}
+      <span className="cmx-num">{Math.round(value)}</span>
       {suffix && <small>{suffix}</small>}
-      {/* Valore accessibile (screen reader): l'odometro animato è puramente visivo. */}
-      <span className="sr-only">
-        {prefix}
-        {Math.round(value)}
-        {suffix}
-      </span>
     </div>
   );
 }

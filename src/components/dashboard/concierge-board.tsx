@@ -8,6 +8,8 @@ import type {
   DashboardDiaryRow,
   DashboardProposal,
 } from "@/app/dashboard/_lib/data";
+import { ConciergeProperties, type PropertyStatus } from "./concierge-properties";
+import { ConciergeCompliance, type ComplianceMonth } from "./concierge-compliance";
 
 type PropState = "idle" | "pressing" | "done" | "leave" | "gone";
 
@@ -164,11 +166,15 @@ export function ConciergeBoard({
   agenda,
   diary,
   kpisSlot,
+  properties,
+  compliance,
 }: {
   proposals: DashboardProposal[];
   agenda: DashboardAgendaItem[];
   diary: DashboardDiaryRow[];
   kpisSlot?: ReactNode;
+  properties?: PropertyStatus[];
+  compliance?: { months: ComplianceMonth[]; summary: string };
 }) {
   const agendaRef = useRef<HTMLDivElement>(null);
   const [extraRows, setExtraRows] = useState<{ time: string; text: string }[]>([]);
@@ -194,96 +200,113 @@ export function ConciergeBoard({
 
   return (
     <>
-      {/* DECISIONI — il vero hero della pagina (#105): a tutta larghezza, prima di tutto.
-          Struttura semantica + heading collegato (#113). */}
-      <section className="cmx-decisions" aria-labelledby="cmx-h-proposte">
-        <h2 className="cmx-col-h" id="cmx-h-proposte">
-          {proposals.length > 0
-            ? `Aspettano il tuo via libera (${proposals.length})`
-            : "Aspettano il tuo via libera"}
-        </h2>
-        {proposals.length === 0 ? (
-          <div className="cmx-empty">
-            <b>Tutto in ordine.</b> Nessuna proposta in sospeso: quando ci sarà qualcosa da decidere
-            — un check-in da mandare, schedine da confermare, un export pronto — lo trovi qui.
-          </div>
-        ) : (
-          <div className="cmx-decision-grid">
-            {proposals.map((p, i) => (
-              <ProposalCard key={p.id} proposal={p} i={i} onApproved={onApproved} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* KPI come striscia di contesto (sotto le decisioni, non protagonisti). */}
+      {/* KPI: striscia di contesto a tutta larghezza, in cima al workspace. */}
       {kpisSlot}
 
-      {/* SECONDARIO, leggero: cosa arriva · cosa ho fatto stanotte. */}
-      <div className="cmx-secondary">
-        <section aria-labelledby="cmx-h-agenda">
-          <h2 className="cmx-col-h" id="cmx-h-agenda">
-            In arrivo
-          </h2>
-          <div className="cmx-agenda" ref={agendaRef}>
-            <div className="cmx-tl" aria-hidden />
-            {agenda.map((ev, idx) => (
-              <div className="cmx-ev" key={idx}>
-                <div className="cmx-when">{ev.when}</div>
-                <div className="cmx-node" aria-hidden />
-                <div>
-                  <div className="cmx-t">{ev.title}</div>
-                  <div className="cmx-d">
-                    {ev.detail}
-                    {ev.norma && (
-                      <>
-                        {" "}
-                        <span className="cmx-norma">Norma:</span> {ev.norma}
-                      </>
-                    )}
+      {/* Workspace denso a 2 colonne — riempie lo schermo, niente vuoti.
+          Sinistra: le decisioni + lo stato delle strutture. Destra: posizione a 12 mesi,
+          cosa arriva, cosa ho fatto stanotte. */}
+      <div className="cmx-grid">
+        <div className="cmx-col cmx-col-main">
+          <section className="cmx-panel cmx-decisions" aria-labelledby="cmx-h-proposte">
+            <div className="cmx-panel-h">
+              <h2 className="cmx-panel-title" id="cmx-h-proposte">
+                {proposals.length > 0
+                  ? `Aspettano il tuo via libera (${proposals.length})`
+                  : "Aspettano il tuo via libera"}
+              </h2>
+            </div>
+            {proposals.length === 0 ? (
+              <div className="cmx-empty">
+                <b>Tutto in ordine.</b> Nessuna proposta in sospeso: quando ci sarà qualcosa da
+                decidere — un check-in da mandare, schedine da confermare, un export pronto — lo
+                trovi qui.
+              </div>
+            ) : (
+              <div className="cmx-decision-grid">
+                {proposals.map((p, i) => (
+                  <ProposalCard key={p.id} proposal={p} i={i} onApproved={onApproved} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {properties && properties.length > 0 && <ConciergeProperties items={properties} />}
+        </div>
+
+        <div className="cmx-col cmx-col-side">
+          {compliance && compliance.months.length > 0 && (
+            <ConciergeCompliance months={compliance.months} summary={compliance.summary} />
+          )}
+
+          <section className="cmx-panel" aria-labelledby="cmx-h-agenda">
+            <div className="cmx-panel-h">
+              <h2 className="cmx-panel-title" id="cmx-h-agenda">
+                In arrivo
+              </h2>
+            </div>
+            <div className="cmx-agenda" ref={agendaRef}>
+              <div className="cmx-tl" aria-hidden />
+              {agenda.map((ev, idx) => (
+                <div className="cmx-ev" key={idx}>
+                  <div className="cmx-when">{ev.when}</div>
+                  <div className="cmx-node" aria-hidden />
+                  <div>
+                    <div className="cmx-t">{ev.title}</div>
+                    <div className="cmx-d">
+                      {ev.detail}
+                      {ev.norma && (
+                        <>
+                          {" "}
+                          <span className="cmx-norma">Norma:</span> {ev.norma}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="cmx-diary" aria-labelledby="cmx-h-diario">
-          <h2 className="cmx-col-h" id="cmx-h-diario" style={{ marginTop: 0 }}>
-            Fatto stanotte
-          </h2>
-          {diary.length === 0 && extraRows.length === 0 ? (
-            <div className="cmx-muted">
-              Ancora niente stanotte. Appena sincronizzo i calendari o verifico una ricevuta, lo
-              annoto qui.
+              ))}
             </div>
-          ) : (
-            <>
-              {diary.map((row, idx) => (
-                <div className="cmx-row" key={`d-${idx}`}>
-                  <span className="cmx-tm">{row.time}</span>
-                  <span className="cmx-check" aria-hidden>
-                    ✓
-                  </span>
-                  <span>
-                    {row.text} — <b>{row.highlight}</b>
-                  </span>
-                </div>
-              ))}
-              {extraRows.map((row, idx) => (
-                <div className="cmx-row cmx-new" key={`e-${idx}`}>
-                  <span className="cmx-tm">{row.time}</span>
-                  <span className="cmx-check" aria-hidden>
-                    ✓
-                  </span>
-                  <span>
-                    <b>{row.text}</b>
-                  </span>
-                </div>
-              ))}
-            </>
-          )}
-        </section>
+          </section>
+
+          <section className="cmx-panel cmx-diary" aria-labelledby="cmx-h-diario">
+            <div className="cmx-panel-h">
+              <h2 className="cmx-panel-title" id="cmx-h-diario">
+                Fatto stanotte
+              </h2>
+            </div>
+            {diary.length === 0 && extraRows.length === 0 ? (
+              <div className="cmx-muted">
+                Ancora niente stanotte. Appena sincronizzo i calendari o verifico una ricevuta, lo
+                annoto qui.
+              </div>
+            ) : (
+              <>
+                {diary.map((row, idx) => (
+                  <div className="cmx-row" key={`d-${idx}`}>
+                    <span className="cmx-tm">{row.time}</span>
+                    <span className="cmx-check" aria-hidden>
+                      ✓
+                    </span>
+                    <span>
+                      {row.text} — <b>{row.highlight}</b>
+                    </span>
+                  </div>
+                ))}
+                {extraRows.map((row, idx) => (
+                  <div className="cmx-row cmx-new" key={`e-${idx}`}>
+                    <span className="cmx-tm">{row.time}</span>
+                    <span className="cmx-check" aria-hidden>
+                      ✓
+                    </span>
+                    <span>
+                      <b>{row.text}</b>
+                    </span>
+                  </div>
+                ))}
+              </>
+            )}
+          </section>
+        </div>
       </div>
     </>
   );
