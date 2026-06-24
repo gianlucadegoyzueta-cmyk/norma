@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import type { TaxDeclarationStatus, TaxRemittanceMode } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { shareFile, toBase64Utf8 } from "@/lib/native/share";
 import {
   changeDeclarationStatusAction,
   prepareDeclarationPdfAction,
@@ -57,11 +58,15 @@ export function DeclarationActions({
     URL.revokeObjectURL(url);
   }
 
-  function download(filename: string, mimeType: string, content: string) {
+  // In app nativa condivide il file col foglio di sistema (in webview il download non apre nulla);
+  // su web ricade sul download del browser. Fail-open: lo share che fallisce → download.
+  async function deliverText(filename: string, mimeType: string, content: string) {
+    if (await shareFile(filename, toBase64Utf8(content))) return;
     triggerDownload(new Blob([content], { type: mimeType }), filename);
   }
 
-  function downloadBase64(filename: string, base64: string, mimeType: string) {
+  async function deliverBase64(filename: string, base64: string, mimeType: string) {
+    if (await shareFile(filename, base64)) return;
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
     triggerDownload(new Blob([bytes], { type: mimeType }), filename);
   }
@@ -74,8 +79,8 @@ export function DeclarationActions({
       if (!res.ok) return setMsg(res.error);
       const r = res.result;
       if (r.kind === "EXPORT_READY") {
-        download(r.filename, r.mimeType, r.content);
-        setOk(`Scaricato ${r.filename}.`);
+        await deliverText(r.filename, r.mimeType, r.content);
+        setOk(`Pronto: ${r.filename}.`);
       } else if (r.kind === "REDIRECT") {
         const w = window.open(r.url, "_blank", "noopener");
         if (w === null) {
@@ -91,8 +96,8 @@ export function DeclarationActions({
     start(async () => {
       const res = await prepareDeclarationPdfAction(id);
       if (!res.ok) return setMsg(res.error);
-      downloadBase64(res.filename, res.base64, "application/pdf");
-      setOk(`Scaricato ${res.filename}.`);
+      await deliverBase64(res.filename, res.base64, "application/pdf");
+      setOk(`Pronto: ${res.filename}.`);
     });
   }
 
