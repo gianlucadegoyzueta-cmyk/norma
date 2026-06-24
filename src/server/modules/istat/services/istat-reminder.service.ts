@@ -35,6 +35,17 @@ export interface ReminderProperty {
   name: string;
   provincia: string | null;
   ownerEmail: string | null;
+  /** Utente OWNER dell'org: destinatario dell'eventuale push (pilastro Turismo). Assente = niente push. */
+  ownerUserId?: string | null;
+}
+
+/**
+ * Notifica push al proprietario per il pilastro Turismo. Port minimale (no dipendenza dal
+ * servizio concreto): la route inietta un adapter su `PushNotificationService`. Best-effort e
+ * gated a valle (PUSH_ENABLED + consenso): qui è solo un canale aggiuntivo, additivo all'email.
+ */
+export interface OwnerPushNotifier {
+  notifyTurismo(userId: string, title: string, body: string): Promise<void>;
 }
 
 /** Esito minimo che il reminder consuma da un loader regionale (Ross1000, SPOT, …). */
@@ -51,6 +62,8 @@ export interface IstatReminderDeps {
     period: string,
   ): Promise<RegionalReportResult>;
   email: EmailSender;
+  /** Canale push opzionale (Turismo). Se assente, il reminder resta solo-email come prima. */
+  push?: OwnerPushNotifier;
 }
 
 export interface ReminderResult {
@@ -62,6 +75,7 @@ export interface ReminderResult {
   errored: number; // strutture il cui report ha lanciato (dati malformati) — isolate, non bloccano il batch
   skippedNoEmail: number; // org senza email owner
   emailFailed: number; // invii email falliti (isolati, non bloccano gli altri)
+  pushSent: number; // org a cui è stata inviata (o tentata) la push owner (gated a valle)
 }
 
 /** Periodo del mese PRECEDENTE rispetto a `now` (il movimento da dichiarare entro il 5). */
@@ -82,7 +96,10 @@ export async function runMonthlyIstatReminders(
   const properties = await deps.listProperties();
 
   // Raggruppa per org, accumulando le righe del digest + contatori.
-  const byOrg = new Map<string, { email: string | null; lines: Line[] }>();
+  const byOrg = new Map<
+    string,
+    { email: string | null; ownerUserId: string | null; lines: Line[] }
+  >();
   const res: ReminderResult = {
     period,
     orgsNotified: 0,
@@ -92,13 +109,18 @@ export async function runMonthlyIstatReminders(
     errored: 0,
     skippedNoEmail: 0,
     emailFailed: 0,
+    pushSent: 0,
   };
 
   for (const p of properties) {
     const rm = regionMovementForProvincia(p.provincia);
     if (!rm) continue; // regione non riconosciuta → niente reminder (dato struttura da sistemare)
 
-    const bucket = byOrg.get(p.organizationId) ?? { email: p.ownerEmail, lines: [] };
+    const bucket = byOrg.get(p.organizationId) ?? {
+      email: p.ownerEmail,
+      ownerUserId: p.ownerUserId ?? null,
+      lines: [],
+    };
 
     if (rm.status === "FILE" && rm.serializerId) {
       // Isolamento per-struttura: loadReport può LANCIARE (es. campo fuori vincolo nel tracciato).
@@ -168,6 +190,21 @@ export async function runMonthlyIstatReminders(
       res.orgsNotified += 1;
     } catch {
       res.emailFailed += 1;
+    }
+
+    // Canale aggiuntivo: push all'OWNER (Turismo), gated a valle (PUSH_ENABLED + consenso) e
+    // best-effort — non deve mai bloccare il reminder. Body breve, adatto a una notifica.
+    if (deps.push && bucket.ownerUserId) {
+      try {
+        await deps.push.notifyTurismo(
+          bucket.ownerUserId,
+          `Movimento turistico ${label}`,
+          `Scadenza ${deadlineStr}: controlla i file/numeri da caricare.`,
+        );
+        res.pushSent += 1;
+      } catch {
+        /* push fallita/inerte: isolata, nessun impatto sull'email */
+      }
     }
   }
 

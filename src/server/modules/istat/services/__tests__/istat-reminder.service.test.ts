@@ -201,4 +201,62 @@ describe("runMonthlyIstatReminders", () => {
     expect(sent).toHaveLength(1);
     expect(sent[0].to).toBe("good@x.it");
   });
+
+  it("push owner (Turismo): invia all'OWNER con userId; isolata e additiva all'email", async () => {
+    const pushed: { userId: string; title: string }[] = [];
+    const props: ReminderProperty[] = [
+      {
+        organizationId: "orgP",
+        propertyId: "pP",
+        name: "Casa P",
+        provincia: "RM",
+        ownerEmail: "p@x.it",
+        ownerUserId: "user-p",
+      },
+      // org senza ownerUserId → nessuna push, ma l'email parte lo stesso
+      {
+        organizationId: "orgQ",
+        propertyId: "pQ",
+        name: "Casa Q",
+        provincia: "RM",
+        ownerEmail: "q@x.it",
+      },
+    ];
+    const { deps, sent } = fakeDeps(props, { pP: OK, pQ: OK });
+    deps.push = {
+      notifyTurismo: async (userId, title) => void pushed.push({ userId, title }),
+    };
+
+    const res = await runMonthlyIstatReminders(deps, NOW);
+
+    expect(res.orgsNotified).toBe(2); // entrambe le email partono
+    expect(res.pushSent).toBe(1); // solo l'org con ownerUserId
+    expect(pushed).toEqual([{ userId: "user-p", title: "Movimento turistico Maggio 2026" }]);
+    expect(sent).toHaveLength(2);
+  });
+
+  it("push che LANCIA → isolata: pushSent non incrementa, email non impattata", async () => {
+    const props: ReminderProperty[] = [
+      {
+        organizationId: "orgR",
+        propertyId: "pR",
+        name: "Casa R",
+        provincia: "RM",
+        ownerEmail: "r@x.it",
+        ownerUserId: "user-r",
+      },
+    ];
+    const { deps, sent } = fakeDeps(props, { pR: OK });
+    deps.push = {
+      notifyTurismo: async () => {
+        throw new Error("canale push giù");
+      },
+    };
+
+    const res = await runMonthlyIstatReminders(deps, NOW);
+
+    expect(res.orgsNotified).toBe(1);
+    expect(res.pushSent).toBe(0);
+    expect(sent).toHaveLength(1);
+  });
 });

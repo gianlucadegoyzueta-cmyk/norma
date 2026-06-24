@@ -177,9 +177,13 @@ Branch `claude/mobile-push-pr2` (stacked sul guscio PR1). Nessuna push reale par
   - Il merge su `main` fa partire `migrate.yml` → applica a PROD: ecco perché serve il backup PRIMA.
 - **Rollback migrazione** (additiva, nessun dato preesistente): `DROP TABLE "NotificationPreference";
 DROP TABLE "DeviceToken"; DROP TYPE "DevicePlatform";`
-- **Cosa NON fa la PR2 (per scelta, niente scope creep):** l'invio reale FCM/APNs (stub gated:
-  `FcmPushSender`) e l'aggancio ai trigger di compliance. Quelli sono **PR2b**: collegare
-  `istat-reminder.service.ts` e l'alert reconcile T+1 Alloggiati (`Schedina.deadlineAt`) a
-  `PushNotificationService.notify(...)`, sempre dietro `PUSH_ENABLED` e consenso per-pilastro.
-- **UI consenso:** l'azione `setNotificationPreferenceAction` e il modello `NotificationPreference`
-  ci sono; manca solo il toggle in `/account` (follow-up minore).
+- **Trigger AGGANCIATO in PR2 (gated):** il reminder mensile ISTAT (`istat-reminder.service.ts`,
+  pilastro Turismo) ora invia **anche** una push all'OWNER, additiva all'email, best-effort e
+  gated a valle (`PUSH_ENABLED` + consenso). Con il gate OFF non cambia nulla in prod.
+- **⛔ Trigger NON agganciato — frozen area #1 (AGENT_LAWS):** l'alert reconcile T+1 **Alloggiati**
+  (`Schedina.deadlineAt`) NON è stato toccato: "invio reale Alloggiati + cron invio/reconcile
+  (PR #56)" è CONGELATO per decisione founder 2026-06-10. Si aggancia SOLO con tua decisione
+  esplicita di scongelamento.
+- **Cosa resta fuori (per scelta):** l'invio reale FCM/APNs (oggi stub gated `FcmPushSender`,
+  attende le chiavi) e il toggle UI del consenso in `/account` (l'azione
+  `setNotificationPreferenceAction` e il modello `NotificationPreference` ci sono già).

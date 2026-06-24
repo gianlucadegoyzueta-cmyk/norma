@@ -5,7 +5,13 @@
 
 import { prisma } from "@/server/db";
 import { evaluateCronGate } from "@/server/cron/cron-gate";
-import { ResendEmailSender } from "@/server/modules/notifications";
+import {
+  FcmPushSender,
+  PrismaDeviceTokenRepository,
+  PrismaNotificationPreferenceRepository,
+  PushNotificationService,
+  ResendEmailSender,
+} from "@/server/modules/notifications";
 import { loadRoss1000Report } from "@/server/modules/istat/ross1000/report";
 import { loadSpotReport } from "@/server/modules/istat/spot/report";
 import { loadUmbriaReport } from "@/server/modules/istat/umbria/report";
@@ -29,6 +35,19 @@ export async function GET(req: Request): Promise<Response> {
 
   try {
     const email = new ResendEmailSender();
+    // Canale push (Turismo): gated a valle da PUSH_ENABLED + consenso. Costruito sempre; senza
+    // chiavi l'adapter è inerte (no-op), quindi nessun effetto in prod finché non si accende.
+    const pushService = new PushNotificationService(
+      new FcmPushSender(),
+      new PrismaDeviceTokenRepository(prisma),
+      new PrismaNotificationPreferenceRepository(prisma),
+    );
+    const push = {
+      notifyTurismo: (userId: string, title: string, body: string) =>
+        pushService
+          .notify(userId, "turismo", { title, body, data: { path: "/istat" } })
+          .then(() => {}),
+    };
     const result = await runMonthlyIstatReminders(
       {
         listProperties: async (): Promise<ReminderProperty[]> => {
@@ -42,7 +61,7 @@ export async function GET(req: Request): Promise<Response> {
                 select: {
                   memberships: {
                     where: { role: "OWNER" },
-                    select: { user: { select: { email: true } } },
+                    select: { user: { select: { id: true, email: true } } },
                     take: 1,
                   },
                 },
@@ -55,6 +74,7 @@ export async function GET(req: Request): Promise<Response> {
             name: r.name,
             provincia: r.comune?.provincia ?? null,
             ownerEmail: r.organization.memberships[0]?.user?.email ?? null,
+            ownerUserId: r.organization.memberships[0]?.user?.id ?? null,
           }));
         },
         loadReport: (serializerId, ids, period) => {
@@ -73,6 +93,7 @@ export async function GET(req: Request): Promise<Response> {
           }
         },
         email,
+        push,
       },
       new Date(),
     );
