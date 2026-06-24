@@ -8,13 +8,42 @@ interface ChatTurn extends SupportMessage {
   escalate?: boolean;
 }
 
+/** Argomenti rapidi: precompilano una domanda frequente e avviano la chat senza far digitare.
+ *  Solo testo (nessun dato server): l'assistente risponde ancorato alla KB verificata. */
+const QUICK_TOPICS: { label: string; question: string }[] = [
+  {
+    label: "Primo accesso Alloggiati",
+    question: "Come faccio il primo accesso ad Alloggiati Web e collego le credenziali a Norma?",
+  },
+  {
+    label: "Come funziona l'ISTAT",
+    question: "Come funziona il movimento turistico ISTAT/Ross1000 e cosa devo fare ogni mese?",
+  },
+  {
+    label: "Tassa di soggiorno: come dichiaro",
+    question: "Come dichiaro la tassa di soggiorno e dove trovo il riepilogo da versare?",
+  },
+  {
+    label: "Cos'è il CIN",
+    question: "Cos'è il CIN e quando mi serve per la mia struttura?",
+  },
+  {
+    label: "Schedine per ospite di una notte",
+    question: "Devo fare le schedine Alloggiati per un ospite che resta una sola notte?",
+  },
+  {
+    label: "Import iCal del calendario",
+    question: "Come importo il calendario iCal delle prenotazioni dentro Norma?",
+  },
+];
+
 export function SupportChat() {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function send() {
-    const question = input.trim();
+  async function send(rawQuestion: string = input) {
+    const question = rawQuestion.trim();
     if (!question || loading) return;
     setInput("");
     const history: SupportMessage[] = turns.map(({ role, content }) => ({
@@ -73,9 +102,25 @@ export function SupportChat() {
     <div className="flex flex-1 flex-col gap-3">
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto" aria-live="polite">
         {turns.length === 0 && (
-          <p className="text-sm text-gray-500">
-            Es. &laquo;Devo fare le schedine Alloggiati per un ospite di una notte?&raquo;
-          </p>
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-gray-500">
+              Scegli un argomento o scrivi la tua domanda. Es. &laquo;Devo fare le schedine
+              Alloggiati per un ospite di una notte?&raquo;
+            </p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {QUICK_TOPICS.map((topic) => (
+                <button
+                  key={topic.label}
+                  type="button"
+                  onClick={() => void send(topic.question)}
+                  disabled={loading}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm text-gray-800 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {topic.label}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
         {turns.map((turn, i) => (
           <div
