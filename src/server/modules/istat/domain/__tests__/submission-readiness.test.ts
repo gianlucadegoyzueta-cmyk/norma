@@ -56,6 +56,32 @@ describe("computeSubmissionReadiness", () => {
     expect(r.missingFields).toEqual(["cittadinanza ospite", "tipo turismo", "codice struttura"]);
   });
 
+  it("INCOMPLETE espone missingDetail con scope/refId, deduplicato per campo+refId", () => {
+    const prep: RegionalPreparation = {
+      kind: "INCOMPLETE",
+      missing: [
+        { field: "cittadinanza", scope: "GUEST", refId: "g1" },
+        { field: "cittadinanza", scope: "GUEST", refId: "g2" }, // stesso campo, ALTRO ospite → resta
+        { field: "cittadinanza", scope: "GUEST", refId: "g1" }, // duplicato esatto → collassa
+        { field: "codice", scope: "STRUTTURA" },
+      ],
+    };
+    const r = computeSubmissionReadiness(lazio, prep, stub);
+    // missingFields collassa per sola etichetta; missingDetail tiene il dettaglio per refId.
+    expect(r.missingFields).toEqual(["cittadinanza ospite", "codice struttura"]);
+    expect(r.missingDetail).toEqual([
+      { field: "cittadinanza", label: "cittadinanza ospite", scope: "GUEST", refId: "g1" },
+      { field: "cittadinanza", label: "cittadinanza ospite", scope: "GUEST", refId: "g2" },
+      { field: "codice", label: "codice struttura", scope: "STRUTTURA", refId: undefined },
+    ]);
+  });
+
+  it("missingDetail è vuoto per gli stati non-INCOMPLETE", () => {
+    expect(computeSubmissionReadiness(lazio, ok, stub).missingDetail).toEqual([]);
+    expect(computeSubmissionReadiness(campania, null, null).missingDetail).toEqual([]);
+    expect(computeSubmissionReadiness(null, null, null).missingDetail).toEqual([]);
+  });
+
   it("canAutoSubmit resta FALSE con canale stub anche se READY (guardrail #1)", () => {
     const r = computeSubmissionReadiness(lazio, ok, stub);
     expect(r.status).toBe("READY");
