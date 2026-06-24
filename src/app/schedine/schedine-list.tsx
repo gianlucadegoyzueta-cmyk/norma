@@ -61,10 +61,12 @@ function Deadline({ deadlineAt, overdue }: { deadlineAt: Date; overdue: boolean 
 export function SchedineList({
   schedine,
   stayIdBySchedina,
+  guestIdBySchedina,
   now,
 }: {
   schedine: SchedinaRow[];
   stayIdBySchedina: Map<string, string>;
+  guestIdBySchedina: Map<string, string>;
   now: number;
 }) {
   if (schedine.length === 0) {
@@ -104,6 +106,9 @@ export function SchedineList({
         {schedine.map((s) => {
           const overdue = isOverdue(s, now);
           const stayId = stayIdBySchedina.get(s.id);
+          const guestId = guestIdBySchedina.get(s.id);
+          // "Correggi" porta all'OSPITE esatto del soggiorno (ancora), non solo alla pagina.
+          const fixHref = stayId ? `/stays/${stayId}${guestId ? `#ospite-${guestId}` : ""}` : null;
           // Sintesi leggibile per screen reader: nome + struttura + stato + scadenza in una frase,
           // così la riga densa non va decifrata dai frammenti sparsi (WCAG 1.3.1).
           const rowLabel = `${s.guestName}, ${s.propertyName}. Stato: ${
@@ -180,8 +185,8 @@ export function SchedineList({
                       {mapAlloggiatiError(s.lastErrorCod, s.lastErrorDes)}
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
-                      {stayId ? (
-                        <Link href={`/stays/${stayId}`}>
+                      {fixHref ? (
+                        <Link href={fixHref}>
                           <Button variant="outline" size="sm">
                             Correggi
                           </Button>
@@ -202,8 +207,9 @@ export function SchedineList({
                     style={{ borderColor: "var(--hairline)" }}
                   >
                     <p className="text-xs" style={{ color: "var(--soft)" }}>
-                      Tentativi di invio esauriti: controlla i dati della schedina, poi rimettila in
-                      coda.
+                      Richiede una verifica manuale: i tentativi di invio sono esauriti, oppure il
+                      conteggio della ricevuta T+1 non quadrava. Controlla i dati, poi rimettila in
+                      coda — nessun doppione, nessun invio alla cieca.
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
                       {stayId ? (

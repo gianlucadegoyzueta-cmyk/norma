@@ -290,7 +290,7 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
             {leaders.map((leader) => {
               const members = membersOf(leader.id);
               return (
-                <li key={leader.id}>
+                <li key={leader.id} id={`ospite-${leader.id}`} className="scroll-mt-24">
                   <div
                     className="cmx-row"
                     style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}
@@ -299,7 +299,8 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
                     {members.map((m) => (
                       <div
                         key={m.id}
-                        className="border-l-2 pl-3"
+                        id={`ospite-${m.id}`}
+                        className="scroll-mt-24 border-l-2 pl-3"
                         style={{ borderColor: "var(--hairline)" }}
                       >
                         <GuestRow guest={m} nested rejected={rejectedByGuest.get(m.id)} />

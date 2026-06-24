@@ -98,15 +98,24 @@ export default async function SchedinePage() {
     return a.deadlineAt.getTime() - b.deadlineAt.getTime();
   });
 
-  // Mappa schedina REJECTED → stayId per il link "Correggi" (query di pagina, nessun cambio al dominio).
-  const rejectedIds = schedine.filter((s) => s.status === "REJECTED").map((s) => s.id);
+  // Mappa schedina REJECTED/NEEDS_REVIEW → soggiorno e ospite, per i link "Correggi" / "Apri
+  // soggiorno" (deep-link all'OSPITE esatto). Query di pagina, nessun cambio al dominio.
+  // NB: include anche NEEDS_REVIEW (prima la mappa era solo REJECTED → il link "Apri soggiorno"
+  // di NEEDS_REVIEW non compariva mai).
+  const actionableIds = schedine
+    .filter((s) => s.status === "REJECTED" || s.status === "NEEDS_REVIEW")
+    .map((s) => s.id);
   const stayIdBySchedina = new Map<string, string>();
-  if (rejectedIds.length > 0) {
+  const guestIdBySchedina = new Map<string, string>();
+  if (actionableIds.length > 0) {
     const rows = await prisma.schedina.findMany({
-      where: { organizationId: orgId, id: { in: rejectedIds } },
-      select: { id: true, guest: { select: { stayId: true } } },
+      where: { organizationId: orgId, id: { in: actionableIds } },
+      select: { id: true, guestId: true, guest: { select: { stayId: true } } },
     });
-    for (const r of rows) stayIdBySchedina.set(r.id, r.guest.stayId);
+    for (const r of rows) {
+      stayIdBySchedina.set(r.id, r.guest.stayId);
+      guestIdBySchedina.set(r.id, r.guestId);
+    }
   }
 
   return (
@@ -306,7 +315,12 @@ export default async function SchedinePage() {
       )}
 
       <section className="cmx-section">
-        <SchedineList schedine={sortedSchedine} stayIdBySchedina={stayIdBySchedina} now={now} />
+        <SchedineList
+          schedine={sortedSchedine}
+          stayIdBySchedina={stayIdBySchedina}
+          guestIdBySchedina={guestIdBySchedina}
+          now={now}
+        />
       </section>
     </ConciergePage>
   );

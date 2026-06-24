@@ -89,6 +89,11 @@ const STAY_IDS = new Map([
   ["6", "stay-villa"],
 ]);
 
+const GUEST_IDS = new Map([
+  ["4", "guest-rossi"],
+  ["6", "guest-muller"],
+]);
+
 export default function SchedineListPreviewPage() {
   if (process.env.NODE_ENV === "production") notFound();
   return (
@@ -100,7 +105,12 @@ export default function SchedineListPreviewPage() {
       intro="Anteprima dev della lista densa con tutti gli stati."
     >
       <section className="cmx-section" style={{ marginTop: 0 }}>
-        <SchedineList schedine={MOCK} stayIdBySchedina={STAY_IDS} now={now} />
+        <SchedineList
+          schedine={MOCK}
+          stayIdBySchedina={STAY_IDS}
+          guestIdBySchedina={GUEST_IDS}
+          now={now}
+        />
       </section>
     </ConciergePage>
   );
