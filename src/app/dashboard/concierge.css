@@ -167,13 +167,18 @@
   margin-bottom: 6px;
 }
 .cmx-rule {
-  width: 0;
+  width: 120px;
   height: 1px;
   background: var(--salvia);
   margin: 0 auto 20px;
-  animation: cmx-drawrule 1.1s var(--ease) 0.9s forwards;
+  /* Reveal robusto: a riposo il filetto è disegnato (120px); l'entrata "draw" vive nel keyframe
+     (from width:0) + `backwards` per il delay. Animazione mancata → filetto comunque visibile. */
+  animation: cmx-drawrule 1.1s var(--ease) 0.3s backwards;
 }
 @keyframes cmx-drawrule {
+  from {
+    width: 0;
+  }
   to {
     width: 120px;
   }
@@ -187,10 +192,10 @@
 }
 .cmx-hero h1 .cmx-w {
   display: inline-block;
-  opacity: 0;
-  filter: blur(6px);
-  transform: translateY(0.45em) rotate(0.6deg);
-  animation: cmx-ink 0.9s var(--ease) forwards;
+  /* Reveal robusto: a riposo le parole sono visibili e nette; l'entrata "ink" (blur+slide) vive
+     dentro il keyframe + `backwards` per il delay di stagger. Se l'animazione non parte (paint
+     ritardato, tab in background), il titolo resta leggibile invece di sparire. */
+  animation: cmx-ink 0.9s var(--ease) backwards;
 }
 .cmx-hero h1 .cmx-hi {
   color: var(--terracotta);
@@ -198,6 +203,11 @@
   font-weight: 700;
 }
 @keyframes cmx-ink {
+  0% {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(0.45em) rotate(0.6deg);
+  }
   60% {
     filter: blur(0);
   }
@@ -244,8 +254,8 @@
   line-height: 1.7;
   color: var(--soft);
   max-width: 600px;
-  opacity: 0;
-  animation: cmx-fadeup 1s var(--ease) 1.5s forwards;
+  /* Reveal robusto: a riposo visibile; entrata nel keyframe + `backwards` (vedi nota su .cmx-kpi). */
+  animation: cmx-fadeup 1s var(--ease) 0.3s backwards;
 }
 .cmx-sub b {
   color: var(--inchiostro);
@@ -296,8 +306,11 @@
     transform 0.18s ease-out,
     box-shadow 0.3s,
     border-color 0.3s;
-  opacity: 0;
-  animation: cmx-fadeup 0.8s var(--ease) calc(1.2s + var(--i) * 0.12s) forwards;
+  /* Reveal robusto (fix visibilità al load): lo stato a RIPOSO è visibile (opacity:1, default).
+     L'entrata vive solo nel keyframe (`from { opacity:0 }`); `backwards` la applica anche durante
+     il piccolo delay di stagger. Se l'animazione non parte/non completa (main-thread occupato,
+     tab in background, paint ritardato), il contenuto resta comunque visibile a riposo. */
+  animation: cmx-fadeup 0.8s var(--ease) calc(var(--i) * 0.08s) backwards;
 }
 .cmx-kpi:hover {
   border-color: rgba(188, 75, 43, 0.35);
@@ -587,8 +600,9 @@
     transform 0.5s var(--ease),
     box-shadow 0.5s,
     opacity 0.6s;
-  opacity: 0;
-  animation: cmx-fadeup 0.8s var(--ease) calc(1.5s + var(--i) * 0.15s) forwards;
+  /* Reveal robusto: a riposo visibile; entrata solo nel keyframe + `backwards` per lo stagger.
+     Animazione mancata → resta visibile (vedi nota su .cmx-kpi). */
+  animation: cmx-fadeup 0.8s var(--ease) calc(var(--i) * 0.1s) backwards;
 }
 .cmx-prop::before {
   content: "";
@@ -792,8 +806,8 @@
   font-size: 15px;
   line-height: 1.6;
   color: var(--soft);
-  opacity: 0;
-  animation: cmx-fadeup 0.8s var(--ease) 1.5s forwards;
+  /* Reveal robusto: a riposo visibile, entrata immediata nel keyframe (vedi nota su .cmx-kpi). */
+  animation: cmx-fadeup 0.8s var(--ease) backwards;
 }
 .cmx-empty b {
   color: var(--inchiostro);
@@ -806,8 +820,8 @@
   border-radius: 18px;
   padding: 24px 26px;
   position: relative;
-  opacity: 0;
-  animation: cmx-fadeup 0.8s var(--ease) 1.8s forwards;
+  /* Reveal robusto: a riposo visibile; entrata solo nel keyframe + `backwards` (vedi nota su .cmx-kpi). */
+  animation: cmx-fadeup 0.8s var(--ease) 0.2s backwards;
 }
 .cmx-tl {
   position: absolute;
@@ -871,8 +885,8 @@
   border: 1px dashed var(--hairline);
   padding: 22px 26px;
   background: rgba(251, 249, 243, 0.5);
-  opacity: 0;
-  animation: cmx-fadeup 0.8s var(--ease) 2s forwards;
+  /* Reveal robusto: a riposo visibile; entrata solo nel keyframe + `backwards` (vedi nota su .cmx-kpi). */
+  animation: cmx-fadeup 0.8s var(--ease) 0.25s backwards;
 }
 .cmx-diary .cmx-row {
   display: flex;
@@ -935,8 +949,8 @@
   border: 1px solid var(--hairline);
   border-radius: 99px;
   box-shadow: 0 8px 28px rgba(33, 28, 21, 0.07);
-  opacity: 0;
-  animation: cmx-fadeup 0.8s var(--ease) 1s forwards;
+  /* Reveal robusto: a riposo visibile; entrata solo nel keyframe + `backwards` (vedi nota su .cmx-kpi). */
+  animation: cmx-fadeup 0.8s var(--ease) 0.1s backwards;
 }
 .cmx-quicknav-pills {
   display: inline-flex;
