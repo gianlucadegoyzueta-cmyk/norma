@@ -110,12 +110,14 @@ Segreti di firma (certificati, profili, keystore, API key App Store/Play, `googl
 ## Checklist store
 
 Pronto in-repo (questa PR):
+
 - [x] Schede store localizzate it/en/de/fr/es (`fastlane/metadata/`) — **DRAFT da rivedere**
 - [x] `PrivacyInfo.xcprivacy` + stringhe permessi localizzate (`native-config/`)
 - [x] Lane Fastlane reali (TestFlight / Play Internal) con segreti via env
 - [x] Permessi Android documentati (`native-config/android-permissions.md`)
 
 Da fare da te (richiede account / Mac):
+
 - [ ] Account Apple Developer + Google Play attivi
 - [ ] `npx cap add ios/android` + applica `native-config/` (permessi, privacy, capabilities)
 - [ ] Asset icona 1024×1024 / splash 2732×2732 + **screenshot** store

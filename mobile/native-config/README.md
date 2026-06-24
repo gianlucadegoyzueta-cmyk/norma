@@ -29,6 +29,7 @@ elencati in fondo come placeholder da riempire.
 ## Deep link — file `.well-known` (nel web app `norma`)
 
 Già serviti da `app.norma.casa`, ma con **placeholder** da sostituire al go-live:
+
 - `public/.well-known/apple-app-site-association`: sostituisci `TEAMID` con il tuo **Team ID**
   (Apple Developer → Membership → Team ID), formato `TEAMID.casa.norma.app`.
 - `public/.well-known/assetlinks.json`: sostituisci `REPLACE_WITH_SHA256_FINGERPRINT_OF_SIGNING_CERT`
@@ -38,15 +39,15 @@ Già serviti da `app.norma.casa`, ma con **placeholder** da sostituire al go-liv
 
 ## Valori che dipendono dagli account (da riempire quando li avrai)
 
-| Valore | Dove si prende | Dove va |
-| --- | --- | --- |
-| **Team ID** (Apple) | Apple Developer → Membership | AASA + `fastlane/Appfile` |
+| Valore                                                | Dove si prende                                      | Dove va                                   |
+| ----------------------------------------------------- | --------------------------------------------------- | ----------------------------------------- |
+| **Team ID** (Apple)                                   | Apple Developer → Membership                        | AASA + `fastlane/Appfile`                 |
 | **App Store Connect API key** (.p8 + key id + issuer) | App Store Connect → Users and Access → Integrations | env per Fastlane (`upload_to_testflight`) |
-| **APNs Auth Key** (.p8) | Apple Developer → Keys | segreti server (push) |
-| **SHA-256** firma Android | keystore / Play App Integrity | `assetlinks.json` |
-| **google-services.json** (FCM) | Firebase Console | `android/app/` |
-| **Play service account JSON** | Google Cloud → Play Console API | env per Fastlane (`upload_to_play_store`) |
-| **Keystore** (.jks) + password | lo generi tu (`keytool`) | env/keychain per la firma release |
+| **APNs Auth Key** (.p8)                               | Apple Developer → Keys                              | segreti server (push)                     |
+| **SHA-256** firma Android                             | keystore / Play App Integrity                       | `assetlinks.json`                         |
+| **google-services.json** (FCM)                        | Firebase Console                                    | `android/app/`                            |
+| **Play service account JSON**                         | Google Cloud → Play Console API                     | env per Fastlane (`upload_to_play_store`) |
+| **Keystore** (.jks) + password                        | lo generi tu (`keytool`)                            | env/keychain per la firma release         |
 
 Tutti questi sono **segreti**: mai nel repo. Usa keychain locale, variabili d'ambiente o i secret
 del CI.
