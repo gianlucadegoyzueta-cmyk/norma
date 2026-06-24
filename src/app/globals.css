@@ -178,9 +178,10 @@
     animation: ob-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  /* Rivelo a scaglioni: testata, copy, azione. Delay via --ob-delay inline. */
+  /* Rivelo a scaglioni: testata, copy, azione. Delay via --ob-delay inline.
+     Reveal robusto: niente opacity:0 a riposo; l'entrata vive nel keyframe ob-rise (from opacity:0)
+     applicata da `both` durante il delay. Animazione mancata → contenuto comunque visibile. */
   .ob-reveal {
-    opacity: 0;
     animation: ob-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-delay: var(--ob-delay, 0ms);
   }
