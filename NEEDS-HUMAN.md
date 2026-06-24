@@ -95,10 +95,10 @@ migrate.yml già presente, che gira al merge su main).
 
 ### 9. Movimento turistico — copertura nazionale (nuove regioni)
 
-- **Stato codice (branch `feat/movimento-turistico-nuove-regioni`, CI verde):** copertura portata da 13 a **15 regioni FILE + serializer Sicilia pronto**.
-  - ✅ **Puglia** (SPOT, XML) — FILE end-to-end (serializer + loader + dispatch reminder).
-  - ✅ **Umbria** (Turismatica C59, .txt fixed-width, 1 file/giorno) — FILE end-to-end. Tabella codici provenienze trascritta dal PDF ufficiale.
-  - ✅ **Sicilia** (WebAPI PMS) — body XML serializzato e testato; **trasmissione NON attiva** (è un'API: client + invio reale gated).
+- **Stato codice (`feat/movimento-turistico-nuove-regioni` → mergiato su `main`):** copertura portata da 13 a **15 regioni FILE + serializer Sicilia pronto**.
+  - ✅ **Puglia** (SPOT, XML) — FILE end-to-end (serializer + loader + dispatch reminder) **+ download dalla schermata `/istat`** (#158): nuova `exportSpotXmlAction`.
+  - ✅ **Umbria** (Turismatica C59, .txt fixed-width, 1 file/giorno) — FILE end-to-end **+ download `/istat`** (#158): `exportUmbriaC59Action` impacchetta i file giornalieri in un solo ZIP (encoder puro STORE, zero dipendenze). Tabella codici provenienze trascritta dal PDF ufficiale.
+  - ✅ **Sicilia** (WebAPI PMS) — body XML serializzato e testato; **trasmissione NON attiva** (è un'API: client + invio reale gated; vault credenziali §9b).
 - **Cosa serve da te — azioni di sblocco (bozze pronte in `tmp/outreach/email-sblocco-regioni.md`):**
   1. **Campania** (Web API Sinfonia): email a giuseppe.pezone@regione.campania.it → Swagger + utenze test. Senza spec non scrivo il client.
   2. **Sicilia** (attivazione): PEC a servizioturistico.ct@certmail.regione.sicilia.it → credenziali UTENTE PMS. Poi: conferma codifica **Gender 1/2** con l'ente (il PDF è incoerente), e **primo invio reale solo con tua decisione** (guardrail #1).

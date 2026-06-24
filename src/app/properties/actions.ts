@@ -54,3 +54,63 @@ export async function createPropertyAction(
   revalidatePath("/properties");
   return { ok: true, message: `Immobile "${name}" aggiunto ✓` };
 }
+
+/** Parsa una capacità ricettiva dal form: vuoto → null; altrimenti intero ≥ 0 (NaN/negativi → errore). */
+function parseCapacity(raw: string, label: string): { value: number | null } | { error: string } {
+  const t = raw.trim();
+  if (t === "") return { value: null };
+  const n = Number(t);
+  if (!Number.isInteger(n) || n < 0) {
+    return { error: `${label}: inserisci un numero intero pari o superiore a 0.` };
+  }
+  return { value: n };
+}
+
+/**
+ * Aggiorna la configurazione ricettiva Ross1000 di un immobile (codice struttura + camere/letti).
+ * Sono i dati struttura richiesti dal movimento turistico ISTAT: senza, la struttura resta
+ * INCOMPLETE su `/istat`. L'organizationId arriva da getCurrentContext (isolamento), MAI dal client.
+ */
+export async function updatePropertyRoss1000Action(
+  _prev: Result | null,
+  formData: FormData,
+): Promise<Result> {
+  const ctx = await getCurrentContext();
+  if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+
+  const propertyId = String(formData.get("propertyId") ?? "").trim();
+  if (!propertyId) return { ok: false, message: "Immobile non specificato." };
+
+  const ross1000Code = String(formData.get("ross1000Code") ?? "");
+  const camere = parseCapacity(
+    String(formData.get("camereDisponibili") ?? ""),
+    "Camere disponibili",
+  );
+  if ("error" in camere) return { ok: false, message: camere.error };
+  const letti = parseCapacity(String(formData.get("lettiDisponibili") ?? ""), "Letti disponibili");
+  if ("error" in letti) return { ok: false, message: letti.error };
+
+  const service = new PropertiesService(
+    new PrismaPropertyRepository(prisma),
+    new PrismaCredentialLookup(prisma),
+  );
+
+  try {
+    await service.updateRoss1000Config({
+      organizationId: ctx.current.organizationId,
+      propertyId,
+      ross1000Code,
+      camereDisponibili: camere.value,
+      lettiDisponibili: letti.value,
+    });
+  } catch (err) {
+    if (err instanceof PropertiesError) return { ok: false, message: err.message };
+    return { ok: false, message: "Errore nel salvataggio della configurazione. Riprova." };
+  }
+
+  // La readiness ISTAT dipende da questi campi: rivalida anche /istat e la pagina immobile.
+  revalidatePath("/properties");
+  revalidatePath(`/properties/${propertyId}`);
+  revalidatePath("/istat");
+  return { ok: true, message: "Configurazione ricettiva salvata ✓" };
+}

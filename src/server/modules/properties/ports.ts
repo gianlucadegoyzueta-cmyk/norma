@@ -14,6 +14,19 @@ export interface CreatePropertyInput {
   credentialId: string | null;
 }
 
+/**
+ * Configurazione ricettiva per il movimento turistico (Ross1000): codice struttura assegnato
+ * dall'ente + capacità. Alimentano il file `<movimenti>` ISTAT. `null` = non configurato (la
+ * readiness ISTAT lo segnala come INCOMPLETE). Vedi `Property` in schema.prisma.
+ */
+export interface UpdateRoss1000ConfigInput {
+  organizationId: string;
+  propertyId: string;
+  ross1000Code: string | null;
+  camereDisponibili: number | null;
+  lettiDisponibili: number | null;
+}
+
 export interface PropertyComune {
   id: string;
   name: string;
@@ -41,6 +54,11 @@ export interface PropertyRepository {
   listByOrganization(organizationId: string): Promise<PropertyListItem[]>;
   /** Provincia (sigla) del Comune scelto; null se il Comune non esiste/non è sincronizzato. */
   getComuneProvincia(comuneId: string): Promise<string | null>;
+  /**
+   * Aggiorna la configurazione ricettiva Ross1000 di un immobile. Scoped per org (isolamento by
+   * query): `updated=false` se l'immobile non esiste o è di un'altra organizzazione.
+   */
+  updateRoss1000Config(input: UpdateRoss1000ConfigInput): Promise<{ updated: boolean }>;
 }
 
 /**

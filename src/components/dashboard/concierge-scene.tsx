@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ConciergeHero, type HeroSegment } from "@/components/dashboard/concierge-hero";
 import { ConciergeKpis, type KpiSpec } from "@/components/dashboard/concierge-kpis";
+import { ConciergeTrust, type ConciergeTrustProps } from "@/components/dashboard/concierge-trust";
 import { ConciergeBoard } from "@/components/dashboard/concierge-board";
 import { AppShell } from "@/components/shell/app-shell";
 import type {
@@ -26,6 +27,8 @@ export interface ConciergeSceneProps {
   properties?: PropertyStatus[];
   /** Posizione compliance a 12 mesi. Opzionale: assente = pannello non reso. */
   compliance?: { months: ComplianceMonth[]; summary: string };
+  /** Striscia "fiducia/fossato" (prova operativa + garanzia). Opzionale: assente = non resa. */
+  trust?: ConciergeTrustProps;
   /** Slot a destra della topbar (es. form di logout). */
   signOutSlot?: ReactNode;
 }
@@ -47,6 +50,7 @@ export function ConciergeScene({
   diary,
   properties,
   compliance,
+  trust,
   signOutSlot,
 }: ConciergeSceneProps) {
   return (
@@ -100,6 +104,16 @@ export function ConciergeScene({
           </div>
 
           <ConciergeHero kicker={kicker} lines={lines} sub={sub} />
+          {/* Striscia "fiducia/fossato": subito sotto la testata, rende visibile come Norma
+              lavora per te (Test, reconcile T+1, "mai inventare") + la garanzia. */}
+          {trust && (
+            <div className="mt-5 mb-2">
+              <ConciergeTrust
+                receiptRef={trust.receiptRef}
+                acquiredRecently={trust.acquiredRecently}
+              />
+            </div>
+          )}
           {/* La navigazione rapida del vecchio layout è sostituita dalla sidebar persistente
               dell'AppShell (#105), che legge le sezioni dalla sorgente unica `@/lib/nav` —
               le stesse voci di command palette ⌘K e bottom-bar mobile. KPI come striscia di

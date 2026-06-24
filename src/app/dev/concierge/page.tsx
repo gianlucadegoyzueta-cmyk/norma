@@ -13,6 +13,8 @@ export const dynamic = "force-dynamic";
 const FULL: DashboardData = {
   positionRegular: true,
   pendingSchedine: 3,
+  overdueSchedine: 1,
+  istat: { ready: 2, incomplete: 1, assisted: 0, unrouted: 0, total: 3, monthLabel: "giugno" },
   receiptRef: "2026/398755",
   acquiredYesterday: 2,
   hero: { thingsDone: 3 },
@@ -93,6 +95,8 @@ const FULL: DashboardData = {
 const EMPTY: DashboardData = {
   positionRegular: true,
   pendingSchedine: 0,
+  overdueSchedine: 0,
+  istat: { ready: 0, incomplete: 0, assisted: 0, unrouted: 0, total: 0, monthLabel: "giugno" },
   receiptRef: null,
   acquiredYesterday: 0,
   hero: { thingsDone: 0 },
@@ -237,6 +241,7 @@ export default async function ConciergePreviewPage({
       diary={data.diary}
       properties={isEmpty ? EMPTY_PROPERTIES : MOCK_PROPERTIES}
       compliance={isEmpty ? EMPTY_COMPLIANCE : MOCK_COMPLIANCE}
+      trust={{ receiptRef: data.receiptRef, acquiredRecently: data.acquiredYesterday }}
     />
   );
 }

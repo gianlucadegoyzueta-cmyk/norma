@@ -1,6 +1,6 @@
 import type { HeroSegment } from "@/components/dashboard/concierge-hero";
 import type { KpiSpec } from "@/components/dashboard/concierge-kpis";
-import { MINUTES_SAVED_PER_GUEST, type DashboardData, type DashboardProposal } from "./data";
+import { type DashboardData, type DashboardProposal } from "./data";
 
 const ROME_TZ = "Europe/Rome";
 const QUARTER_LABEL: Record<string, string> = {
@@ -103,37 +103,92 @@ export function buildSceneCopy(
   );
   const quarter = `Q${Math.floor(now.getMonth() / 3) + 1}`;
   const quarterLabel = QUARTER_LABEL[quarter];
-  const { occupancyPct, occupiedNights, capacityNights, propertyCount, guestsThisMonth } =
-    data.kpis;
+  const { guestsThisMonth } = data.kpis;
   const tax = data.kpis.taxAccruedEuros;
-  const hours = data.kpis.hoursSaved;
+  const overdue = data.overdueSchedine;
+  const istat = data.istat;
 
+  // I 4 KPI guidano con i DUE PILASTRI (Alloggiati, Turismo/ISTAT). La tassa è secondaria, gli
+  // ospiti sono l'input che li alimenta. Occupazione e ore-risparmiate non sono più in cima
+  // (restano calcolate in data.ts per usi futuri): la dashboard parla di adempimento, non di ricettività.
   const kpis: KpiSpec[] = [
+    // PILASTRO 1 — Alloggiati: l'azione del giorno.
     {
-      value: occupancyPct,
-      suffix: "%",
-      label: `occupazione ${monthName}`,
-      trend: data.kpis.occupancyTrend,
+      value: pending,
+      label: "schedine da confermare",
+      trend:
+        overdue > 0
+          ? `${overdue} oltre scadenza`
+          : pending > 0
+            ? "pronte, aspettano il tuo via libera"
+            : "nessuna in attesa",
+      due: overdue > 0,
       detail: {
-        title: `Occupazione di ${monthName}`,
+        title: "Schedine da confermare",
         intro:
-          occupancyPct > 0
-            ? `${occupancyPct}% delle notti disponibili sono occupate.`
-            : "Ancora nessuna notte occupata questo mese.",
+          pending > 0
+            ? `${pending} ${pending === 1 ? "schedina preparata" : "schedine preparate"} in attesa della tua conferma.`
+            : "Nessuna schedina in attesa: l'outbox è pulito.",
         rows: [
-          { label: "Notti occupate", value: `${occupiedNights}` },
-          { label: "Notti disponibili", value: `${capacityNights}` },
-          { label: "Immobili", value: `${propertyCount}` },
+          { label: "In attesa di conferma", value: `${pending}` },
+          { label: "Di cui oltre scadenza", value: `${overdue}` },
         ],
-        note: "Calcolata sui soggiorni che coprono il mese, su tutte le tue strutture.",
-        link: { label: "Apri i soggiorni del mese", href: "/stays" },
+        note: "Norma le prepara dai dati degli ospiti; l'invio ad Alloggiati resta una tua conferma.",
+        link: { label: "Vai alle schedine", href: "/schedine" },
       },
     },
+    // PILASTRO 2 — Turismo/ISTAT: prontezza del movimento del mese.
+    {
+      value: istat.ready,
+      label: `movimento ISTAT · ${istat.monthLabel}`,
+      trend:
+        istat.total === 0
+          ? "nessuna struttura"
+          : istat.ready === istat.total
+            ? "tutte pronte"
+            : `${istat.ready}/${istat.total} pronte`,
+      detail: {
+        title: `Movimento ISTAT · ${istat.monthLabel}`,
+        intro:
+          istat.total === 0
+            ? "Aggiungi una struttura per preparare il movimento turistico."
+            : `${istat.ready} ${istat.ready === 1 ? "struttura pronta" : "strutture pronte"} all'invio su ${istat.total}.`,
+        rows: [
+          { label: "Pronte", value: `${istat.ready}` },
+          { label: "Da completare", value: `${istat.incomplete}` },
+          { label: "Inserimento manuale", value: `${istat.assisted}` },
+          ...(istat.unrouted > 0
+            ? [{ label: "Regione da verificare", value: `${istat.unrouted}` }]
+            : []),
+        ],
+        note: "Norma prepara il tracciato della regione; dove manca un dato te lo segnala, mai inventato.",
+        link: { label: "Apri il movimento ISTAT", href: "/istat" },
+      },
+    },
+    // Turismo — secondaria: la tassa di soggiorno.
+    {
+      value: tax,
+      prefix: "€",
+      label: `tassa maturata · ${quarterLabel}`,
+      trend: data.kpis.taxTrend,
+      due: tax > 0,
+      detail: {
+        title: `Tassa di soggiorno · ${quarterLabel}`,
+        intro:
+          tax > 0 ? `€${tax} maturati nel trimestre.` : "Nessun importo maturato nel trimestre.",
+        rows: [
+          { label: "Maturata", value: `€${tax}` },
+          { label: "Trimestre", value: quarterLabel },
+          { label: "Stato", value: tax > 0 ? "registro aggiornato" : "nessun importo" },
+        ],
+        note: "Pronta da esportare nel formato del Comune per il versamento.",
+        link: { label: "Apri la tassa di soggiorno", href: "/tourist-tax" },
+      },
+    },
+    // Input ai due pilastri: gli ospiti registrati nel mese.
     {
       value: guestsThisMonth,
       label: `ospiti registrati · ${monthName}`,
-      // "tutti in regola" solo se nulla è scaduto E nulla è in attesa di conferma. Con schedine
-      // PENDING/UNVERIFIED lo stato è "X da confermare": l'obbligo non è ancora assolto.
       trend:
         guestsThisMonth === 0
           ? "nessuno questo mese"
@@ -164,45 +219,6 @@ export function buildSceneCopy(
         ],
         note: "Ogni ospite registrato diventa una schedina pronta per Alloggiati Web.",
         link: { label: "Vai ai soggiorni", href: "/stays" },
-      },
-    },
-    {
-      value: tax,
-      prefix: "€",
-      label: `tassa maturata · ${quarterLabel}`,
-      trend: data.kpis.taxTrend,
-      due: tax > 0,
-      detail: {
-        title: `Tassa di soggiorno · ${quarterLabel}`,
-        intro:
-          tax > 0 ? `€${tax} maturati nel trimestre.` : "Nessun importo maturato nel trimestre.",
-        rows: [
-          { label: "Maturata", value: `€${tax}` },
-          { label: "Trimestre", value: quarterLabel },
-          { label: "Stato", value: tax > 0 ? "registro aggiornato" : "nessun importo" },
-        ],
-        note: "Pronta da esportare nel formato del Comune per il versamento.",
-        link: { label: "Apri la tassa di soggiorno", href: "/tourist-tax" },
-      },
-    },
-    {
-      value: hours,
-      prefix: "~",
-      label: "ore risparmiate · stima",
-      trend: guestsThisMonth > 0 ? `stimate su ${guestsThisMonth} ospiti` : "stima sugli ospiti",
-      detail: {
-        title: "Ore risparmiate nel mese",
-        intro:
-          hours > 0
-            ? `Circa ${hours} ${hours === 1 ? "ora" : "ore"} di pratiche che non hai dovuto fare.`
-            : "La stima cresce con gli ospiti registrati.",
-        rows: [
-          { label: "Ospiti nel mese", value: `${guestsThisMonth}` },
-          { label: "Minuti per ospite", value: `${MINUTES_SAVED_PER_GUEST} min` },
-          { label: "Totale risparmiato", value: `${hours} ${hours === 1 ? "ora" : "ore"}` },
-        ],
-        note: `Stima: ${MINUTES_SAVED_PER_GUEST} minuti di pratiche per ospite (compilazione schedina, invio, archivio), automatizzati da Norma.`,
-        link: { label: "Vedi le schedine", href: "/schedine" },
       },
     },
   ];

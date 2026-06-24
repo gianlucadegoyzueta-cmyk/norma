@@ -175,6 +175,29 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
   const leaders = stay.guests.filter((g) => g.leaderId === null);
   const membersOf = (leaderId: string) => stay.guests.filter((g) => g.leaderId === leaderId);
 
+  // Riepilogo schedine del soggiorno (da dati già caricati): bucket presentazionali per uno
+  // sguardo d'insieme nella testata. Acquisite (ok) · in attesa di conferma/invio (wait) ·
+  // da rivedere/respinte (err). Allineato a `schedinaStatusDisplay`.
+  let schedineAcquired = 0;
+  let schedinePending = 0;
+  let schedineAttention = 0;
+  for (const g of stay.guests) {
+    switch (g.schedinaStatus) {
+      case "ACQUIRED":
+        schedineAcquired++;
+        break;
+      case "PENDING":
+      case "SENDING":
+      case "UNVERIFIED":
+        schedinePending++;
+        break;
+      case "REJECTED":
+      case "NEEDS_REVIEW":
+        schedineAttention++;
+        break;
+    }
+  }
+
   // Motivo per cui la generazione è bloccata (priorità: credenziale → ospiti → tabelle).
   let generateDisabledReason: string | undefined;
   if (!stay.hasCredential) {
@@ -208,6 +231,17 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
             {stay.comuneName} ({stay.provincia})
           </span>
           {stay.isShortStay && <span>· breve (≤24h)</span>}
+          {/* Riepilogo schedine in testa: solo i bucket non vuoti, niente rumore su un soggiorno
+              appena creato. Lo stato di dettaglio resta accanto a ogni ospite. */}
+          {schedineAcquired > 0 && (
+            <span className="cmx-badge cmx-badge-ok">{schedineAcquired} acquisite</span>
+          )}
+          {schedinePending > 0 && (
+            <span className="cmx-badge cmx-badge-wait">{schedinePending} da confermare</span>
+          )}
+          {schedineAttention > 0 && (
+            <span className="cmx-badge cmx-badge-err">{schedineAttention} da rivedere</span>
+          )}
         </span>
       }
     >
@@ -256,7 +290,7 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
             {leaders.map((leader) => {
               const members = membersOf(leader.id);
               return (
-                <li key={leader.id}>
+                <li key={leader.id} id={`ospite-${leader.id}`} className="scroll-mt-24">
                   <div
                     className="cmx-row"
                     style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}
@@ -265,7 +299,8 @@ export default async function StayDetailPage({ params }: { params: Promise<{ id:
                     {members.map((m) => (
                       <div
                         key={m.id}
-                        className="border-l-2 pl-3"
+                        id={`ospite-${m.id}`}
+                        className="scroll-mt-24 border-l-2 pl-3"
                         style={{ borderColor: "var(--hairline)" }}
                       >
                         <GuestRow guest={m} nested rejected={rejectedByGuest.get(m.id)} />

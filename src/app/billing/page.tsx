@@ -206,18 +206,22 @@ export default async function BillingPage({
           </Card>
         )}
 
-        <section className="space-y-3">
-          <h2 className="text-lg font-medium">Scegli il piano</h2>
-          <p className="text-muted-foreground text-sm">
-            {annualSaving > 0
-              ? `Con l'annuale risparmi ${formatEuroCents(annualSaving)} l'anno rispetto al mensile — circa ${monthsFree} ${monthsFree === 1 ? "mese" : "mesi"} gratis.`
-              : "Scegli la cadenza che preferisci: cambi quando vuoi."}
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <PlanCard plan={ANNUAL_PLAN} configured={configured} />
-            <PlanCard plan={MONTHLY_PLAN} configured={configured} />
-          </div>
-        </section>
+        {/* L'upsell del piano serve solo a chi NON è già abbonato: a un abbonato attivo mostriamo
+            il portale (sotto) per cambiare cadenza o metodo, non un nuovo "Abbónati". */}
+        {access?.state !== "SUBSCRIBED" && (
+          <section className="space-y-3">
+            <h2 className="text-lg font-medium">Scegli il piano</h2>
+            <p className="text-muted-foreground text-sm">
+              {annualSaving > 0
+                ? `Con l'annuale risparmi ${formatEuroCents(annualSaving)} l'anno rispetto al mensile — circa ${monthsFree} ${monthsFree === 1 ? "mese" : "mesi"} gratis.`
+                : "Scegli la cadenza che preferisci: cambi quando vuoi."}
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <PlanCard plan={ANNUAL_PLAN} configured={configured} />
+              <PlanCard plan={MONTHLY_PLAN} configured={configured} />
+            </div>
+          </section>
+        )}
 
         {hasCustomer && (
           <Card>

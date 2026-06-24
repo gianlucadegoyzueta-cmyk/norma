@@ -67,6 +67,7 @@ export default async function DashboardPage() {
       diary={data.diary}
       properties={panels.properties}
       compliance={panels.compliance}
+      trust={{ receiptRef: data.receiptRef, acquiredRecently: data.acquiredYesterday }}
       signOutSlot={
         <form action={signOutAction}>
           <button

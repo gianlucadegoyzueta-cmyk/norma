@@ -20,6 +20,8 @@ function makeData(overrides: {
   return {
     positionRegular,
     pendingSchedine,
+    overdueSchedine: positionRegular ? 0 : 1,
+    istat: { ready: 0, incomplete: 0, assisted: 0, unrouted: 0, total: 0, monthLabel: "giugno" },
     receiptRef: null,
     acquiredYesterday: 0,
     hero: { thingsDone },

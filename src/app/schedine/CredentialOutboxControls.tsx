@@ -189,6 +189,18 @@ export function CredentialOutboxControls({
             cancellata.
           </p>
 
+          {/* Il momento dell'azione irreversibile è anche il momento in cui la fiducia conta di
+              più: ricordiamo i safeguard (reconcile T+1) + la garanzia. Wording prudente, da
+              validare legale prima del go-live pubblico (CLAUDE.md guardrail #1). */}
+          <p className="text-muted-foreground inline-flex items-start gap-1.5 text-xs">
+            <ShieldCheck className="text-success mt-0.5 size-3.5 shrink-0" aria-hidden />
+            <span>
+              Dopo l&apos;invio riconcilio l&apos;esito a T+1 sulla ricevuta della Questura. Se un
+              nostro errore tecnico ti causa una sanzione, la copriamo noi entro un massimale
+              (garanzia).
+            </span>
+          </p>
+
           {/* Error-prevention: senza un Test positivo in sessione, alziamo l'attrito (checkbox
               obbligatoria), senza bloccare del tutto (il Test può fallire per rete). */}
           {!testedOk && (

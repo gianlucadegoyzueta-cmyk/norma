@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 import { getCurrentContext } from "@/server/auth/session";
@@ -29,6 +30,13 @@ export default async function CredentialsPage() {
     ctx.current.organizationId,
   );
 
+  // Riepilogo leggero sempre in testa (no salti di layout negli stati parziali): tre numeri
+  // chiave da dati già caricati — totale, attive, da verificare (non valide o da rionboardare).
+  const activeCount = credentials.filter((c) => c.status === "ACTIVE").length;
+  const toVerifyCount = credentials.filter(
+    (c) => c.status === "INVALID" || c.status === "PENDING_REONBOARDING",
+  ).length;
+
   return (
     <ConciergePage
       dense
@@ -52,11 +60,53 @@ export default async function CredentialsPage() {
         </>
       }
     >
-      <section
-        aria-labelledby="credentials-heading"
-        className="cmx-section"
-        style={{ marginTop: 0 }}
-      >
+      {/* Riepilogo sempre presente: niente salti di layout quando la lista è vuota o parziale.
+          Tre numeri sobri da dati già caricati (totale, attive, da verificare). */}
+      <div className="cmx-section flex flex-wrap gap-x-6 gap-y-2" style={{ marginTop: 0 }}>
+        {(
+          [
+            { label: "credenziali", value: credentials.length },
+            { label: "attive", value: activeCount },
+            { label: "da verificare", value: toVerifyCount },
+          ] as const
+        ).map((stat) => (
+          <div key={stat.label} className="flex flex-col leading-tight">
+            <span className="text-foreground text-lg font-semibold tabular-nums">{stat.value}</span>
+            <span className="text-muted-foreground text-[11px] tracking-[0.04em] uppercase">
+              {stat.label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Onboarding guidato: le credenziali sono il primo dei tre passi (Credenziali · Immobile ·
+          Soggiorno). Senza, non nasce alcuna schedina: lo diciamo subito invece di una lista vuota. */}
+      {credentials.length === 0 && (
+        <section className="cmx-section">
+          <Card style={{ borderRadius: 18 }}>
+            <CardHeader>
+              <CardTitle>Inizia qui</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm">
+                Le credenziali Alloggiati sono il <strong>primo dei tre passi</strong> — Credenziali
+                ·{" "}
+                <Link href="/properties" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
+                  Immobile
+                </Link>{" "}
+                ·{" "}
+                <Link href="/stays" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
+                  Soggiorno
+                </Link>
+                . Aggiungine una nel modulo qui sotto: la verifico subito con Alloggiati (senza
+                inviare nulla) e da lì preparo le schedine pronte da confermare.
+              </p>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      <section aria-labelledby="credentials-heading" className="cmx-section">
         <h2 id="credentials-heading" className="cmx-section-title">
           Le tue credenziali
         </h2>

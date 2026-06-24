@@ -4,6 +4,7 @@ import type {
   CredentialLookup,
   PropertyListItem,
   PropertyRepository,
+  UpdateRoss1000ConfigInput,
 } from "../ports";
 
 export class PropertiesError extends Error {
@@ -75,4 +76,36 @@ export class PropertiesService {
   async listProperties(organizationId: string): Promise<PropertyListItem[]> {
     return this.properties.listByOrganization(organizationId);
   }
+
+  /**
+   * Aggiorna la configurazione ricettiva Ross1000 (codice struttura + camere/letti). Normalizza
+   * il codice (trim, vuoto → null) e valida le capacità (interi ≥ 0 o null). L'isolamento per-org
+   * è nel repository (update scoped per organizationId): se l'immobile non è dell'org → errore.
+   */
+  async updateRoss1000Config(input: UpdateRoss1000ConfigInput): Promise<void> {
+    const trimmed = input.ross1000Code?.trim();
+    const ross1000Code = trimmed ? trimmed : null;
+    const camereDisponibili = validCapacity(input.camereDisponibili, "Le camere disponibili");
+    const lettiDisponibili = validCapacity(input.lettiDisponibili, "I letti disponibili");
+
+    const res = await this.properties.updateRoss1000Config({
+      organizationId: input.organizationId,
+      propertyId: input.propertyId,
+      ross1000Code,
+      camereDisponibili,
+      lettiDisponibili,
+    });
+    if (!res.updated) {
+      throw new PropertiesError("Immobile non trovato per questa organizzazione.");
+    }
+  }
+}
+
+/** Capacità ricettiva: null (non configurata) oppure intero ≥ 0. Altrimenti errore di dominio. */
+function validCapacity(value: number | null, label: string): number | null {
+  if (value === null) return null;
+  if (!Number.isInteger(value) || value < 0) {
+    throw new PropertiesError(`${label}: inserisci un numero intero pari o superiore a 0.`);
+  }
+  return value;
 }
