@@ -118,6 +118,21 @@ export default async function AgencyPage({
             <h2 id="agency-totals-heading" className="cmx-section-title">
               {selectedId ? visibleRows[0].propertyName : "Tutte le strutture"}
             </h2>
+            {/* Titolo d'insieme sempre presente: il numero più azionabile per chi gestisce più
+                immobili (quante strutture richiedono attenzione), già calcolato nei totali. */}
+            <p className="text-muted-foreground -mt-1 mb-3 text-xs">
+              {totals.propertyCount} {totals.propertyCount === 1 ? "struttura" : "strutture"}
+              {totals.propertiesNeedingAttention > 0 ? (
+                <>
+                  {" · "}
+                  <strong style={{ color: "var(--terracotta-dark)" }}>
+                    {totals.propertiesNeedingAttention} da seguire
+                  </strong>
+                </>
+              ) : (
+                " · tutto in ordine"
+              )}
+            </p>
             <div className="agency-kpis">
               <article className="agency-kpi">
                 <div
