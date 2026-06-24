@@ -74,6 +74,10 @@ export default async function IstatPage({
     return { pr, ross1000Code: p?.ross1000Code ?? null, canDownload };
   });
 
+  // Riepilogo leggero sempre in testa (no salti di layout): tre numeri del mese selezionato da
+  // dati già caricati — arrivi, presenze e quante strutture sono pronte all'invio.
+  const readyCount = perProperty.filter((x) => x.pr.readiness.status === "READY").length;
+
   return (
     <ConciergePage
       dense
@@ -103,6 +107,26 @@ export default async function IstatPage({
             Mostra
           </Button>
         </form>
+
+        {/* Riepilogo del mese: tre numeri sobri da dati già caricati, sempre presenti (anche a 0). */}
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {(
+            [
+              { label: "arrivi", value: report.totals.arrivi },
+              { label: "presenze", value: report.totals.presenze },
+              { label: "strutture pronte", value: readyCount },
+            ] as const
+          ).map((stat) => (
+            <div key={stat.label} className="flex flex-col leading-tight">
+              <span className="text-foreground text-lg font-semibold tabular-nums">
+                {stat.value}
+              </span>
+              <span className="text-muted-foreground text-[11px] tracking-[0.04em] uppercase">
+                {stat.label}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="cmx-section" style={{ marginTop: 24 }}>
