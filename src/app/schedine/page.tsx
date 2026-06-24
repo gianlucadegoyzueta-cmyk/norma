@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 import type { SchedinaStatus } from "@prisma/client";
@@ -6,6 +7,7 @@ import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaCredentialRepository, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
 import { ConciergePage } from "@/components/concierge/concierge-page";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isOverdue } from "@/lib/schedina-status";
 import { schedinaStatusDisplay } from "@/lib/schedina-status-display";
@@ -79,6 +81,12 @@ export default async function SchedinePage() {
   }, {});
   const overdueCount = schedine.filter((s) => isOverdue(s, now)).length;
 
+  // Riepilogo leggero sempre in testa (no salti di layout negli stati parziali): tre numeri
+  // chiave già disponibili — in coda, acquisite, credenziali attive. Tutto da dati esistenti.
+  const queuedCount = counts.PENDING ?? 0;
+  const acquiredCount = counts.ACQUIRED ?? 0;
+  const activeCredentials = credentials.filter((c) => c.status === "ACTIVE").length;
+
   // Ordine d'azione della lista: stato per priorità, poi overdue, poi scadenza (l'intro lo promette).
   const sortedSchedine = [...schedine].sort((a, b) => {
     const ra = STATUS_PRIORITY.indexOf(a.status);
@@ -117,6 +125,25 @@ export default async function SchedinePage() {
         </>
       }
     >
+      {/* Riepilogo sempre presente: niente salti di layout quando la coda è vuota o parziale.
+          Tre numeri sobri da dati già caricati (PENDING, ACQUIRED, credenziali ATTIVE). */}
+      <div className="cmx-section flex flex-wrap gap-x-6 gap-y-2" style={{ marginTop: 0 }}>
+        {(
+          [
+            { label: "in coda", value: queuedCount },
+            { label: "acquisite", value: acquiredCount },
+            { label: "credenziali attive", value: activeCredentials },
+          ] as const
+        ).map((stat) => (
+          <div key={stat.label} className="flex flex-col leading-tight">
+            <span className="text-foreground text-lg font-semibold tabular-nums">{stat.value}</span>
+            <span className="text-muted-foreground text-[11px] tracking-[0.04em] uppercase">
+              {stat.label}
+            </span>
+          </div>
+        ))}
+      </div>
+
       {schedine.length > 0 && (
         <div className="cmx-section flex flex-wrap gap-2" style={{ marginTop: 0 }}>
           {/* Urgenza in testa (#105), poi i conteggi per stato dal display unico (#111). */}
@@ -137,7 +164,45 @@ export default async function SchedinePage() {
         </div>
       )}
 
-      {pendingByCredential.size > 0 && (
+      {/* Onboarding guidato quando manca il primo passo: senza credenziali non nasce alcuna
+          schedina, quindi indirizziamo subito l'host invece di mostrargli liste vuote. */}
+      {credentials.length === 0 && (
+        <section className="cmx-section">
+          <Card style={{ borderRadius: 18 }}>
+            <CardHeader>
+              <CardTitle>Inizia qui</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <p className="text-muted-foreground text-sm">
+                Le schedine partono dalle credenziali Alloggiati: collega quelle della tua struttura
+                e Norma prepara qui gli invii alla Polizia di Stato, pronti da confermare. È il
+                primo dei tre passi —{" "}
+                <Link href="/credentials" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
+                  Credenziali
+                </Link>{" "}
+                ·{" "}
+                <Link href="/properties" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
+                  Immobile
+                </Link>{" "}
+                ·{" "}
+                <Link href="/stays" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
+                  Soggiorno
+                </Link>
+                .
+              </p>
+              <div>
+                <Link href="/credentials">
+                  <Button size="sm">Aggiungi una credenziale</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      {/* "Da inviare ad Alloggiati" resta sempre visibile (anche a coda vuota) per evitare che la
+          sezione sparisca: con credenziali ma senza PENDING mostriamo un placeholder sobrio. */}
+      {credentials.length > 0 && (
         <section className="cmx-section">
           <Card style={{ borderRadius: 18 }}>
             <CardHeader>
@@ -148,18 +213,25 @@ export default async function SchedinePage() {
                 Verifica con <em>Test</em> (sicuro, ripetibile) e poi invia. L&apos;invio è{" "}
                 <strong>irreversibile</strong>.
               </p>
-              {[...pendingByCredential.entries()].map(([credId, { label, count }]) => (
-                <div key={credId} className="border-border grid gap-2 rounded-xl border p-3">
-                  <p className="text-sm font-medium">
-                    {label} <span className="text-muted-foreground">· {count} da inviare</span>
-                  </p>
-                  <CredentialOutboxControls
-                    credentialId={credId}
-                    pendingCount={count}
-                    status={credStatus.get(credId) ?? "PENDING_REONBOARDING"}
-                  />
+              {pendingByCredential.size === 0 ? (
+                <div className="border-border text-muted-foreground rounded-xl border border-dashed p-3 text-sm">
+                  Nessuna schedina in coda. Le nuove schedine compaiono qui appena pronte
+                  dall&apos;invio.
                 </div>
-              ))}
+              ) : (
+                [...pendingByCredential.entries()].map(([credId, { label, count }]) => (
+                  <div key={credId} className="border-border grid gap-2 rounded-xl border p-3">
+                    <p className="text-sm font-medium">
+                      {label} <span className="text-muted-foreground">· {count} da inviare</span>
+                    </p>
+                    <CredentialOutboxControls
+                      credentialId={credId}
+                      pendingCount={count}
+                      status={credStatus.get(credId) ?? "PENDING_REONBOARDING"}
+                    />
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </section>
