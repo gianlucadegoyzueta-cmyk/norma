@@ -134,7 +134,7 @@ biometria opt-in. Riusa il 100% del prodotto. Cosa serve da te / da ambiente Mac
 - **Account store (a tuo nome):** Apple Developer (99 €/anno) e Google Play Console (25 €
   una-tantum). Senza, niente pubblicazione.
 - **Setup nativo (solo su Mac, l'env remoto è Linux):** `cd mobile && npm install &&
-  npx cap add ios && npx cap add android && npx cap sync` (richiede Xcode + Android Studio).
+npx cap add ios && npx cap add android && npx cap sync` (richiede Xcode + Android Studio).
 - **Asset store:** sostituire i placeholder `mobile/assets/{icon,splash}.png` (512px) con icona
   **1024×1024** e splash **2732×2732** su avorio `#f7f2e8`.
 - **Deep link — valori reali:**
@@ -151,6 +151,7 @@ biometria opt-in. Riusa il 100% del prodotto. Cosa serve da te / da ambiente Mac
   se si userà il login Google da dispositivo.
 
 **Follow-up codice (PR successive, NON in questo branch):**
+
 - **PR2 (HIGH — migrazione + segreti):** consegna push server-side. Tabella `DeviceToken`
   (con **backup fresco**, guardrail #2) + porta `PushSender` accanto a `EmailSender` + endpoint
   `POST /api/devices`; agganci a reminder ISTAT e alert reconcile T+1 Alloggiati; chiavi APNs
