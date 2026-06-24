@@ -68,6 +68,16 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         : { kind: "ok", when: dateTimeFmt.format(imp.lastSyncAt), count: imp.lastImported },
   }));
 
+  // Riepilogo di stato delle prenotazioni importate, dai dati già caricati (nessuna query in più).
+  // Stessi colori/etichette dei badge della lista: l'intestazione "rima" con le righe sotto.
+  const statusCounts = (Object.keys(IMPORT_BADGE) as StayImportStatus[])
+    .map((status) => ({
+      status,
+      ...IMPORT_BADGE[status],
+      count: importedStays.filter((s) => s.importStatus === status).length,
+    }))
+    .filter((s) => s.count > 0);
+
   return (
     <ConciergePage
       dense
@@ -93,12 +103,19 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
               da completare con gli ospiti. Aggiorni quando vuoi con «Sincronizza ora».
             </p>
 
-            {importRows.length > 0 && (
+            {importRows.length > 0 ? (
               <div className="grid gap-2">
                 {importRows.map((row) => (
                   <ICalImportRow key={row.id} propertyId={property.id} data={row} />
                 ))}
               </div>
+            ) : (
+              <p
+                className="border-border/60 text-muted-foreground rounded-lg border border-dashed px-4 py-3 text-sm"
+                style={{ background: "rgba(251, 249, 243, 0.5)" }}
+              >
+                Nessun calendario collegato · collega il primo qui sotto.
+              </p>
             )}
 
             <div className="border-border/60 border-t pt-4">
@@ -108,7 +125,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         </Card>
       </section>
 
-      <section className="cmx-section">
+      <section className="cmx-section" style={{ marginTop: 32 }}>
         <h2 className="cmx-section-title">Prenotazioni importate</h2>
         {importedStays.length === 0 ? (
           <div className="cmx-empty">
@@ -118,38 +135,51 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             </p>
           </div>
         ) : (
-          <ul className="grid gap-2.5">
-            {importedStays.map((s) => {
-              const badge = s.importStatus ? IMPORT_BADGE[s.importStatus] : null;
-              return (
-                <li key={s.id}>
-                  <Link href={`/stays/${s.id}`} className="block">
-                    <div className="cmx-row">
-                      <div className="cmx-row-main">
-                        <p className="cmx-row-title flex items-center gap-1.5">
-                          <CalendarClock
-                            className="size-4 shrink-0"
-                            style={{ color: "var(--soft)" }}
-                          />
-                          {dateFmt.format(s.arrivalDate)}
-                          {s.departureDate ? ` → ${dateFmt.format(s.departureDate)}` : ""}
-                        </p>
-                        <p className="cmx-row-meta">
-                          {s.importSource ? sourceLabel(s.importSource) : "iCal"} ·{" "}
-                          {s.guestsAdded > 0
-                            ? `${s.guestsAdded} ospiti inseriti`
-                            : "ospiti da inserire"}
-                        </p>
+          <>
+            <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <span className="text-sm font-medium">
+                Totale <span className="tabular-nums">{importedStays.length}</span>{" "}
+                {importedStays.length === 1 ? "prenotazione" : "prenotazioni"}
+              </span>
+              {statusCounts.map((s) => (
+                <span key={s.status} className={`cmx-badge ${s.cmx}`}>
+                  {s.count} {s.text.toLowerCase()}
+                </span>
+              ))}
+            </div>
+            <ul className="grid gap-2.5">
+              {importedStays.map((s) => {
+                const badge = s.importStatus ? IMPORT_BADGE[s.importStatus] : null;
+                return (
+                  <li key={s.id}>
+                    <Link href={`/stays/${s.id}`} className="block">
+                      <div className="cmx-row">
+                        <div className="cmx-row-main">
+                          <p className="cmx-row-title flex items-center gap-1.5">
+                            <CalendarClock
+                              className="size-4 shrink-0"
+                              style={{ color: "var(--soft)" }}
+                            />
+                            {dateFmt.format(s.arrivalDate)}
+                            {s.departureDate ? ` → ${dateFmt.format(s.departureDate)}` : ""}
+                          </p>
+                          <p className="cmx-row-meta">
+                            {s.importSource ? sourceLabel(s.importSource) : "iCal"} ·{" "}
+                            {s.guestsAdded > 0
+                              ? `${s.guestsAdded} ospiti inseriti`
+                              : "ospiti da inserire"}
+                          </p>
+                        </div>
+                        {badge && (
+                          <span className={`cmx-badge ${badge.cmx} shrink-0`}>{badge.text}</span>
+                        )}
                       </div>
-                      {badge && (
-                        <span className={`cmx-badge ${badge.cmx} shrink-0`}>{badge.text}</span>
-                      )}
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
       </section>
     </ConciergePage>
