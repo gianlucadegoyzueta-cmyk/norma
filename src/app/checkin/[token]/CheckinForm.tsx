@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ComboBox, type ComboBoxLabels } from "@/components/ui/combobox";
@@ -14,6 +14,7 @@ import {
   TIPO_TURISMO_OPTIONS,
 } from "@/server/modules/istat/ross1000/domains";
 import { type CheckinSubmitState, submitCheckinAction } from "./actions";
+import { clearDraft, DRAFT_COMBO_FIELDS, loadDraft, saveDraft } from "./checkin-draft";
 
 type Country = { id: string; name: string };
 type DocumentType = { id: string; name: string };
@@ -70,6 +71,7 @@ export function CheckinForm({
     birthDate?: string;
     documentNumber?: string;
   }>({});
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,13 +83,32 @@ export function CheckinForm({
     };
   }, []);
 
+  // Ripristina la bozza offline UNA volta al primo mount: scrive i valori salvati negli input/select
+  // (le ComboBox sono escluse). Imperativo perché i campi sono uncontrolled (defaultValue). Non
+  // entra in conflitto con lo scanner (che rimonta il form con i propri defaultValue dopo).
+  useEffect(() => {
+    const draft = loadDraft(token);
+    const form = formRef.current;
+    if (!draft || !form) return;
+    for (const [name, value] of Object.entries(draft)) {
+      if (DRAFT_COMBO_FIELDS.has(name)) continue;
+      const el = form.elements.namedItem(name);
+      if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement) el.value = value;
+    }
+    // Solo al mount iniziale: lo scanner e "aggiungi persona" gestiscono i propri rimonti.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Quando l'azione va a buon fine, mostra la conferma. È un effetto (non un calcolo in render)
   // perché vogliamo poterlo riabbassare al click su "Aggiungi un'altra persona". Dipende dall'intero
   // `state` (nuova identità a ogni dispatch) e non da `state.ok`: così anche un SECONDO submit ok
   // di fila — dove ok resta true — riaccende la conferma dopo che l'utente era tornato al form.
   useEffect(() => {
-    if (state.ok) setShowSuccess(true);
-  }, [state]);
+    if (state.ok) {
+      setShowSuccess(true);
+      clearDraft(token); // inviato con successo → la bozza non serve più
+    }
+  }, [state, token]);
 
   // Dopo un submit con errori: porta l'ospite al PRIMO campo errato (scroll + focus). Su un modulo
   // lungo da mobile è la differenza tra "non capisco perché non parte" e "ah, manca questo".
@@ -195,7 +216,15 @@ export function CheckinForm({
   };
 
   return (
-    <form key={formKey} action={action} className="flex flex-col gap-4">
+    <form
+      key={formKey}
+      ref={formRef}
+      action={action}
+      onInput={() => {
+        if (formRef.current) saveDraft(token, formRef.current);
+      }}
+      className="flex flex-col gap-4"
+    >
       <input type="hidden" name="token" value={token} />
       <input type="hidden" name="lang" value={locale} />
 
