@@ -57,6 +57,29 @@ export function CheckinForm({
   // ("Aggiungi un'altra persona" sarebbe un no-op). Con questo flag possiamo tornare al form pulito
   // — false + bump della key — senza ricaricare la pagina.
   const [showSuccess, setShowSuccess] = useState(false);
+  // Scanner documento (solo app nativa). `native` è rilevato in un effect → niente mismatch di
+  // hydration (SSR/web = false). `prefill` alimenta i defaultValue dei campi sicuri; un bump della
+  // key rimonta il form coi valori scansionati. `scanMsg` dà il feedback (compilato / non riconosciuto).
+  const [native, setNative] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanMsg, setScanMsg] = useState<string | null>(null);
+  const [prefill, setPrefill] = useState<{
+    lastName?: string;
+    firstName?: string;
+    sex?: "M" | "F";
+    birthDate?: string;
+    documentNumber?: string;
+  }>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    void import("@/lib/native").then((n) => {
+      if (!cancelled) setNative(n.isNative());
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Quando l'azione va a buon fine, mostra la conferma. È un effetto (non un calcolo in render)
   // perché vogliamo poterlo riabbassare al click su "Aggiungi un'altra persona". Dipende dall'intero
@@ -146,6 +169,31 @@ export function CheckinForm({
 
   const errorCount = state.fieldErrors ? Object.keys(state.fieldErrors).length : 0;
 
+  // Scansiona il documento (nativo): pre-compila i campi sicuri e rimonta il form coi valori.
+  // L'ospite rivede e conferma SEMPRE (mai auto-submit). Fail-open: in caso di nulla, si compila a mano.
+  const onScan = async () => {
+    setScanning(true);
+    setScanMsg(null);
+    try {
+      const { scanDocumentMrz } = await import("@/lib/native/document-scan");
+      const id = await scanDocumentMrz();
+      const got =
+        id && (id.lastName || id.firstName || id.documentNumber || id.birthDate || id.sex);
+      if (got) {
+        setPrefill(id);
+        setShowSuccess(false);
+        setFormKey((k) => k + 1);
+        setScanMsg(m.scanFilled);
+      } else {
+        setScanMsg(m.scanFailed);
+      }
+    } catch {
+      setScanMsg(m.scanFailed);
+    } finally {
+      setScanning(false);
+    }
+  };
+
   return (
     <form key={formKey} action={action} className="flex flex-col gap-4">
       <input type="hidden" name="token" value={token} />
@@ -170,6 +218,20 @@ export function CheckinForm({
         </p>
       )}
 
+      {/* Scanner documento: solo in app nativa (no-op/invisibile su web). Pre-compila i campi sicuri. */}
+      {native && (
+        <div className="grid gap-1.5">
+          <Button type="button" variant="outline" onClick={onScan} disabled={scanning}>
+            {m.scanDocument}
+          </Button>
+          {scanMsg && (
+            <p className="text-muted-foreground text-xs" role="status" aria-live="polite">
+              {scanMsg}
+            </p>
+          )}
+        </div>
+      )}
+
       <SectionHeading>{m.sectionIdentity}</SectionHeading>
 
       <div className="grid gap-1.5">
@@ -180,6 +242,7 @@ export function CheckinForm({
           required
           autoComplete="family-name"
           autoCapitalize="words"
+          defaultValue={prefill.lastName ?? ""}
           {...invalidProps("lastName")}
         />
         {fieldError("lastName")}
@@ -193,6 +256,7 @@ export function CheckinForm({
           required
           autoComplete="given-name"
           autoCapitalize="words"
+          defaultValue={prefill.firstName ?? ""}
           {...invalidProps("firstName")}
         />
         {fieldError("firstName")}
@@ -200,7 +264,13 @@ export function CheckinForm({
 
       <div className="grid gap-1.5">
         <Label htmlFor="sex">{m.sex}</Label>
-        <Select id="sex" name="sex" required defaultValue="" {...invalidProps("sex")}>
+        <Select
+          id="sex"
+          name="sex"
+          required
+          defaultValue={prefill.sex ?? ""}
+          {...invalidProps("sex")}
+        >
           <option value="" disabled>
             {m.select}
           </option>
@@ -218,6 +288,7 @@ export function CheckinForm({
           type="date"
           required
           max={today}
+          defaultValue={prefill.birthDate ?? ""}
           {...invalidProps("birthDate")}
         />
         {fieldError("birthDate")}
@@ -309,6 +380,7 @@ export function CheckinForm({
           required
           autoComplete="off"
           autoCapitalize="characters"
+          defaultValue={prefill.documentNumber ?? ""}
           {...invalidProps("documentNumber")}
         />
         {fieldError("documentNumber")}
