@@ -96,7 +96,8 @@ export function OnboardingWizard({
 
       <header className="border-border flex items-center justify-between gap-4 border-b px-4 py-3 sm:px-6">
         <Brand />
-        {step > 0 ? <Stepper current={step} /> : <span aria-hidden />}
+        {/* Stepper visibile fin dal Benvenuto: si vede subito che è un percorso guidato. */}
+        <Stepper current={step} />
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard"
