@@ -58,7 +58,7 @@ export function BuildDeclarationForm({ comuni }: { comuni: Array<{ id: string; n
             className="w-48"
           />
           <p id="period-hint" className="text-muted-foreground text-xs">
-            Mese 2026-05, trimestre 2026-Q2 o anno 2026.
+            Mese AAAA-MM (2026-05) · Trimestre AAAA-Qn (2026-Q2) · Anno AAAA (2026).
           </p>
         </div>
         <Button type="submit" disabled={pending || comuni.length === 0}>
