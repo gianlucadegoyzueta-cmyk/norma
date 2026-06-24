@@ -16,7 +16,7 @@ import {
   type MissingDetail,
   type ReadinessStatus,
 } from "@/server/modules/istat/domain/submission-readiness";
-import { Ross1000ExportButton } from "./Ross1000ExportButton";
+import { RegionFileExportButton } from "./RegionFileExportButton";
 
 /**
  * Mappa lo stato di prontezza alla classe badge "cmx" + etichetta IT (presentazionale).
@@ -119,8 +119,15 @@ export default async function IstatPage({
   const perProperty = readiness.map((pr) => {
     const p = propById.get(pr.propertyId);
     const rm = p ? regionMovementForProvincia(p.comune.provincia) : null;
-    const canDownload = rm?.status === "FILE" && rm.serializerId === "ross1000-xml";
-    return { pr, ross1000Code: p?.ross1000Code ?? null, canDownload };
+    // Scaricabile = qualsiasi regione a FILE con un serializer (Ross1000, SPOT/Puglia, Turismatica/Umbria).
+    const canDownload = rm?.status === "FILE" && rm.serializerId !== null;
+    return {
+      pr,
+      ross1000Code: p?.ross1000Code ?? null,
+      canDownload,
+      serializerId: rm?.serializerId ?? null,
+      system: rm?.system ?? null,
+    };
   });
 
   // Riepilogo leggero sempre in testa (no salti di layout): tre numeri del mese selezionato da
@@ -278,8 +285,9 @@ export default async function IstatPage({
         <h2 className="text-sm font-medium">Invio per struttura</h2>
         <p className="text-muted-foreground mt-1 mb-3 text-xs">
           Per ogni struttura: la regione di competenza, lo stato del mese e il file da portare sul
-          portale. Dove il portale è integrato scarichi il file Ross1000; altrimenti usi i numeri
-          del riepilogo qui sopra e li inserisci a mano. L&rsquo;invio automatico è in arrivo.{" "}
+          portale. Dove Norma genera il tracciato (Ross1000, SPOT/Puglia, Turismatica/Umbria)
+          scarichi il file della tua regione; altrimenti usi i numeri del riepilogo qui sopra e li
+          inserisci a mano. L&rsquo;invio automatico è in arrivo.{" "}
           <strong>Norma prepara, l&rsquo;invio resta una tua decisione.</strong>
         </p>
         {perProperty.length === 0 ? (
@@ -297,7 +305,7 @@ export default async function IstatPage({
           <Card style={{ borderRadius: 18 }}>
             <CardContent className="p-0">
               <ul className="divide-border/60 divide-y">
-                {perProperty.map(({ pr, ross1000Code, canDownload }) => {
+                {perProperty.map(({ pr, ross1000Code, canDownload, serializerId, system }) => {
                   const badge = READINESS_BADGE[pr.readiness.status];
                   const region = pr.readiness.region;
                   return (
@@ -379,8 +387,13 @@ export default async function IstatPage({
                         ) : null}
                       </div>
                       <div className="flex flex-col items-end gap-1">
-                        {canDownload ? (
-                          <Ross1000ExportButton propertyId={pr.propertyId} period={period} />
+                        {canDownload && serializerId ? (
+                          <RegionFileExportButton
+                            propertyId={pr.propertyId}
+                            period={period}
+                            serializerId={serializerId}
+                            system={system ?? ""}
+                          />
                         ) : (
                           <span className="text-muted-foreground max-w-[16rem] text-right text-xs">
                             {region
