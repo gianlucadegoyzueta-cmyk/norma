@@ -19,9 +19,9 @@ resumption-njo4cn` (vincolo di sessione) → si impilano su #167.
   "Norma esegue per te"/garanzia** dalla dashboard. Anteprime auth-free: `/dev/shell-preview`,
   `/dev/concierge?audience=host|pm|empty`. Screenshot inviati al founder.
 - **FASE 3 — superfici** (`b4c38fc`, `6a5608a`, `e9ebc23`): pagina **`/statistiche`** (ricettività
-  + compliance, dove migrano le metriche vanity tolte dalla home); **`InfoHint`** (aiuto contestuale
-  inline); sezione **"invio automatico agli enti"** su `/account` in **sola presentazione** (modello
-  su mandato/consenso-per-pilastro/revocabile, NESSUN toggle/storage/Send — guardrail #1).
+  - compliance, dove migrano le metriche vanity tolte dalla home); **`InfoHint`** (aiuto contestuale
+    inline); sezione **"invio automatico agli enti"** su `/account` in **sola presentazione** (modello
+    su mandato/consenso-per-pilastro/revocabile, NESSUN toggle/storage/Send — guardrail #1).
 - **Verifica**: `format·lint·typecheck·test` (902 pass) · `build` verdi in locale; **CI GitHub
   Actions verde** (Lint·Typecheck·Test·Build + E2E Playwright) + **preview Vercel deployata** su ogni push.
 - **FASE 4 (ospite→periodo, scan, onboarding)**: NON costruita in autonomia di proposito — i pezzi

@@ -198,7 +198,9 @@ DROP TABLE "DeviceToken"; DROP TYPE "DevicePlatform";`
 > codice reale.
 
 ### FASE 4 — flusso ospite→periodo + scan + onboarding (piano esecutivo, dopo l'OK sul look)
+
 Molto esiste già; sono rifiniture mirate, **presentazione, zero schema, zero guardrail #1**:
+
 1. **Badge "Adempimenti" per-ospite** in `src/app/stays/[id]/page.tsx` (GuestRow ~riga 372-416):
    3 micro-badge per ospite (Alloggiati / ISTAT / Tassa) per vedere lo stato nei 3 adempimenti su
    una riga. Lo schedina-status c'è già; ISTAT/tassa per-ospite vanno derivati da letture esistenti
@@ -218,6 +220,7 @@ Molto esiste già; sono rifiniture mirate, **presentazione, zero schema, zero gu
    iCal-in-wizard e test-guest = build grandi a basso ROI: lasciare fuori salvo richiesta.
 
 ### ⛔ FASE 5 — binari automazione / mandato / consenso per-pilastro (HARD STOP, guardrail #1)
+
 - Lo **step "Consenso autorizzazioni" in onboarding** e il **toggle reale** nella sezione
   "invio automatico agli enti" di `/account` (oggi **sola presentazione**, "In arrivo") sono
   **esattamente** il safeguard #1 dell'auto-send (consenso granulare versionato/revocabile).
@@ -227,6 +230,7 @@ Molto esiste già; sono rifiniture mirate, **presentazione, zero schema, zero gu
 - L'auto-send Alloggiati **esiste già** (#99) ed è **spento di default**: non accenderlo, non riproporlo.
 
 ### ⛔ FASE 6 — integrazioni reali ISTAT/Tassa per-ente (HARD STOP)
+
 - Portali regionali / pagoPA / GECOS / comuni: servono **spec esterne + credenziali reali** (vedi §9
   Sicilia AUTO = schema vault `RegionalCredential` = migrazione HIGH + backup + decisione primo invio).
   Nessun URL portale è nel codice (`routing.ts`: "DA VERIFICARE") → **non inventarli**. Una regione
