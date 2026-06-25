@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, Bell, CreditCard, KeyRound, Settings2, TriangleAlert } from "lucide-react";
+import {
+  ArrowRight,
+  Bell,
+  CreditCard,
+  KeyRound,
+  Send,
+  Settings2,
+  TriangleAlert,
+} from "lucide-react";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { PrismaNotificationPreferenceRepository } from "@/server/modules/notifications";
@@ -113,6 +121,44 @@ export default async function AccountPage() {
                 Gestisci credenziali <ArrowRight className="size-4" />
               </Button>
             </Link>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Invio automatico agli enti — PRESENTAZIONE soltanto (consenso reale = FASE 5, decisione
+          umana, guardrail #1). Nessun toggle funzionante, nessuno storage di consenso: comunica il
+          modello "su mandato, per-pilastro, revocabile" senza poter accendere nulla. */}
+      <section className="cmx-section">
+        <Card style={{ borderRadius: 18 }}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Send className="size-4" /> Invio automatico agli enti
+            </CardTitle>
+            <CardDescription>
+              Su un mandato firmato una volta, Norma potrà inviare in automatico agli enti — un
+              consenso <b>separato per ogni pilastro</b>, sempre revocabile. Oggi Norma{" "}
+              <b>prepara e tu confermi</b>: l&apos;invio automatico non è attivo. Lo accendiamo
+              insieme, mai da soli.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-2.5">
+            {[
+              { name: "Alloggiati Web", sub: "schedine alla Questura" },
+              { name: "Tassa di soggiorno", sub: "dichiarazione al Comune" },
+              { name: "Movimento ISTAT", sub: "portale regionale" },
+            ].map((p) => (
+              <div
+                key={p.name}
+                className="flex items-center justify-between gap-3 rounded-xl border p-3"
+                style={{ borderColor: "var(--hairline)", background: "var(--carta)" }}
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium">{p.name}</span>
+                  <span className="text-muted-foreground block text-xs">{p.sub}</span>
+                </span>
+                <span className="cmx-badge cmx-badge-wait shrink-0">In arrivo</span>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </section>
