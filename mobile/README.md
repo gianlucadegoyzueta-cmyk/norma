@@ -99,9 +99,13 @@ Segreti di firma (certificati, profili, keystore, API key App Store/Play, `googl
 
 ## Prima del submit — dipendenze esterne
 
-- **Privacy policy URL** + **Support URL** pubblici: obbligatori per entrambi gli store. Verifica
-  che esistano su `norma.casa` (es. `/privacy`, `/supporto`); altrimenti vanno aggiunti nel repo
-  marketing `norma-marketing`.
+- **Privacy policy URL** + **Support URL** pubblici: obbligatori per entrambi gli store.
+  - **Privacy:** `https://norma.casa/privacy` e `https://norma.casa/termini` **esistono già** (in
+    `norma-marketing`), ma sono **BOZZE** con campi `[DA COMPILARE]` (titolare, P.IVA, PEC) e nota
+    "revisionare da un professionista prima del lancio" → **da finalizzare legalmente** prima del
+    submit.
+  - **Support URL:** usa `https://norma.casa` (sezione Supporto) o l'email di contatto. NON usare
+    `app.norma.casa/support`: è dietro login, non adatto come URL pubblico.
 - **Apple — abbonamenti/IAP (rischio review):** Norma vende l'abbonamento via web (Stripe). Apple
   può contestare un'app che sblocca funzioni a pagamento senza IAP. L'app è companion di un SaaS
   B2B (gestionale) → di norma accettata, ma il listing **non deve** linkare all'acquisto esterno.
