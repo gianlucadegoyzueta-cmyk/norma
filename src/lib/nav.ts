@@ -9,6 +9,7 @@ import {
   LayoutGrid,
   LifeBuoy,
   type LucideIcon,
+  PieChart,
   ScrollText,
   Settings,
 } from "lucide-react";
@@ -55,6 +56,14 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Strutture",
         Icon: LayoutDashboard,
         keywords: "agenzia multi immobile pm portfolio",
+      },
+      // Pagina secondaria: metriche di ricettività + posizione compliance (PARTE 6/FASE 3).
+      {
+        key: "statistiche",
+        href: "/statistiche",
+        label: "Statistiche",
+        Icon: PieChart,
+        keywords: "metriche occupazione numeri andamento ricettività report",
       },
     ],
   },
