@@ -187,3 +187,47 @@ DROP TABLE "DeviceToken"; DROP TYPE "DevicePlatform";`
 - **Cosa resta fuori (per scelta):** l'invio reale FCM/APNs (oggi stub gated `FcmPushSender`,
   attende le chiavi) e il toggle UI del consenso in `/account` (l'azione
   `setNotificationPreferenceAction` e il modello `NotificationPreference` ci sono già).
+
+---
+
+## PARTE 6 redesign (prodotto-first) — FASE 4 (piano) + FASE 5/6 (HARD STOP)
+
+> Contesto: sessione 2026-06-25. FASE 2 (guscio + home) e FASE 3 (superfici) sono su **PR draft
+> #167** (LOW/MEDIUM, non mergiata, attende l'OK sul look). FASE 4 NON costruita in autonomia di
+> proposito; FASE 5/6 sono decisioni umane (guardrail #1). Mappa sorgente: 1 agente Explore sul
+> codice reale.
+
+### FASE 4 — flusso ospite→periodo + scan + onboarding (piano esecutivo, dopo l'OK sul look)
+Molto esiste già; sono rifiniture mirate, **presentazione, zero schema, zero guardrail #1**:
+1. **Badge "Adempimenti" per-ospite** in `src/app/stays/[id]/page.tsx` (GuestRow ~riga 372-416):
+   3 micro-badge per ospite (Alloggiati / ISTAT / Tassa) per vedere lo stato nei 3 adempimenti su
+   una riga. Lo schedina-status c'è già; ISTAT/tassa per-ospite vanno derivati da letture esistenti
+   (`loadIstatSubmissionReadiness`, righe `TouristTaxDeclarationLine`). **Verificare la mappa
+   ospite→stato senza inventare** (se un dato non c'è, mostrarlo "—", mai dedotto).
+2. **Header "Periodo + scadenze" riusabile** (`src/components/.../PeriodStatus.tsx`, NUOVO): periodo
+   corrente (mese/trimestre, da `period.ts`) + stato dei 3 pilastri. ⚠️ **NON inventare date di
+   scadenza specifiche** (ISTAT/tassa variano e sono "DA VERIFICARE" nel codice — accuratezza
+   normativa = vita o morte): tenere il framing qualitativo già in uso ("entro 24h dall'arrivo",
+   "a fine mese/trimestre"). Montare su dashboard/istat/stays.
+3. **Scan documento — indicatore di successo** in `checkin/[token]/CheckinForm.tsx` (~riga 195-216):
+   checkmark + "Documento scansionato: rivedi i campi". ⚠️ **Native-only** (scanner solo in app):
+   non verificabile nella preview web → serve build nativa per il test. Confermato: **nessuna foto
+   salvata** (`lib/native/document-scan.ts`, OCR in-memory poi scartata) — mantenere così.
+4. **Onboarding — iCal e "ospite di prova"**: oggi il wizard (`OnboardingWizard.tsx`) ha 5 step
+   (welcome→activity→credenziali→property→ready); il link calendario in ReadyStep va bene così.
+   iCal-in-wizard e test-guest = build grandi a basso ROI: lasciare fuori salvo richiesta.
+
+### ⛔ FASE 5 — binari automazione / mandato / consenso per-pilastro (HARD STOP, guardrail #1)
+- Lo **step "Consenso autorizzazioni" in onboarding** e il **toggle reale** nella sezione
+  "invio automatico agli enti" di `/account` (oggi **sola presentazione**, "In arrivo") sono
+  **esattamente** il safeguard #1 dell'auto-send (consenso granulare versionato/revocabile).
+  **NON costruire lo storage del consenso né alcun wiring di Send in autonomia.** Si costruisce
+  con te, OFF di default, Test-gate + DRY-RUN, e si accende **insieme** prima su struttura/ospite
+  reale del FOUNDER, presidiato (CRITICAL). Mandato: wording da legale.
+- L'auto-send Alloggiati **esiste già** (#99) ed è **spento di default**: non accenderlo, non riproporlo.
+
+### ⛔ FASE 6 — integrazioni reali ISTAT/Tassa per-ente (HARD STOP)
+- Portali regionali / pagoPA / GECOS / comuni: servono **spec esterne + credenziali reali** (vedi §9
+  Sicilia AUTO = schema vault `RegionalCredential` = migrazione HIGH + backup + decisione primo invio).
+  Nessun URL portale è nel codice (`routing.ts`: "DA VERIFICARE") → **non inventarli**. Una regione
+  alla volta, con te.

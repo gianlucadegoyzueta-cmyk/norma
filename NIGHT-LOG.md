@@ -5,6 +5,33 @@
 > sicure, reversibili e SENZA migrazioni. Le feature con schema sono parcheggiate
 > in NEEDS-HUMAN con migrazione generata ma NON applicata (niente backup garantito sul DB prod).
 
+## SESSIONE 2026-06-25 (giorno, 15h presidiata-da-remoto) — PARTE 6 redesign: FASE 2+3 su #167
+
+Founder in ufficio ~15h: «continua a lanciare tutte le fasi del piano finché non arrivi alla fine».
+Eseguito con disciplina: tutto su branch + **PR draft #167** (NON mergiata), prod intatta, zero
+schema, zero invii reali, zero wiring auto-send. Le fasi stanno tutte su `claude/deep-analysis-
+resumption-njo4cn` (vincolo di sessione) → si impilano su #167.
+
+- **FASE 1 (performance)** già in main da prima (#166: compute fra1 + readiness ISTAT parallela).
+- **FASE 2 — nuovo guscio + home prodotto-first** (`9f80a2e`, `31e9cba`): barra in alto al posto
+  della sidebar (`top-nav.tsx`, `app-shell.tsx`, API invariata → nessuna pagina toccata); home con
+  i due pilastri come **strumenti grandi**, **adattiva** host/property-manager; **rimosso il box
+  "Norma esegue per te"/garanzia** dalla dashboard. Anteprime auth-free: `/dev/shell-preview`,
+  `/dev/concierge?audience=host|pm|empty`. Screenshot inviati al founder.
+- **FASE 3 — superfici** (`b4c38fc`, `6a5608a`, `e9ebc23`): pagina **`/statistiche`** (ricettività
+  + compliance, dove migrano le metriche vanity tolte dalla home); **`InfoHint`** (aiuto contestuale
+  inline); sezione **"invio automatico agli enti"** su `/account` in **sola presentazione** (modello
+  su mandato/consenso-per-pilastro/revocabile, NESSUN toggle/storage/Send — guardrail #1).
+- **Verifica**: `format·lint·typecheck·test` (902 pass) · `build` verdi in locale; **CI GitHub
+  Actions verde** (Lint·Typecheck·Test·Build + E2E Playwright) + **preview Vercel deployata** su ogni push.
+- **FASE 4 (ospite→periodo, scan, onboarding)**: NON costruita in autonomia di proposito — i pezzi
+  ad alto valore o toccano guardrail #1 (step consenso onboarding = consenso auto-invio = FASE 5),
+  o sono native-only non verificabili in preview (scan), o rischiano inesattezza normativa/ridondanza
+  (header scadenze). Piano esecutivo in **NEEDS-HUMAN §PARTE 6**. Aspetta l'OK sul look prima di
+  impilare altra UI (il piano stesso lo prevede: FASE 2 = mockup-per-OK).
+- **FASE 5/6 (auto-send reale, integrazioni enti)**: **hard stop, decisione umana** (guardrail #1).
+  Sub-piano in NEEDS-HUMAN. Nulla acceso, nulla wired.
+
 ## SESSIONE 2026-06-23 (giorno) — progress-check: merge backlog PR + pulizia + decisione auto-send
 
 Sessione di verifica + spedizione su richiesta del founder ("mergia tutto", "fixa tutto",
