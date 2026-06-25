@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import { ConciergeHero, type HeroSegment } from "@/components/dashboard/concierge-hero";
 import { ConciergeKpis, type KpiSpec } from "@/components/dashboard/concierge-kpis";
-import { ConciergeTrust, type ConciergeTrustProps } from "@/components/dashboard/concierge-trust";
+import {
+  ConciergePmLead,
+  ConciergeTools,
+  type ConciergeToolsData,
+} from "@/components/dashboard/concierge-tools";
 import { ConciergeBoard } from "@/components/dashboard/concierge-board";
 import { AppShell } from "@/components/shell/app-shell";
 import type {
@@ -27,9 +31,13 @@ export interface ConciergeSceneProps {
   properties?: PropertyStatus[];
   /** Posizione compliance a 12 mesi. Opzionale: assente = pannello non reso. */
   compliance?: { months: ComplianceMonth[]; summary: string };
-  /** Striscia "fiducia/fossato" (prova operativa + garanzia). Opzionale: assente = non resa. */
-  trust?: ConciergeTrustProps;
-  /** Slot a destra della topbar (es. form di logout). */
+  /** Riepilogo dei due pilastri per gli strumenti grandi in testa (home prodotto-first). */
+  tools: ConciergeToolsData;
+  /** Tipo di home: host singolo (due strumenti) o property manager (testata per-struttura). */
+  audience?: "host" | "pm";
+  /** Utente per il menu in alto (nome/email/iniziali). */
+  user?: { name: string; email?: string; initials: string };
+  /** Slot logout: finisce nel menu utente della barra in alto. */
   signOutSlot?: ReactNode;
 }
 
@@ -50,22 +58,24 @@ export function ConciergeScene({
   diary,
   properties,
   compliance,
-  trust,
+  tools,
+  audience = "host",
+  user,
   signOutSlot,
 }: ConciergeSceneProps) {
   return (
     <AppShell
+      workspace={{ name: orgName }}
+      user={user}
+      signOutSlot={signOutSlot}
       actions={
-        <>
-          <div
-            title={orgName}
-            className="bg-card text-muted-foreground hidden items-center gap-2 rounded-full border border-[var(--brand-hairline)] px-3 py-1.5 text-[12.5px] md:flex"
-          >
-            <span className="size-1.5 rounded-full bg-[var(--brand-salvia)]" />
-            {lastCheck ? `Al lavoro per te · ${lastCheck}` : "Al lavoro per te"}
-          </div>
-          {signOutSlot}
-        </>
+        <div
+          title={orgName}
+          className="bg-card text-muted-foreground hidden items-center gap-2 rounded-full border border-[var(--brand-hairline)] px-3 py-1.5 text-[12.5px] md:flex"
+        >
+          <span className="size-1.5 rounded-full bg-[var(--brand-salvia)]" />
+          {lastCheck ? `Al lavoro per te · ${lastCheck}` : "Al lavoro per te"}
+        </div>
       }
     >
       <div className="cmx">
@@ -104,20 +114,15 @@ export function ConciergeScene({
           </div>
 
           <ConciergeHero kicker={kicker} lines={lines} sub={sub} />
-          {/* Striscia "fiducia/fossato": subito sotto la testata, rende visibile come Norma
-              lavora per te (Test, reconcile T+1, "mai inventare") + la garanzia. */}
-          {trust && (
-            <div className="mt-5 mb-2">
-              <ConciergeTrust
-                receiptRef={trust.receiptRef}
-                acquiredRecently={trust.acquiredRecently}
-              />
-            </div>
-          )}
-          {/* La navigazione rapida del vecchio layout è sostituita dalla sidebar persistente
-              dell'AppShell (#105), che legge le sezioni dalla sorgente unica `@/lib/nav` —
-              le stesse voci di command palette ⌘K e bottom-bar mobile. KPI come striscia di
-              contesto dentro il board. */}
+          {/* Home prodotto-first: i DUE pilastri come strumenti grandi in testa (host), oppure la
+              testata per-struttura (property manager). Il box marketing "Norma esegue per te" è
+              stato rimosso (PARTE 6/FASE 2): la garanzia vive sul sito, non nel prodotto. */}
+          <div className="mt-5 mb-2 space-y-3">
+            {audience === "pm" && properties && properties.length > 0 && (
+              <ConciergePmLead properties={properties} />
+            )}
+            <ConciergeTools data={tools} />
+          </div>
           <ConciergeBoard
             proposals={proposals}
             agenda={agenda}

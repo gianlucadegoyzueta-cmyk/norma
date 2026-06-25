@@ -217,16 +217,27 @@ const EMPTY_COMPLIANCE = {
 export default async function ConciergePreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ state?: string; name?: string }>;
+  searchParams: Promise<{ state?: string; name?: string; audience?: string }>;
 }) {
   if (process.env.NODE_ENV === "production") notFound();
-  const { state, name } = await searchParams;
+  const { state, name, audience } = await searchParams;
   const isEmpty = state === "empty";
   const data = isEmpty ? EMPTY : FULL;
   const now = new Date("2026-06-11T09:00:00Z");
   // `?name=none` simula l'utente senza nome (fallback saluto elegante senza nome).
   const firstName = name === "none" ? null : "Gianluca";
   const copy = buildSceneCopy(data, { firstName, now, proposals: data.proposals });
+  // `?audience=pm` mostra la testata per-struttura del property manager.
+  const aud = audience === "pm" ? "pm" : "host";
+  const tools = {
+    alloggiati: { pending: data.kpis.pendingSchedine, overdue: data.overdueSchedine },
+    turismo: {
+      istatReady: data.istat.ready,
+      istatTotal: data.istat.total,
+      taxEuros: data.kpis.taxAccruedEuros,
+      monthLabel: data.istat.monthLabel,
+    },
+  } as const;
 
   return (
     <ConciergeScene
@@ -241,7 +252,8 @@ export default async function ConciergePreviewPage({
       diary={data.diary}
       properties={isEmpty ? EMPTY_PROPERTIES : MOCK_PROPERTIES}
       compliance={isEmpty ? EMPTY_COMPLIANCE : MOCK_COMPLIANCE}
-      trust={{ receiptRef: data.receiptRef, acquiredRecently: data.acquiredYesterday }}
+      tools={tools}
+      audience={aud}
     />
   );
 }
