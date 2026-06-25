@@ -31,6 +31,11 @@ const fraunces = localFont({
   ],
 });
 
+// Region delle Serverless Function: Francoforte, accanto al DB Supabase (era iad1/USA →
+// ~200-300ms per query). Route Segment Config sul layout radice → vale per tutte le route.
+// (Il `regions` in vercel.json da solo non sposta le function di Next.js.)
+export const preferredRegion = "fra1";
+
 export const metadata: Metadata = {
   title: {
     default: "Norma — Affitti Brevi",

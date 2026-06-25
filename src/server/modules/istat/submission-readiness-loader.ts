@@ -60,10 +60,53 @@ export interface PropertyInput {
   provincia: string | null;
 }
 
+/** Prontezza di UNA struttura: routing → prepara il tracciato (isolato) → calcola la prontezza. */
+async function computePropertyReadiness(
+  prisma: PrismaClient,
+  organizationId: string,
+  period: string,
+  p: PropertyInput,
+): Promise<PropertyReadiness> {
+  const region = regionMovementForProvincia(p.provincia);
+  const channel = region ? resolveIstatSubmissionChannel(region.serializerId) : null;
+  const channelVerdict = channel ? { isImplemented: channel.isImplemented } : null;
+
+  // Solo le regioni a FILE/AUTO con un serializer hanno un tracciato da preparare.
+  let prep: RegionalPreparation | null = null;
+  let errored = false;
+  if (region && region.serializerId) {
+    try {
+      prep = await prepareForSerializer(
+        prisma,
+        region.serializerId,
+        { organizationId, propertyId: p.id },
+        period,
+      );
+    } catch {
+      // Dati fuori vincolo del tracciato: isola la struttura, non abbattere la pagina.
+      errored = true;
+      prep = { kind: "INCOMPLETE", missing: [{ field: "struttura" }] };
+    }
+  }
+
+  return {
+    propertyId: p.id,
+    propertyName: p.name,
+    readiness: computeSubmissionReadiness(region, prep, channelVerdict),
+    errored,
+  };
+}
+
+// Quante strutture preparare in parallelo. Le strutture sono indipendenti: andare in parallelo
+// elimina la cascata di query (prima era un loop sequenziale → lento su DB lontano). Il tetto
+// evita che un property manager con tante strutture apra centinaia di query insieme (pool).
+const READINESS_CONCURRENCY = 8;
+
 /**
  * Calcola la prontezza all'invio per ogni struttura passata. Le strutture sono passate dal chiamante
  * (la pagina le carica già con il routing per provincia), così questo loader resta focalizzato sul
- * preparare i tracciati e calcolare la prontezza.
+ * preparare i tracciati e calcolare la prontezza. Esecuzione parallela a concorrenza limitata;
+ * l'ordine d'input è preservato e l'isolamento per-struttura (try/catch) resta in `computePropertyReadiness`.
  */
 export async function loadIstatSubmissionReadiness(
   prisma: PrismaClient,
@@ -72,37 +115,12 @@ export async function loadIstatSubmissionReadiness(
   properties: readonly PropertyInput[],
 ): Promise<PropertyReadiness[]> {
   const out: PropertyReadiness[] = [];
-
-  for (const p of properties) {
-    const region = regionMovementForProvincia(p.provincia);
-    const channel = region ? resolveIstatSubmissionChannel(region.serializerId) : null;
-    const channelVerdict = channel ? { isImplemented: channel.isImplemented } : null;
-
-    // Solo le regioni a FILE/AUTO con un serializer hanno un tracciato da preparare.
-    let prep: RegionalPreparation | null = null;
-    let errored = false;
-    if (region && region.serializerId) {
-      try {
-        prep = await prepareForSerializer(
-          prisma,
-          region.serializerId,
-          { organizationId, propertyId: p.id },
-          period,
-        );
-      } catch {
-        // Dati fuori vincolo del tracciato: isola la struttura, non abbattere la pagina.
-        errored = true;
-        prep = { kind: "INCOMPLETE", missing: [{ field: "struttura" }] };
-      }
-    }
-
-    out.push({
-      propertyId: p.id,
-      propertyName: p.name,
-      readiness: computeSubmissionReadiness(region, prep, channelVerdict),
-      errored,
-    });
+  for (let i = 0; i < properties.length; i += READINESS_CONCURRENCY) {
+    const chunk = properties.slice(i, i + READINESS_CONCURRENCY);
+    const results = await Promise.all(
+      chunk.map((p) => computePropertyReadiness(prisma, organizationId, period, p)),
+    );
+    out.push(...results);
   }
-
   return out;
 }
