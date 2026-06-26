@@ -119,7 +119,7 @@ export default async function StatistichePage() {
         </h2>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           <StatCard
-            label="Schedine da confermare"
+            label="Schedine in coda"
             value={data.pendingSchedine}
             sub={
               data.overdueSchedine > 0

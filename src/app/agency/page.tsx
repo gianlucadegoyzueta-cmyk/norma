@@ -209,7 +209,7 @@ export default async function AgencyPage({
                       )}
                       {r.schedinePending > 0 && (
                         <span className="cmx-badge cmx-badge-wait">
-                          {r.schedinePending} da confermare
+                          {r.schedinePending} in coda
                         </span>
                       )}
                       {r.checkinsToday > 0 && (

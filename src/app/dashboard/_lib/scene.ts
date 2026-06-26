@@ -50,9 +50,7 @@ export function buildSceneCopy(
   const allClear = data.positionRegular && pending === 0;
 
   // --- Hero ASCIUTTO (dual-judge, consenso alto): saluto serif a UNA riga + una sotto-riga
-  // di stato sans. Le decisioni NON si raccontano qui — vivono nel blocco "Aspettano il tuo
-  // via libera" sotto (regola anti-ridondanza: un fatto, un posto solo). La ricevuta Questura
-  // vive nel diario "Fatto stanotte", non in cima. Niente parola rotante.
+  // di stato sans. Le decisioni vivono nel blocco proposte sotto (regola anti-ridondanza).
   const greeting = greetingFor(now);
   const lines: HeroSegment[][] = [
     [{ text: firstName ? `${greeting} ${firstName}.` : `${greeting}.` }],
@@ -118,25 +116,25 @@ export function buildSceneCopy(
     // PILASTRO 1 — Alloggiati: l'azione del giorno.
     {
       value: pending,
-      label: "schedine da confermare",
+      label: "schedine in coda",
       trend:
         overdue > 0
           ? `${overdue} oltre scadenza`
           : pending > 0
-            ? "pronte, aspettano il tuo via libera"
+            ? "pronte per l'invio su mandato"
             : "nessuna in attesa",
       due: overdue > 0,
       detail: {
-        title: "Schedine da confermare",
+        title: "Schedine in coda",
         intro:
           pending > 0
-            ? `${pending} ${pending === 1 ? "schedina preparata" : "schedine preparate"} in attesa della tua conferma.`
-            : "Nessuna schedina in attesa: l'outbox è pulito.",
+            ? `${pending} ${pending === 1 ? "schedina in" : "schedine in"} coda per l'invio su mandato Alloggiati.`
+            : "Nessuna schedina in coda: l'outbox è pulito.",
         rows: [
-          { label: "In attesa di conferma", value: `${pending}` },
+          { label: "In coda per l'invio", value: `${pending}` },
           { label: "Di cui oltre scadenza", value: `${overdue}` },
         ],
-        note: "Norma le prepara dai dati degli ospiti; l'invio ad Alloggiati resta una tua conferma.",
+        note: "Con mandato attivo Norma invia per tuo conto; altrimenti le gestisci da Schedine.",
         link: { label: "Vai alle schedine", href: "/schedine" },
       },
     },
