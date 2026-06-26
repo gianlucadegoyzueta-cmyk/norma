@@ -1,5 +1,7 @@
 # Registro difetti — Norma (giuria critici, 2026-06-23)
 
+> **Aggiornamento 2026-06-26 (piano Ordine ecosistema):** verità editoriale migrata a `docs/EDITORIAL.md` — pitch **"Norma esegue per te su mandato"** (non più "prepara/confermi"). Interventi #1 e tono app in Top 10 vanno riletti alla luce di EDITORIAL; molti fix copy/CTA/deploy sono in corso su `norma-marketing` e `norma`.
+
 **Conteggi:** Sito: 4 BLOCKER, 13 MAJOR, 12 MINOR, 5 POLISH (34 difetti deduplicati). App: 5 BLOCKER, 17 MAJOR, 18 MINOR, 10 POLISH (50 difetti deduplicati). Totale: 9 BLOCKER, 30 MAJOR, 30 MINOR, 15 POLISH = 84 difetti unici su 12 report.
 
 ## Verdetto sito

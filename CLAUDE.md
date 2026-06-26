@@ -5,7 +5,8 @@ Contesto operativo per Claude (Code, Cowork, agenti). Leggi PRIMA di toccare il 
 ## Cos'è Norma
 
 SaaS di compliance per affitti brevi in Italia (norma.casa, app su app.norma.casa,
-€120/anno — gratis fino al primo ospite gestito). **Pivot 2026-06-17: due soli pilastri ricorrenti.**
+**gratis fino al primo ospite** · Host da €9/mese per struttura · PM da €6/mese per struttura).
+**Verità editoriale:** `docs/EDITORIAL.md` (fonte unica copy). **Pivot 2026-06-17: due soli pilastri ricorrenti.**
 
 1. **Alloggiati** — schedine alla Polizia di Stato (Alloggiati Web, art. 109 TULPS).
 2. **Turismo** — tassa di soggiorno + ISTAT/movimento turistico (Ross1000 e portali regionali).
@@ -14,10 +15,10 @@ Tutto il resto serve i due pilastri: check-in self-service multilingua, import i
 properties, onboarding alimentano schedine e dichiarazioni. **CIN non è un pilastro né sta nel
 pitch** (adempimento una-tantum): NON si vende. Ma resta nel prodotto perché è load-bearing —
 `Property.cin` è richiesto dalla dichiarazione tassa di soggiorno (`tourist-tax/actions.ts`):
-NON rimuoverlo, NON deprecare il modulo. **Verità editoriale (rev. 2026-06-23): "Norma esegue per
-te" — invio automatico agli enti su mandato firmato una volta; "se sbagliamo noi, paghiamo noi"
+NON rimuoverlo, NON deprecare il modulo. **Verità editoriale:** vedi `docs/EDITORIAL.md` — "Norma esegue per
+te" su mandato firmato una volta; "se sbagliamo noi, paghiamo noi"
 (garanzia commerciale a cap sul danno da nostro errore tecnico, MAI assunzione di responsabilità
-penale — vedi guardrail #1).** Positioning: **compliance garantita in automatico per affitti brevi**
+penale — vedi guardrail #1).** Positioning: **compliance garantita in automatico per affitti brevi\*\*
 (l'auto-send è commodity: il fossato è la garanzia + reconcile/ricevute che la reggono).
 
 - **Stack:** Next.js App Router + TypeScript strict + PostgreSQL (Supabase, Frankfurt) + Prisma.

@@ -34,30 +34,22 @@ migrate.yml già presente, che gira al merge su main).
 
 ## Parcheggiate
 
-### 1. ISTAT — presenze turistiche per-regione
+### ~~2. Check-in ospite self-service~~ — ✅ RISOLTO (in prod, #158+)
 
-- **Perché è qui:** richiede campi di **residenza/provenienza** su `Guest` (oggi il modello ha solo nascita + cittadinanza, vedi censimento) → migrazione schema. Inoltre nuovo modello per le dichiarazioni ISTAT e tabelle di aggregazione mensile.
-- **Cosa serve da te:** backup DB Supabase, poi applicare la migrazione generata. Decisione di prodotto: i portali ISTAT sono **regionali ed eterogenei** (Ross1000, WebTur, Sinfonia, Turismatica…) — l'invio reale per-regione va confermato per i comuni coperti (partenza Roma → Lazio/Ross1000).
-- **Stato:** non iniziato in codice (parcheggiato a monte per il vincolo schema).
+- Link pubblico `/checkin/[token]`, multilingua IT/EN/DE/FR/ES, bozza offline (#164), scanner MRZ (#161).
 
-### 2. Check-in ospite self-service (link pubblico, multilingua IT/EN/DE/FR/ES, GDPR)
+### ~~3. Import iCal prenotazioni~~ — ✅ RISOLTO (in prod, #65/#158)
 
-- **Perché è qui:** richiede (a) un token/record pubblico per soggiorno (nuovo modello → schema), (b) i campi residenza su `Guest` (condivisi con ISTAT), (c) infrastruttura i18n (oggi **assente**: nessun next-intl/i18next, stringhe IT hardcoded).
-- **Cosa serve da te:** backup DB + migrazione. Scelta lib i18n consigliata: `next-intl` (App Router-native).
-- **Stato:** non iniziato (vincolo schema + i18n da introdurre).
+- Modulo `stays` + `ReservationImport`; import con stati DRAFT/CANCELLED/NEEDS_CANCEL_REVIEW.
 
-### 3. Import iCal prenotazioni (port ReservationSource)
+### ~~4. Backend hardening — NEEDS_REVIEW enum~~ — ✅ RISOLTO (schema in prod)
 
-- **Perché è qui:** nuovo modello `Reservation`/`ImportSource` (oggi inesistente) → schema.
-- **Cosa serve da te:** backup DB + migrazione.
+- Enum `NEEDS_REVIEW` presente; cap `MAX_SEND_ATTEMPTS=5` attivo (DECISIONS D2).
 
-### 4. Backend hardening — stato `NEEDS_REVIEW` + omonimi
+### 1. ISTAT — invio regionale reale (oltre export file)
 
-- **Perché è qui:** aggiungere `NEEDS_REVIEW` all'enum `SchedinaStatus` è un cambio di schema. Serve per parcheggiare gli **omonimi** (la riconciliazione T+1 matcha su cognome+nome+data nascita senza documento → due omonimi nello stesso batch possono collidere).
-- **Cosa serve da te:** backup DB + migrazione enum.
-- **NB non-schema già fattibile (lo farò se resta tempo / oppure tu):** il **cap max-attempts=5** e il guard sul doppio-incremento di `attempts` NON richiedono schema (logica in `outbox.service.ts`/repo) → spedibile a parte.
-
-### 5. Scheduler invio + reconcile T+1 — ⏸️ CODICE PRONTO IN PR (disattivato), attende la TUA decisione
+- **Perché è qui:** export file Puglia/Umbria in prod (#158); **invio reale** ai portali regionali (Lazio first) resta gate umano CRITICAL.
+- **Stato:** serializer + client pronti dove coperti; trasmissione gated fino a decisione founder. — ⏸️ CODICE PRONTO IN PR (disattivato), attende la TUA decisione
 
 - **Stato:** route + cron **implementati e DISATTIVATI di default** in **PR #56** (`feat/cron-send-reconcile`), **NON mergiata** apposta. CI verde. Nessuno schema, nessun Send reale finché il flag è OFF.
 - **Com'è fatto:** `GET /api/cron/alloggiati` con due barriere (`domain/cron-gate.ts`): (1) gira solo se env `ALLOGGIATI_CRON_ENABLED="true"`, altrimenti 200 `{disabled:true}`; (2) anche da attivo accetta solo il cron Vercel autenticato (`Authorization: Bearer $CRON_SECRET`, fail-closed). Orchestrazione testabile `runSendAndReconcile` (send poi reconcile per conteggio su ogni credenziale attiva, resiliente per-credenziale).

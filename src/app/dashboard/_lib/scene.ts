@@ -59,37 +59,40 @@ export function buildSceneCopy(
   ];
 
   const noun = things === 1 ? "cosa" : "cose";
-  // "X da confermare" è VERO anche quando nulla è scaduto: non confonde "preparato" con "adempiuto".
+  // "X in coda" = PENDING/UNVERIFIED: obbligo non ancora assolto anche se nulla è scaduto.
   const pendingNote =
     pending > 0
-      ? ` ${pending} ${pending === 1 ? "schedina è" : "schedine sono"} in attesa della tua conferma.`
+      ? ` ${pending} ${pending === 1 ? "schedina in" : "schedine in"} coda per l'invio su mandato.`
       : "";
   const sub: { text: string; bold?: string } =
     things > 0
       ? {
-          bold: `Stanotte ho preparato ${things} ${noun}.`,
+          bold: `Stanotte ho gestito ${things} ${noun}.`,
           text:
             pending > 0
               ? pendingNote
               : k > 0
-                ? " Niente è scaduto: aspetto il tuo via libera."
+                ? " Con mandato attivo l'invio è automatico; altrimenti restano in coda."
                 : " Per oggi non serve altro.",
         }
       : pending > 0
         ? { bold: "Tutto pronto.", text: pendingNote }
         : k > 0
-          ? { bold: "Tutto pronto.", text: " Niente è scaduto: aspetto solo il tuo via libera." }
+          ? {
+              bold: "Tutto pronto.",
+              text: " Con mandato attivo l'invio è automatico; altrimenti restano in coda.",
+            }
           : allClear
             ? { bold: "Tutto in regola.", text: " Nessuna scadenza da gestire oggi." }
             : {
                 bold: "Nessuna scadenza scaduta.",
-                text: " Resta solo da confermare il preparato.",
+                text: " Restano adempimenti in coda — apri le proposte sotto.",
               };
 
   const positionLabel = !data.positionRegular
     ? "da sistemare"
     : pending > 0
-      ? `${pending} da confermare`
+      ? `${pending} in coda`
       : "regolare";
   const kicker = `${new Intl.DateTimeFormat("it-IT", {
     weekday: "long",
@@ -193,7 +196,7 @@ export function buildSceneCopy(
         guestsThisMonth === 0
           ? "nessuno questo mese"
           : pending > 0
-            ? `${pending} ${pending === 1 ? "schedina" : "schedine"} da confermare`
+            ? `${pending} ${pending === 1 ? "schedina" : "schedine"} in coda`
             : data.positionRegular
               ? "schedine in regola"
               : "schedine da gestire",
@@ -211,7 +214,7 @@ export function buildSceneCopy(
               guestsThisMonth === 0
                 ? "—"
                 : pending > 0
-                  ? `${pending} da confermare`
+                  ? `${pending} in coda`
                   : data.positionRegular
                     ? "tutte in regola"
                     : "da gestire",
