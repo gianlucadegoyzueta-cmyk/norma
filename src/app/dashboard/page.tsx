@@ -4,6 +4,7 @@ import { signOut } from "@/auth";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { getOnboardingState } from "@/server/modules/onboarding/state";
+import { loadProgress } from "@/server/modules/onboarding/progress";
 import { LogOut } from "lucide-react";
 import { ConciergeScene } from "@/components/dashboard/concierge-scene";
 import { getDashboardData, type DashboardProposal } from "./_lib/data";
@@ -19,15 +20,42 @@ export default async function DashboardPage() {
 
   const orgId = ctx.current.organizationId;
   const now = new Date();
-  const [data, onboarding, panels] = await Promise.all([
+  const [data, onboarding, panels, progress] = await Promise.all([
     getDashboardData(prisma, orgId, now),
     getOnboardingState(prisma, orgId),
     getDashboardPanels(prisma, orgId, now),
+    loadProgress(prisma, orgId),
   ]);
+
+  // Home adattiva: i property manager (più strutture di terzi) vedono la testata per-struttura;
+  // gli host singoli i due strumenti grandi. Il tipo è quello dichiarato in onboarding.
+  const audience = progress?.userType === "PROPERTY_MANAGER" ? "pm" : "host";
+  const tools = {
+    alloggiati: { pending: data.kpis.pendingSchedine, overdue: data.overdueSchedine },
+    turismo: {
+      istatReady: data.istat.ready,
+      istatTotal: data.istat.total,
+      taxEuros: data.kpis.taxAccruedEuros,
+      monthLabel: data.istat.monthLabel,
+    },
+  } as const;
 
   // Primo nome REALE dell'utente: se manca (solo email), saluto elegante senza nome.
   const rawName = ctx.user.name?.trim();
   const firstName = rawName ? rawName.split(/\s+/)[0] : null;
+
+  // Utente per il menu in alto del nuovo guscio.
+  const displayName = rawName || ctx.user.email || "Il tuo account";
+  const initials =
+    (rawName
+      ? rawName
+          .split(/\s+/)
+          .slice(0, 2)
+          .map((w) => w[0])
+          .join("")
+      : (ctx.user.email?.[0] ?? "N")
+    ).toUpperCase() || "N";
+  const user = { name: displayName, email: ctx.user.email ?? undefined, initials };
 
   // Onboarding incompleto = prima proposta (azione reale: vai al wizard), poi le proposte sui dati.
   const proposals: DashboardProposal[] = [];
@@ -67,14 +95,16 @@ export default async function DashboardPage() {
       diary={data.diary}
       properties={panels.properties}
       compliance={panels.compliance}
-      trust={{ receiptRef: data.receiptRef, acquiredRecently: data.acquiredYesterday }}
+      tools={tools}
+      audience={audience}
+      user={user}
       signOutSlot={
         <form action={signOutAction}>
           <button
             type="submit"
-            className="bg-card text-muted-foreground hover:text-foreground flex h-9 items-center gap-1.5 rounded-lg border border-[var(--brand-hairline)] px-3 text-[13px] font-medium transition-colors"
+            className="text-muted-foreground hover:text-foreground flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] transition-colors hover:bg-[var(--brand-avorio)]"
           >
-            <LogOut className="size-4" />
+            <LogOut className="size-[17px]" />
             Esci
           </button>
         </form>
