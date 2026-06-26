@@ -136,9 +136,10 @@ export default async function AccountPage() {
             </CardTitle>
             <CardDescription>
               Su un mandato firmato una volta, Norma potrà inviare in automatico agli enti — un
-              consenso <b>separato per ogni pilastro</b>, sempre revocabile. Oggi Norma{" "}
-              <b>prepara e tu confermi</b>: l&apos;invio automatico non è attivo. Lo accendiamo
-              insieme, mai da soli.
+              consenso <b>separato per ogni pilastro</b>, sempre revocabile. L&apos;auto-invio è{" "}
+              <b>spento di default</b> fino al go-live controllato sul tuo account — con mandato
+              attivo Norma esegue per tuo conto; dati incompleti bloccano l&apos;invio. Lo
+              accendiamo insieme, mai da soli.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-2.5">
