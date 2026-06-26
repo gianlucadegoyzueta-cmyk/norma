@@ -371,11 +371,11 @@ export async function getDashboardData(
     proposals.push({
       id: "schedine-pending",
       emoji: "🧾",
-      bold: `${pendingSchedine} ${pendingSchedine === 1 ? "schedina pronta" : "schedine pronte"} in attesa di conferma.`,
-      rest: " Le ho preparate dai dati degli ospiti; dai un'occhiata e confermale per l'invio ad Alloggiati.",
+      bold: `${pendingSchedine} ${pendingSchedine === 1 ? "schedina in coda" : "schedine in coda"} per l'invio.`,
+      rest: " Dati validati su mandato Alloggiati: con l'auto-invio attivo partono da sole; altrimenti le invii da qui.",
       meta: "outbox · le più urgenti in cima",
       primary: { label: "Vai alle schedine", action: { type: "link", href: "/schedine" } },
-      doneText: "Schedine aperte per la conferma",
+      doneText: "Schedine aperte in outbox",
     });
   }
 
@@ -386,7 +386,7 @@ export async function getDashboardData(
       id: "ical-drafts",
       emoji: "📅",
       bold: `${draftStaysNoGuests.length} ${draftStaysNoGuests.length === 1 ? "bozza importata" : "bozze importate"} dal calendario senza ospiti.`,
-      rest: " Completa i dati degli ospiti e ti preparo le schedine, pronte da confermare.",
+      rest: " Completa i dati degli ospiti: con il mandato attivo preparo e invio le schedine in automatico.",
       meta: `import iCal · ${first.property.name}`,
       primary: { label: "Completa ospiti", action: { type: "link", href: `/stays/${first.id}` } },
       secondary: { label: "Vedi soggiorni", href: "/stays" },

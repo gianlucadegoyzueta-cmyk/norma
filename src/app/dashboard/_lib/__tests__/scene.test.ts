@@ -61,7 +61,7 @@ describe("buildSceneCopy — accuratezza compliance", () => {
       proposals: NO_PROPOSALS,
     });
     expect(scene.kicker).not.toContain("posizione regolare");
-    expect(scene.kicker).toContain("2 da confermare");
+    expect(scene.kicker).toContain("2 in coda");
   });
 
   it("dice 'posizione regolare' nel kicker solo se nulla è scaduto E nulla è in attesa", () => {
@@ -87,8 +87,8 @@ describe("buildSceneCopy — accuratezza compliance", () => {
       makeData({ positionRegular: true, pendingSchedine: 3 }),
     );
     expect(trend).not.toContain("in regola");
-    expect(trend).toContain("3 schedine da confermare");
-    expect(statoSchedine).toBe("3 da confermare");
+    expect(trend).toContain("3 schedine in coda");
+    expect(statoSchedine).toBe("3 in coda");
   });
 
   it("il KPI ospiti registrati dice 'in regola' solo senza pendenti né scadenze", () => {
@@ -107,7 +107,7 @@ describe("buildSceneCopy — accuratezza compliance", () => {
     });
     const subText = `${scene.sub.bold ?? ""}${scene.sub.text}`;
     expect(subText).not.toContain("Tutto in regola");
-    expect(subText).toContain("in attesa della tua conferma");
+    expect(subText).toContain("coda per l'invio su mandato");
   });
 
   it("il sub hero afferma 'Tutto in regola' solo quando tutto è davvero adempiuto", () => {

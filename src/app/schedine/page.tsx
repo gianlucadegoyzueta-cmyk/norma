@@ -184,8 +184,8 @@ export default async function SchedinePage() {
             <CardContent className="grid gap-3">
               <p className="text-muted-foreground text-sm">
                 Le schedine partono dalle credenziali Alloggiati: collega quelle della tua struttura
-                e Norma prepara qui gli invii alla Polizia di Stato, pronti da confermare. È il
-                primo dei tre passi —{" "}
+                e Norma gestisce qui gli invii alla Polizia di Stato su tuo mandato. È il primo dei
+                tre passi —{" "}
                 <Link href="/credentials" style={{ color: "var(--terracotta)", fontWeight: 600 }}>
                   Credenziali
                 </Link>{" "}
