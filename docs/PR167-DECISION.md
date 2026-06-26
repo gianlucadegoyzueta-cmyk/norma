@@ -8,5 +8,5 @@ Redesign Fase 2+3: guscio app (`top-nav`), home dashboard, superfici interne, pa
 
 ## Follow-up post-merge
 
-- Verificare copy nuove stringhe vs `docs/EDITORIAL.md` (mandato + safeguard).
-- Smoke su app.norma.casa dopo deploy Vercel.
+- ✅ Copy riallineata a `docs/EDITORIAL.md` via [PR #170](https://github.com/gianlucadegoyzueta-cmyk/norma/pull/170) (2026-06-26).
+- Smoke su app.norma.casa dopo deploy Vercel (founder).
