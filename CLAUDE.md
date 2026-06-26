@@ -134,3 +134,17 @@ Complementare al setup di questo repo (guard hook `scripts/hooks/guard.sh`, coma
 - **MCP** (14 connettori): github, filesystem, context7, playwright, Linear, Notion, Slack, Apollo, n8n…
 
 Per norma il rischio resta sovrano: billing/auth/schema/PII = HIGH+, invii reali = CRITICAL (sempre umano).
+
+## Ecosistema multi-repo (Claude Code)
+
+Claude Code usa **una directory di lavoro** per sessione. Repo correlati:
+
+| Task                                 | `cd` prima di `claude`      |
+| ------------------------------------ | --------------------------- |
+| **App (default)**                    | `~/dev/norma` ← questo repo |
+| Marketing / SEO                      | `~/dev/norma-marketing`     |
+| GTM / outreach                       | `~/dev/norma-ecosystem/gtm` |
+| Brief mattutino (`/morning`, `/gtm`) | `~/dev/norma-ecosystem`     |
+
+Mappa completa: `~/dev/norma-ecosystem/README.md` · goal stack: `~/dev/norma-ecosystem/gtm/STATO.md`.
+Per toccare marketing da sessione app: path assoluti (`~/dev/norma-marketing/...`) o seconda sessione.
