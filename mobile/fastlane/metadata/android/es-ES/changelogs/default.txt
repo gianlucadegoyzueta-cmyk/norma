@@ -1,0 +1,1 @@
+Primera version: check-in online multiidioma, preparacion del registro de viajeros Alloggiati, tasa turistica y archivos ISTAT, escaner de documento y recordatorios de plazos.

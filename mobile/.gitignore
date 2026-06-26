@@ -16,3 +16,18 @@
 .env*.local
 *.log
 .DS_Store
+
+# Segreti di firma e build store — MAI nel repo
+/build
+google-services.json
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+fastlane/*.json
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+Gemfile.lock

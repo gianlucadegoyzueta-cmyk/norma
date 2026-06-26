@@ -1,33 +1,96 @@
 # Fastlane per Norma Mobile (Capacitor).
 #
-# SCHELETRO da completare quando gli account store sono attivi (vedi ../README.md e
-# ../../NEEDS-HUMAN.md). I segreti di firma NON vanno nel repo: usare keychain locale,
-# variabili d'ambiente o secret del CI.
+# Lane reali per TestFlight (iOS) e Play Internal (Android). I SEGRETI di firma e le chiavi API
+# NON stanno nel repo: si leggono da variabili d'ambiente (vedi commenti) o dal keychain locale.
 #
-# Prerequisito: aver eseguito `npx cap add ios` / `npx cap add android` e `npx cap sync`,
-# così esistono le cartelle native `ios/App` e `android`.
+# Prerequisito: `npx cap add ios` / `npx cap add android` + `npx cap sync`, così esistono
+# `ios/App/App.xcworkspace` e `android/`. Le schede store sono in `fastlane/metadata/`
+# (iOS `deliver`) e `fastlane/metadata/android/` (Android `supply`).
 
 default_platform(:ios)
 
+# ---------------------------------------------------------------------------
 platform :ios do
-  desc "Build e upload su TestFlight"
+  desc "Build firmata + upload su TestFlight"
   lane :beta do
-    # Allinea il web/config nativo prima della build.
     sh("npm", "run", "cap:sync")
-    # Esempio (scommentare e configurare match/cert + profili):
-    # build_app(workspace: "ios/App/App.xcworkspace", scheme: "App")
-    # upload_to_testflight(skip_waiting_for_build_processing: true)
-    UI.message("TODO: configurare firma (match) e upload_to_testflight")
+
+    # Autenticazione con App Store Connect API key (consigliata, niente 2FA interattivo).
+    # Env richiesti: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (contenuto del .p8) oppure ASC_KEY_PATH.
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_content: ENV["ASC_KEY_P8"],
+      key_filepath: ENV["ASC_KEY_PATH"],
+      is_key_content_base64: false,
+    )
+
+    # Firma: con `match` (consigliato) servono MATCH_GIT_URL + MATCH_PASSWORD nei segreti.
+    # In alternativa usa la firma automatica di Xcode (rimuovi match e imposta in Xcode).
+    match(type: "appstore", readonly: true, api_key: api_key) if ENV["MATCH_GIT_URL"]
+
+    build_app(
+      workspace: "ios/App/App.xcworkspace",
+      scheme: "App",
+      export_method: "app-store",
+      output_directory: "build",
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true,
+    )
+  end
+
+  desc "Carica solo le schede store (metadata/) su App Store Connect, senza binario"
+  lane :metadata do
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_content: ENV["ASC_KEY_P8"],
+      key_filepath: ENV["ASC_KEY_PATH"],
+    )
+    upload_to_app_store(
+      api_key: api_key,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      precheck_include_in_app_purchases: false,
+      force: true,
+    )
   end
 end
 
+# ---------------------------------------------------------------------------
 platform :android do
-  desc "Build e upload su Play Internal testing"
+  desc "Build firmata (AAB) + upload su Play Internal testing"
   lane :beta do
     sh("npm", "run", "cap:sync")
-    # Esempio (scommentare e configurare keystore + service account):
-    # gradle(project_dir: "android", task: "bundle", build_type: "Release")
-    # upload_to_play_store(track: "internal", aab: "android/app/build/outputs/bundle/release/app-release.aab")
-    UI.message("TODO: configurare keystore e upload_to_play_store")
+
+    # Firma release: env ANDROID_KEYSTORE_PATH, ANDROID_KEYSTORE_PASSWORD,
+    # ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD (configura in android/app/build.gradle o qui).
+    gradle(
+      project_dir: "android",
+      task: "bundle",
+      build_type: "Release",
+    )
+
+    # Service account JSON del Play Developer API: env SUPPLY_JSON_KEY (path) — gitignored.
+    upload_to_play_store(
+      track: "internal",
+      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      json_key: ENV.fetch("SUPPLY_JSON_KEY"),
+      skip_upload_apk: true,
+    )
+  end
+
+  desc "Carica solo le schede store (metadata) su Play, senza build"
+  lane :metadata do
+    upload_to_play_store(
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      json_key: ENV.fetch("SUPPLY_JSON_KEY"),
+    )
   end
 end
