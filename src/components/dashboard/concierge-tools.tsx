@@ -5,7 +5,7 @@ import type { PropertyStatus } from "@/components/dashboard/concierge-properties
 
 // Home "prodotto-first" (PARTE 6/FASE 2): i DUE pilastri come strumenti grandi e centrali, non
 // annegati tra KPI e pannelli. Presentazionale: riceve numeri già calcolati dai dati di dashboard
-// (nessuna query nuova). Tono onesto: "Norma prepara, tu confermi" — nessun claim "in regola".
+// (nessuna query nuova). Tono EDITORIAL: mandato + coda invio — nessun claim "in regola".
 
 export interface ConciergeToolsData {
   alloggiati: { pending: number; overdue: number };
@@ -79,9 +79,9 @@ export function ConciergeTools({ data }: { data: ConciergeToolsData }) {
   const allDetail =
     a.pending > 0
       ? a.overdue > 0
-        ? `${a.overdue} oltre la scadenza: confermale per l'invio ad Alloggiati Web.`
-        : "Le ho preparate dai dati degli ospiti; aspettano il tuo via libera."
-      : "Nessuna schedina in attesa: l'outbox è pulito.";
+        ? `${a.overdue} oltre la scadenza: gestisci l'invio ad Alloggiati Web.`
+        : "In coda su mandato Alloggiati: con l'auto-invio attivo partono da sole."
+      : "Nessuna schedina in coda: l'outbox è pulito.";
 
   const turStat = t.istatTotal > 0 ? `${t.istatReady}/${t.istatTotal}` : "—";
   const turDetail =
@@ -98,7 +98,7 @@ export function ConciergeTools({ data }: { data: ConciergeToolsData }) {
         pillar="Alloggiati"
         subtitle="Schedine alla Questura"
         stat={allStat}
-        statLabel={a.pending === 1 ? "schedina da confermare" : "schedine da confermare"}
+        statLabel={a.pending === 1 ? "schedina in coda" : "schedine in coda"}
         due={a.overdue > 0}
         detail={allDetail}
         ctaLabel="Apri le schedine"
@@ -176,9 +176,7 @@ export function ConciergePmLead({ properties }: { properties: PropertyStatus[] }
                   {p.city && <span className="text-muted-foreground font-normal"> · {p.city}</span>}
                 </span>
                 <span className="text-muted-foreground shrink-0 text-[12.5px] tabular-nums">
-                  {p.pendingSchedine > 0
-                    ? `${p.pendingSchedine} da confermare`
-                    : "richiede attenzione"}
+                  {p.pendingSchedine > 0 ? `${p.pendingSchedine} in coda` : "richiede attenzione"}
                 </span>
               </Link>
             </li>

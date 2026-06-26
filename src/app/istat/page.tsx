@@ -288,7 +288,9 @@ export default async function IstatPage({
           portale. Dove Norma genera il tracciato (Ross1000, SPOT/Puglia, Turismatica/Umbria)
           scarichi il file della tua regione; altrimenti usi i numeri del riepilogo qui sopra e li
           inserisci a mano. L&rsquo;invio automatico è in arrivo.{" "}
-          <strong>Norma prepara, l&rsquo;invio resta una tua decisione.</strong>
+          <strong>
+            Con mandato attivo, Norma invia per tuo conto; altrimenti scarichi e invii tu.
+          </strong>
         </p>
         {perProperty.length === 0 ? (
           <div className="cmx-empty">

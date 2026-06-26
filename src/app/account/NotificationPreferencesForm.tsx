@@ -33,7 +33,7 @@ export function NotificationPreferencesForm({ initial }: { initial: Consent }) {
     {
       pillar: "alloggiati",
       title: "Alloggiati",
-      desc: "Promemoria schedine da confermare e scadenze.",
+      desc: "Promemoria schedine in coda e scadenze Alloggiati.",
     },
     {
       pillar: "turismo",

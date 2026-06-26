@@ -7,9 +7,9 @@ export interface PropertyStatus {
   city: string;
   /** Occupazione del mese (0–100), per la barra. */
   occupancyPct: number;
-  /** Schedine in attesa di conferma per questa struttura. */
+  /** Schedine in coda per l'invio su mandato Alloggiati. */
   pendingSchedine: number;
-  /** Pallino di posizione: ok = in regola, wait = qualcosa da confermare, err = scaduto. */
+  /** Pallino di posizione: ok = in regola, wait = qualcosa in coda, err = scaduto. */
   status: "ok" | "wait" | "err";
   /** Riga di contesto a destra quando non ci sono schedine in attesa (es. "prossimo arrivo VEN 13"). */
   nextLabel?: string;
@@ -58,7 +58,7 @@ export function ConciergeProperties({ items }: { items: PropertyStatus[] }) {
             </div>
             <div className="cmx-prop-aside">
               {p.pendingSchedine > 0 ? (
-                <span className="cmx-badge cmx-badge-wait">{p.pendingSchedine} da confermare</span>
+                <span className="cmx-badge cmx-badge-wait">{p.pendingSchedine} in coda</span>
               ) : (
                 <span className="cmx-prop-next">{p.nextLabel ?? "in regola"}</span>
               )}

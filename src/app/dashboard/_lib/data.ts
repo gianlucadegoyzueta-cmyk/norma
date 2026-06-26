@@ -415,13 +415,13 @@ export async function getDashboardData(
           when: "OGGI",
           title: `${overdueCount} ${overdueCount === 1 ? "schedina" : "schedine"} oltre scadenza`,
           detail:
-            "Da gestire subito: oltre le 24h dall'arrivo la comunicazione ad Alloggiati è tardiva. Apri e conferma.",
+            "Da gestire subito: oltre le 24h dall'arrivo la comunicazione ad Alloggiati è tardiva. Apri Schedine.",
         }
       : pendingSchedine > 0
         ? {
             when: "OGGI",
             title: "Nessuna scadenza superata",
-            detail: `${pendingSchedine} ${pendingSchedine === 1 ? "schedina" : "schedine"} in attesa della tua conferma: nulla è scaduto, ma l'obbligo si chiude quando confermi l'invio.`,
+            detail: `${pendingSchedine} ${pendingSchedine === 1 ? "schedina" : "schedine"} in coda per l'invio su mandato: nulla è scaduto, ma l'obbligo si chiude con l'invio.`,
           }
         : {
             when: "OGGI",
@@ -436,7 +436,9 @@ export async function getDashboardData(
         title: `Arrivo ${s.property.name} · ${s.guestsCount} ${s.guestsCount === 1 ? "ospite" : "ospiti"}`,
         detail: "Schedina pronta entro le 24h dall'arrivo,",
         norma:
-          s._count.guests > 0 ? "la confermi con un tocco" : "completa gli ospiti e la preparo io",
+          s._count.guests > 0
+            ? "con mandato attivo la invio, altrimenti la gestisci da Schedine"
+            : "completa gli ospiti e con il mandato la invio per te",
       });
     }
     if (s.departureDate && s.departureDate >= startOfToday && s.departureDate <= weekAhead) {
@@ -444,7 +446,7 @@ export async function getDashboardData(
         when: agendaWhen(s.departureDate, now),
         title: `Partenza ${s.property.name}`,
         detail: "Conteggio tassa di soggiorno",
-        norma: "lo tengo aggiornato, pronto da confermare",
+        norma: "lo tengo aggiornato, pronto per la dichiarazione",
       });
     }
   }

@@ -99,7 +99,7 @@ export default async function CredentialsPage() {
                   Soggiorno
                 </Link>
                 . Aggiungine una nel modulo qui sotto: la verifico subito con Alloggiati (senza
-                inviare nulla) e da lì preparo le schedine pronte da confermare.
+                inviare nulla) e da lì le metto in coda per l&apos;invio su mandato Alloggiati.
               </p>
             </CardContent>
           </Card>

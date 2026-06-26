@@ -212,15 +212,14 @@ export function ConciergeBoard({
             <div className="cmx-panel-h">
               <h2 className="cmx-panel-title" id="cmx-h-proposte">
                 {proposals.length > 0
-                  ? `Aspettano il tuo via libera (${proposals.length})`
-                  : "Aspettano il tuo via libera"}
+                  ? `Richiedono attenzione (${proposals.length})`
+                  : "Richiedono attenzione"}
               </h2>
             </div>
             {proposals.length === 0 ? (
               <div className="cmx-empty">
-                <b>Tutto in ordine.</b> Nessuna proposta in sospeso: quando ci sarà qualcosa da
-                decidere — un check-in da mandare, schedine da confermare, un export pronto — lo
-                trovi qui.
+                <b>Tutto in ordine.</b> Nessuna azione in sospeso: quando ci sarà qualcosa da fare —
+                un check-in da mandare, schedine in coda, un export pronto — lo trovi qui.
               </div>
             ) : (
               <div className="cmx-decision-grid">
