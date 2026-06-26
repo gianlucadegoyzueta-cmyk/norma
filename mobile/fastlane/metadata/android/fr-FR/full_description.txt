@@ -1,12 +1,12 @@
-Norma aide les hotes de locations courte duree en Italie a gerer leurs obligations, depuis leur telephone.
+Norma handles short-term rental compliance in Italy from your phone — on a one-time signed mandate.
 
-• Check-in en ligne multilingue : envoyez un lien a vos hotes, qui saisissent leurs informations avant l'arrivee (italien, anglais, allemand, francais, espagnol).
-• Declaration des voyageurs (Alloggiati) : Norma prepare les declarations pour la Police d'Etat (Alloggiati Web, art. 109 TULPS) ; vous verifiez et confirmez.
-• Taxe de sejour : montant du, rapports et exports (CSV/PDF) pour le versement a la commune.
-• Mouvement touristique / ISTAT : fichiers prets pour les portails regionaux (ex. Ross1000).
-• Scanner de document : visez le document du voyageur et les champs se pre-remplissent — votre confirmation reste toujours requise.
-• Rappels : gardez un oeil sur les echeances des deux obligations.
+• Multilingual online check-in: secure guest link (IT/EN/DE/FR/ES).
+• Alloggiati guest registration: State Police web service with blocking validation and duplicate protection (art. 109 TULPS).
+• Tourist tax: calculation, reports and CSV/PDF exports for your municipality.
+• ISTAT tourist movement: files for regional portals (e.g. Ross1000).
+• MRZ document scanner: pre-fills fields from the guest's document.
+• Push reminders for both compliance pillars.
 
-Norma prepare les donnees et vous aide a respecter les echeances : les confirmations restent sous votre controle.
+With your mandate active, Norma sends on your behalf; incomplete data blocks submission. Commercial guarantee capped on our technical errors.
 
-Un compte Norma est requis. Certaines fonctions font partie de l'abonnement.
+Norma account required. Subscription after your first managed guest.

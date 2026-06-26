@@ -1,12 +1,12 @@
-Norma aiuta chi gestisce affitti brevi in Italia a tenere in ordine gli adempimenti, dal telefono.
+Norma esegue la compliance degli affitti brevi in Italia dal telefono — su mandato firmato una volta.
 
-• Check-in online multilingua: invia un link ai tuoi ospiti, che inseriscono i loro dati prima dell'arrivo (italiano, inglese, tedesco, francese, spagnolo).
-• Schedine Alloggiati: Norma prepara le comunicazioni per la Polizia di Stato (Alloggiati Web, art. 109 TULPS); tu controlli e confermi.
-• Tassa di soggiorno: calcolo del dovuto, report ed esportazioni (CSV/PDF) per il versamento al Comune.
-• Movimento turistico / ISTAT: file pronti per i portali regionali (es. Ross1000).
-• Scanner del documento: inquadra il documento dell'ospite e i campi si pre-compilano — resta sempre la tua conferma.
-• Promemoria: tieni d'occhio le scadenze dei due adempimenti.
+• Check-in online multilingua: link sicuro per gli ospiti (IT/EN/DE/FR/ES).
+• Schedine Alloggiati: invio al web service Polizia di Stato con validazione bloccante e anti-doppione (art. 109 TULPS).
+• Tassa di soggiorno: calcolo, report ed export CSV/PDF per il Comune.
+• Movimento turistico ISTAT: file per portali regionali (es. Ross1000).
+• Scanner documento MRZ: pre-compila i campi dal documento dell'ospite.
+• Promemoria push sulle scadenze dei due pilastri.
 
-Norma prepara i dati e ti aiuta a rispettare le scadenze: le conferme restano sotto il tuo controllo.
+Con il mandato attivo Norma invia per tuo conto; dati incompleti bloccano l'invio. Garanzia commerciale a cap su errori tecnici nostri.
 
-L'accesso richiede un account Norma. Alcune funzioni fanno parte dell'abbonamento.
+Richiede account Norma. Abbonamento dopo il primo ospite gestito.
