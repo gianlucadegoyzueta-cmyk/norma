@@ -7,44 +7,45 @@ alwaysApply: true
 
 L'agente ha accesso a **tutto `~/dev/`** via MCP filesystem e shell. Non limitarsi al repo corrente se il task tocca marketing, GTM, video o worktree paralleli.
 
-**Workspace canonico:** `~/dev/norma-ecosystem.code-workspace` (vedi `~/dev/WORKSPACE.md`).  
-**Verità editoriale copy:** `~/dev/norma/docs/EDITORIAL.md` — precede AGENTS.md e REGISTRO-DIFETTI per tono e prezzo.
+**Workspace canonico:** `~/dev/norma-ecosystem/norma-ecosystem.code-workspace` (symlink: `~/dev/norma-ecosystem.code-workspace`).  
+**Mappa:** `~/dev/norma-ecosystem/README.md` · **Copy:** `~/dev/norma/docs/EDITORIAL.md`
 
-## Repo principali (`~/dev/`)
+## Layout `~/dev/`
 
-| Cartella            | Ruolo                                                   | Branch tipico |
-| ------------------- | ------------------------------------------------------- | ------------- |
-| `norma/`            | App SaaS (app.norma.casa) — **questo repo**             | `main`        |
-| `norma-marketing/`  | Sito norma.casa                                         | `main`        |
-| `norma-gtm/`        | GTM, campagne, competitor, contenuti lancio (solo docs) | —             |
-| `norma-video/`      | Asset video / still Fal                                 | —             |
-| `norma-fleet-logs/` | Log corse notturne agenti                               | —             |
-| `~/claude-infra`    | Kernel agenti, backup, fleet scripts                    | —             |
+| Path | Ruolo | GitHub |
+|------|-------|--------|
+| `norma/` | App SaaS (app.norma.casa) — **questo repo** | `norma` |
+| `norma-marketing/` | Sito norma.casa | `norma-marketing` |
+| `norma-ecosystem/` | Meta: GTM, video, log flotta, worktree | `norma-ecosystem` |
+| `norma-ecosystem/gtm/` | Outreach, competitor, calendario | (in norma-ecosystem) |
+| `norma-ecosystem/video/` | Asset video / still Fal | (in norma-ecosystem) |
+| `norma-ecosystem/logs/fleet/` | Log corse notturne agenti | (in norma-ecosystem) |
+| `~/claude-infra` | Kernel agenti, backup, fleet scripts | `claude-infra` |
 
-## Worktree marketing (stesso remote, branch corsia)
+## Worktree marketing (`norma-ecosystem/worktrees/`)
 
-- `norma-marketing-wt-igpub/` → `feat/workforce-ig-publisher`
-- `norma-marketing-wt-images/` → `feat/workforce-images`
-- `norma-marketing-wt-metapublish/` → `feat/workforce-meta-publish`
-- `norma-marketing-wt-og/` → `feat/og-social-hosting`
+- `marketing-igpub/` → `feat/workforce-ig-publisher`
+- `marketing-images/` → `feat/workforce-images`
+- `marketing-metapublish/` → `feat/workforce-meta-publish`
+- `marketing-og/` → `feat/og-social-hosting`
 
 ## Archivio Desktop (NON code)
 
 - `~/Desktop/Norma/01_Product` … `08_Legal_Admin` — brief, pitch, PDF storici
-- `~/Desktop/Norma/_archive/` — clone git obsoleti (`compliance`, `norma-marketing`) archiviati 2026-06-26
-- **Non sviluppare** sotto `Desktop/Norma/` tranne aggiornamento docs business
+- `~/Desktop/Norma/_archive/` — clone git obsoleti archiviati 2026-06-26
+- **Non sviluppare** sotto `Desktop/Norma/` tranne docs business
 
 ## Infra fuori repo
 
-- Backup DB: `~/backups/norma/` · script `~/bin/norma-backup.sh`
+- Backup DB: `~/backups/norma/` · `~/bin/norma-backup.sh`
 - Fleet: `~/bin/norma-fleet.sh`, `~/bin/norma-daily.sh`
-- Brand canonico: `norma-marketing/public/` (logo prod). Legacy: `~/Desktop/Norma/norma-brand/` (read-only)
+- Brand canonico: `norma-marketing/public/`
 
-## Quando leggere quale repo
+## Quando lavorare dove
 
 - **Prodotto / compliance / billing / UI app** → `norma/`
 - **Copy, prezzo, landing, SEO** → `norma-marketing/` + `docs/EDITORIAL.md`
-- **Posizionamento, GTM, outreach** → `norma-gtm/ECOSYSTEM.md`
+- **Posizionamento, GTM, outreach** → `norma-ecosystem/gtm/`
 - **Disallineamenti sito vs app** → `docs/EDITORIAL.md` + `docs/critique/REGISTRO-DIFETTI.md`
 
-Precedenza verità copy: **EDITORIAL.md** > codice UI > CLAUDE.md > marketing legacy.
+Precedenza verità copy: **EDITORIAL.md** > codice UI > CLAUDE.md > documenti storici Desktop.
