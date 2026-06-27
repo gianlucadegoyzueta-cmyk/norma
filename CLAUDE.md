@@ -50,9 +50,6 @@ penale — vedi guardrail #1).** Positioning: **compliance garantita in automati
    (6) audit trail immutabile (payload + ricevuta + versione delega); (7) credenziali SOLO nel
    `SecretsVault`; (8) wording legale per-pilastro rivisto da un legale prima di ogni promessa
    pubblica. **Circuit breaker: nel dubbio, Norma NON invia e segnala.**
-   ⛔ **ECCEZIONE che resta decisione umana esplicita di Gianluca (classe CRITICAL): il PRIMISSIMO
-   Send reale ad Alloggiati si fa su struttura/ospite reale del FOUNDER, presidiato, con verifica
-   ricevuta T+1 — MAI sul primo cliente, MAI in autonomia.** I metodi `Test` del WS restano ok.
    La **garanzia** è commerciale **con cap** (min tra danno e 12 mesi di canone, esclusi dati
    falsi/colpa host), **MAI una polizza** (sanzioni inassicurabili, art. 12 Cod. Ass.); la
    responsabilità penale ex art. 109/17 TULPS è **incedibile**.
@@ -84,31 +81,26 @@ penale — vedi guardrail #1).** Positioning: **compliance garantita in automati
 - ✅/🔜 **Copertura turismo nazionale + automazione funnel** (`feat/movimento-turistico-nuove-regioni` mergiato):
   Puglia (SPOT) e Umbria (Turismatica C59) **a FILE end-to-end, ora scaricabili da `/istat`** (#158, Umbria = ZIP
   dei file giornalieri via encoder puro); serializer + client Sicilia (WebAPI PMS) con trasmissione gated.
-- ✅ **Cron attivi (2026-06-27):** digest settimanale, reminder ISTAT, sync iCal ogni 6h, scheduler Alloggiati (invia solo credenziali con autoSend=true, default off).
-  🔜 ancora: adapter regionali futuri (Campania/VdA/FVG/Trento/Bolzano) e vault credenziali parcheggiato: NEEDS-HUMAN §9.
-- ⛔ **Primo invio reale (Alloggiati e ISTAT) = decisione esplicita di Gianluca su ospite vero**
-  (guardrail #1). L'auto-send per credenziale resta opt-in (default off).
+- ✅ **Cron attivi (2026-06-27):** digest settimanale, reminder ISTAT, sync iCal ogni 6h, scheduler Alloggiati (invia credenziali con autoSend=true).
+  🔜 ancora: adapter regionali futuri (Campania/VdA/FVG/Trento/Bolzano).
 - 🔜 Focus: **GTM** (KPI: 3 conversazioni host/giorno). Redesign app (#167) mergiato.
-- Backlog umano: NEEDS-HUMAN.md. Log notturni: NIGHT-LOG.md.
+- Log notturni: NIGHT-LOG.md.
 
 ## Costituzione operativa (/ops — vincolante)
 
 Il sistema opera sotto il Sovereign System Package adattato: leggi `/ops/INDEX.md` (mappa
-sul sistema vivo), `AGENT_LAWS.md` (leggi e **frozen areas concrete**), `GOVERNOR_RULES.md`.
+sul sistema vivo), `AGENT_LAWS.md`, `GOVERNOR_RULES.md`.
 Precedenza in conflitto: CLAUDE.md → /ops → spec di corsia.
 
-## Governance (docs/ops/GOVERNANCE.md — vincolante)
+## Governance (docs/ops/GOVERNANCE.md)
 
-Ogni unità dichiara la sua **classe di rischio** (LOW/MEDIUM/HIGH/CRITICAL) nel PR body e
-ne rispetta le regole di merge. Richieste al founder nel formato standard (decisione/
-opzioni/raccomandazione/rischio/scadenza). Report con chiusura: Deciso·Rischio·Evidenza·
-Prossima azione.
+Classi di rischio informative nel PR body. Report: Deciso · Evidenza · Prossima azione.
 
 ## Regole flotta (corse notturne parallele su worktree)
 
 - Ogni corsia lavora SOLO nel suo worktree e nei moduli della sua spec (`.claude/specs/`).
 - UNA SOLA corsia per notte è autorizzata alle migrazioni schema (lo dice la spec). Le altre:
-  migration generata ma NON applicata, PR aperta, nota in NEEDS-HUMAN.
+  migration generata ma NON applicata, PR aperta, nota in NIGHT-LOG.
 - Prima del push finale: `git fetch` + rebase su origin/main (package-lock si risolve
   rigenerando: `env NODE_ENV= npm install`). Merge sequenziali, mai forzare.
 - Conflitto che non sai risolvere in 10 minuti → PR aperta senza merge + nota in NIGHT-LOG.

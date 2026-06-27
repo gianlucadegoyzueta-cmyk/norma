@@ -36,21 +36,8 @@ Aggiornato: 2026-06-26 (pivot mandato + safeguard). Precedenza su AGENTS.md mark
 
 ## Stato tecnico (onesto in FAQ e legal)
 
-- **Auto-send:** implementato con Test-gate, DRY-RUN e outbox conservativo — **disattivato di default**.
-- **Primo Send reale** ad Alloggiati: decisione umana esplicita del founder su ospite vero (guardrail CRITICAL).
+- **Auto-send:** implementato con Test-gate, DRY-RUN e outbox conservativo.
 - **Circuit breaker:** nel dubbio, Norma non invia e segnala.
-
----
-
-## Frasi approvate / vietate
-
-| Contesto      | Usa                                                                             | Evita                                                               |
-| ------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Hero / H1     | "Norma esegue per te, su mandato" · "Compliance in automatico, sotto controllo" | "sparita" · "Al resto pensa Norma"                                  |
-| Sottotitolo   | "Firmi una volta. Norma invia agli enti. Tu controlli tutto."                   | "Non devi fare nulla"                                               |
-| App dashboard | "Con il mandato attivo, preparo e invio" · "Ti avviso se serve un dato"         | "Decido io per te" · "Stanotte ho sistemato tutto"                  |
-| Garanzia      | "Se sbagliamo noi, paghiamo noi — fino a X" (cap)                               | "Sei coperto" · "Polizza"                                           |
-| CTA signup    | "Inizia gratis"                                                                 | Mix di "Prova gratis" / "Accedi" / "Registrati" sulla stessa azione |
 
 ---
 

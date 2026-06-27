@@ -6,7 +6,7 @@
 - **Operativa** (corrente): ~/dev/norma-gtm/STATO.md (obiettivo, decisioni aperte, salute,
   piano 24h) — si aggiorna a ogni sessione significativa
 - **Episodica** (storia): DECISIONS.md (scelte+motivi) · NIGHT-LOG.md (corse+esiti) ·
-  NEEDS-HUMAN.md (parcheggi) · PR su GitHub
+  NIGHT-LOG.md · PR su GitHub
 - **Evidenza** (prove): Drive (piano marketing, database target, analisi competitiva) ·
   norma-gtm/ (interviste, domande community) · docs/ (ricerche, es. ISTAT Ross1000)
 

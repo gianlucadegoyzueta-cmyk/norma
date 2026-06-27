@@ -155,7 +155,7 @@ export default async function BillingPage({
               </CardTitle>
               <CardDescription>
                 Le chiavi Stripe non sono impostate su questo ambiente: i pulsanti di pagamento sono
-                disattivati. Vedi NEEDS-HUMAN.md per i passi di configurazione.
+                disattivati. Configura le variabili d&apos;ambiente su Vercel.
               </CardDescription>
             </CardHeader>
           </Card>

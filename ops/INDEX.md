@@ -10,7 +10,7 @@ poi le spec di corsia.
 | --------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | Constitutional memory | CLAUDE.md + /ops                                                                                                 |
 | Operational memory    | ~/dev/norma-gtm/STATO.md                                                                                         |
-| Episodic memory       | DECISIONS.md · NIGHT-LOG.md · NEEDS-HUMAN.md                                                                     |
+| Episodic memory       | DECISIONS.md · NIGHT-LOG.md                                                                                      |
 | Evidence memory       | Drive (piano marketing, database target) · docs/ · norma-gtm/                                                    |
 | Task spec             | .claude/specs/lane-\*.md                                                                                         |
 | Builder               | corsie Claude Code (worktree)                                                                                    |
