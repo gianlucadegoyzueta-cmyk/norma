@@ -8,7 +8,7 @@ alwaysApply: true
 L'agente ha accesso a **tutto `~/dev/`** via MCP filesystem e shell. Non limitarsi al repo corrente se il task tocca marketing, GTM, video o worktree paralleli.
 
 **Workspace canonico:** `~/dev/norma-ecosystem/norma-ecosystem.code-workspace` (symlink: `~/dev/norma-ecosystem.code-workspace`).  
-**Mappa:** `~/dev/norma-ecosystem/README.md` · **Copy:** `~/dev/norma/docs/EDITORIAL.md`
+**Mappa:** `~/dev/norma-ecosystem/gtm/ARCHIVE-INDEX.md` · **Copy:** `~/dev/norma/docs/EDITORIAL.md`
 
 ## Layout `~/dev/`
 
@@ -16,30 +16,23 @@ L'agente ha accesso a **tutto `~/dev/`** via MCP filesystem e shell. Non limitar
 |------|-------|--------|
 | `norma/` | App SaaS (app.norma.casa) — **questo repo** | `norma` |
 | `norma-marketing/` | Sito norma.casa | `norma-marketing` |
-| `norma-ecosystem/` | Meta: GTM, video, log flotta, worktree | `norma-ecosystem` |
-| `norma-ecosystem/gtm/` | Outreach, competitor, calendario | (in norma-ecosystem) |
+| `norma-ecosystem/` | Meta: GTM, video, log flotta, lead-gen | `norma-ecosystem` |
+| `norma-ecosystem/gtm/` | Outreach, competitor, calendario, dati | (in norma-ecosystem) |
+| `norma-ecosystem/scripts/lead-gen/` | Script Python aggregazione lead | (in norma-ecosystem) |
 | `norma-ecosystem/video/` | Asset video / still Fal | (in norma-ecosystem) |
 | `norma-ecosystem/logs/fleet/` | Log corse notturne agenti | (in norma-ecosystem) |
 | `~/claude-infra` | Kernel agenti, backup, fleet scripts | `claude-infra` |
 
 ## Worktree marketing (`norma-ecosystem/worktrees/`)
 
-- `marketing-igpub/` → `feat/workforce-ig-publisher`
-- `marketing-images/` → `feat/workforce-images`
-- `marketing-metapublish/` → `feat/workforce-meta-publish`
-- `marketing-og/` → `feat/og-social-hosting`
+Ricreabili on demand — vedi `worktrees/README.md`. Workforce canonico su `norma-marketing` `main`.
 
-## Archivio Desktop (NON code)
-
-- `~/Desktop/Norma/01_Product` … `08_Legal_Admin` — brief, pitch, PDF storici
-- `~/Desktop/Norma/_archive/` — clone git obsoleti archiviati 2026-06-26
-- **Non sviluppare** sotto `Desktop/Norma/` tranne docs business
-
-## Infra fuori repo
+## Fuori dev (intenzionale)
 
 - Backup DB: `~/backups/norma/` · `~/bin/norma-backup.sh`
 - Fleet: `~/bin/norma-fleet.sh`, `~/bin/norma-daily.sh`
-- Brand canonico: `norma-marketing/public/`
+- Lead master B2B: Google Drive `09_Giacomo` (xlsx)
+- Brand canonico: `norma-marketing/public/brand/`
 
 ## Quando lavorare dove
 
@@ -48,4 +41,4 @@ L'agente ha accesso a **tutto `~/dev/`** via MCP filesystem e shell. Non limitar
 - **Posizionamento, GTM, outreach** → `norma-ecosystem/gtm/`
 - **Disallineamenti sito vs app** → `docs/EDITORIAL.md` + `docs/critique/REGISTRO-DIFETTI.md`
 
-Precedenza verità copy: **EDITORIAL.md** > codice UI > CLAUDE.md > documenti storici Desktop.
+Precedenza verità copy: **EDITORIAL.md** > codice UI > CLAUDE.md > `gtm/archive/` (storico).
