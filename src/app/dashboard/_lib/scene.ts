@@ -65,7 +65,7 @@ export function buildSceneCopy(
   const sub: { text: string; bold?: string } =
     things > 0
       ? {
-          bold: `Stanotte ho gestito ${things} ${noun}.`,
+          bold: `${things} ${noun} ${things === 1 ? "preparata" : "preparate"} su mandato.`,
           text:
             pending > 0
               ? pendingNote

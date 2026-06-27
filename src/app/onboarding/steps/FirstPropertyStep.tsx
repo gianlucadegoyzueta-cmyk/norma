@@ -52,8 +52,8 @@ export function FirstPropertyStep({
           Il tuo primo immobile
         </h2>
         <p className="text-muted-foreground mt-1 text-sm text-pretty">
-          Lo aggancio alla credenziale giusta e restringo io i Comuni alla sua provincia: tu scegli,
-          al resto penso io.
+          Lo aggancio alla credenziale giusta e restringo i Comuni alla sua provincia: tu scegli
+          nome e indirizzo, Norma prepara il resto su mandato.
         </p>
       </header>
 

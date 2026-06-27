@@ -49,11 +49,13 @@ migrate.yml già presente, che gira al merge su main).
 ### 1. ISTAT — invio regionale reale (oltre export file)
 
 - **Perché è qui:** export file Puglia/Umbria in prod (#158); **invio reale** ai portali regionali (Lazio first) resta gate umano CRITICAL.
-- **Stato:** serializer + client pronti dove coperti; trasmissione gated fino a decisione founder. — ⏸️ CODICE PRONTO IN PR (disattivato), attende la TUA decisione
+- **Stato:** serializer + client pronti dove coperti; trasmissione gated fino a decisione founder.
 
-- **Stato:** route + cron **implementati e DISATTIVATI di default** in **PR #56** (`feat/cron-send-reconcile`), **NON mergiata** apposta. CI verde. Nessuno schema, nessun Send reale finché il flag è OFF.
-- **Com'è fatto:** `GET /api/cron/alloggiati` con due barriere (`domain/cron-gate.ts`): (1) gira solo se env `ALLOGGIATI_CRON_ENABLED="true"`, altrimenti 200 `{disabled:true}`; (2) anche da attivo accetta solo il cron Vercel autenticato (`Authorization: Bearer $CRON_SECRET`, fail-closed). Orchestrazione testabile `runSendAndReconcile` (send poi reconcile per conteggio su ogni credenziale attiva, resiliente per-credenziale).
-- **Cosa serve da te per accenderlo (consapevolmente):** (a) mergiare PR #56; (b) copiare il blocco `crons` da `vercel.cron.example.json` in un vero `vercel.json`; (c) su Vercel impostare `CRON_SECRET` e `ALLOGGIATI_CRON_ENABLED=true`. Prima conviene un primo invio reale manuale su ospite vero (guardrail #1).
+### 5. Cron Alloggiati (invio + reconcile T+1) — ✅ IN MAIN, attivato 2026-06-27
+
+- **Stato:** `GET /api/cron/alloggiati` in main; schedule in `vercel.json` (08:10 UTC). Env prod: `ALLOGGIATI_CRON_ENABLED=true` + `CRON_SECRET`.
+- **Barriere:** (1) flag env; (2) auth Bearer cron; (3) solo credenziali con `autoSend=true` (default false). Nessun Send reale finché non attivi il toggle su una credenziale.
+- **Primo Send reale:** resta decisione founder su ospite vero (guardrail #1 CRITICAL).
 
 ### 6. Gate #0 — diagnostico PDF Ricevuta (live) + parser PDF reale — ✅ RISOLTO (2026-06-10)
 
@@ -65,21 +67,10 @@ migrate.yml già presente, che gira al merge su main).
 - **Perché è qui:** richiede **credenziali Alloggiati di test reali** nel `.env` e una **chiamata SOAP live** alla Questura → segreto/accesso che non ho e azione verso un sistema esterno reale. Il parser del PDF reale dipende dall'output del Gate #0.
 - **Cosa serve da te:** eseguire `npm run alloggiati:gate0-pdf` con le credenziali test, incollarmi il verdetto/diagnostica → poi implemento il parser reale e applico il verdetto al finding #1.
 
-### 8. Billing Stripe (sandbox) — CODICE PRONTO IN PR, attende chiavi + migrazione
+### 8. Billing Stripe — ✅ IN PROD (chiavi Vercel presenti)
 
-- **Perché è qui:** (a) introduce i modelli `Subscription` + `ProcessedStripeEvent` → migrazione schema; stanotte solo la corsia A è autorizzata a migrare, quindi la mia migrazione è **generata ma NON applicata**; (b) servono le chiavi Stripe (test mode) che non ho.
-- **Stato:** modulo `src/server/modules/billing` completo (dominio puro + porte + adapter Stripe/Prisma/InMemory + servizi), pagina `/billing`, webhook `/api/webhooks/stripe`, script bootstrap. CI verde (format/lint/typecheck/test/build). **Nessuna tabella creata, nessuna chiave usata** → mergiabile così com'è.
-- **Migrazione parcheggiata:** `prisma/migrations-parked/20260610000000_add_billing_subscription/` (NON sotto `prisma/migrations/`, così un `migrate deploy` accidentale non la applica). Lo schema Prisma è già aggiornato (per generare il client/i tipi). Finché la migrazione non è applicata, la pagina `/billing` mostra "Billing in attesa di attivazione" e degrada con grazia (P2021 intercettato).
-- **Cosa serve da te (nell'ordine):**
-  1. **Backup DB** (guardrail 2), poi spostare la cartella della migrazione sotto `prisma/migrations/` e `npm run db:deploy`. (Coordinare con la corsia A che migra stanotte, per evitare doppioni.)
-  2. **Crea prodotti/prezzi su Stripe (test mode):** `STRIPE_SECRET_KEY=sk_test_... npx tsx scripts/stripe-bootstrap.ts` — idempotente, crea Product "Norma" + price annuale €120/anno (`norma_annual_v1`) e mensile €14/mese (`norma_monthly_v1`).
-  3. **Env (`.env` locale + Vercel, ambiente di test/preview):**
-     - `STRIPE_SECRET_KEY=sk_test_...`
-     - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...` (predisposto; oggi non usato lato server, le pagine Checkout/Portal sono hosted)
-     - `STRIPE_WEBHOOK_SECRET=whsec_...` (lo dà Stripe quando registri l'endpoint)
-  4. **Registra il webhook** su Stripe → URL `https://<app>/api/webhooks/stripe`, eventi: `checkout.session.completed`, `customer.subscription.created/updated/deleted`, `invoice.payment_failed`. Per i test locali: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`.
-- **Decisioni di prodotto già applicate (Piano Marketing):** annuale-first (€120/anno consigliato, €14/mese rampa); **trial legato al primo ospite gestito**, non a tempo (logica app-side `billing/domain/access.ts`, niente trial Stripe a giorni); grazia di 7 giorni dopo il primo ospite. NB: il sito dice ancora "€12/mese" — disallineamento noto, lo aggiorni tu.
-- **Follow-up (non bloccante, NON l'ho fatto per non toccare i moduli di altre corsie):** cablare il guard `BillingGatingService.requireWriteAccess(orgId)` nelle server action di scrittura (schedine, stay, tax…) e il banner "abbonati" quando `state === "EXPIRED"`. Il guard e il gating sono già pronti e testati.
+- **Stato:** migrazione applicata, modulo `src/server/modules/billing` in prod. Chiavi Stripe in Vercel production.
+- **Follow-up (non bloccante):** cablare `BillingGatingService.requireWriteAccess(orgId)` nelle server action di scrittura quando decidi di monetizzare. Prezzi canonici: `plan.ts` v2 (€90/€9 host).
 
 ### 7. Tassa di soggiorno — export PDF
 

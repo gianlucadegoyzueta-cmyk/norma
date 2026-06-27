@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, CircleCheck, CircleSlash, TriangleAlert } from "lucide-react";
+import { CircleCheck, CircleSlash, TriangleAlert } from "lucide-react";
 import { getCurrentContext } from "@/server/auth/session";
 import {
   type ComplianceVerdict,
@@ -9,7 +8,7 @@ import {
   humanMonth,
   loadComplianceHistory,
 } from "@/server/modules/compliance";
-import { SiteHeader } from "@/components/site-header";
+import { ConciergePage } from "@/components/concierge/concierge-page";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Storico compliance" };
@@ -24,11 +23,6 @@ const VERDICT: Record<
   quiet: { label: "Nessun movimento", badgeClass: "", Icon: CircleSlash },
 };
 
-/**
- * Chip statistico della summary bar: numero grande + etichetta piccola, sobrio e denso.
- * Il colore del numero segue il tono (verde "in regola" salvia · terracotta "pendenze");
- * con zero pendenze il tono resta neutro per non allarmare su un dato a posto.
- */
 function SummaryStat({
   value,
   label,
@@ -38,8 +32,6 @@ function SummaryStat({
   label: string;
   tone: "ok" | "pending";
 }) {
-  // Token GLOBALI di brand (definiti a :root in globals.css): questa pagina non porta la classe
-  // .cmx, quindi NON usare gli alias scoped (--salvia/--soft). salvia-ink è la variante AA per testo.
   const muted = tone === "pending" && Number(value) === 0;
   const color =
     tone === "ok"
@@ -60,7 +52,6 @@ function SummaryStat({
   );
 }
 
-/** Riga di registro: mese, badge di posizione, e il dettaglio a chip separati. */
 function MonthRow({ row }: { row: MonthComplianceRow }) {
   const v = VERDICT[row.verdict];
   return (
@@ -77,10 +68,6 @@ function MonthRow({ row }: { row: MonthComplianceRow }) {
   );
 }
 
-/**
- * Dettaglio della riga a chip/badge separati (schedine acquisite · da completare · tassa),
- * senza nominativi: solo conteggi. Più leggibile della stringa concatenata, stessi numeri.
- */
 function DetailChips({ row }: { row: MonthComplianceRow }) {
   if (row.verdict === "quiet") {
     return (
@@ -119,74 +106,56 @@ export default async function CompliancePage() {
   const rows = await loadComplianceHistory(ctx.current.organizationId, new Date(), 12);
   const tracked = rows.filter((r) => r.verdict !== "quiet");
   const allRegular = tracked.length > 0 && tracked.every((r) => r.verdict === "regular");
-  // Riepilogo dai mesi tracciati (gli stessi `rows` della lista): nessun dato nuovo.
   const regularCount = tracked.filter((r) => r.verdict === "regular").length;
   const pendingCount = tracked.filter((r) => r.verdict === "attention").length;
 
   return (
-    <div className="min-h-dvh">
-      <SiteHeader />
-      <main
-        id="main-content"
-        tabIndex={-1}
-        className="mx-auto w-full max-w-3xl px-4 py-8 outline-none sm:px-6 sm:py-10"
-      >
-        <Link
-          href="/dashboard"
-          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
-        >
-          <ArrowLeft className="size-4" aria-hidden />
-          Dashboard
-        </Link>
-
-        <div className="mb-6">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Storico compliance</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            La tua posizione regolare mese per mese, calcolata dai dati: schedine acquisite rispetto
-            alle attese e tasse di soggiorno dichiarate.
-          </p>
+    <ConciergePage
+      active="statistiche"
+      dense
+      kicker="COMPLIANCE"
+      title="Storico compliance"
+      intro="La tua posizione regolare mese per mese, calcolata dai dati: schedine acquisite rispetto alle attese e tasse di soggiorno dichiarate."
+    >
+      {tracked.length > 0 && (
+        <div className="border-border/70 bg-card mb-4 flex flex-wrap items-stretch gap-3 rounded-xl border p-1">
+          <SummaryStat value={`${regularCount}/12`} label="mesi in regola" tone="ok" />
+          <SummaryStat
+            value={pendingCount}
+            label={pendingCount === 1 ? "mese con pendenze" : "mesi con pendenze"}
+            tone="pending"
+          />
         </div>
+      )}
 
-        {tracked.length > 0 && (
-          <div className="border-border/70 bg-card mb-4 flex flex-wrap items-stretch gap-3 rounded-xl border p-1">
-            <SummaryStat value={`${regularCount}/12`} label="mesi in regola" tone="ok" />
-            <SummaryStat
-              value={pendingCount}
-              label={pendingCount === 1 ? "mese con pendenze" : "mesi con pendenze"}
-              tone="pending"
-            />
-          </div>
-        )}
-
-        {tracked.length > 0 && (
-          <p className="text-muted-foreground mb-4 text-sm">
-            {allRegular
-              ? "Tutti i mesi con movimento risultano in regola. Bel lavoro."
-              : "Alcuni mesi hanno pendenze da chiudere: li trovi segnati qui sotto."}
-          </p>
-        )}
-
-        <Card>
-          <CardContent className="py-2">
-            {rows.length === 0 ? (
-              <p className="text-muted-foreground py-8 text-center text-sm">
-                Ancora nessun dato di compliance.
-              </p>
-            ) : (
-              <ul>
-                {rows.map((row) => (
-                  <MonthRow key={row.month} row={row} />
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        <p className="text-muted-foreground mt-4 text-xs">
-          «Regolare» significa che tutte le schedine dovute per gli arrivi del mese risultano
-          acquisite dalla Questura e che nessuna dichiarazione di tassa è rimasta in lavorazione.
+      {tracked.length > 0 && (
+        <p className="text-muted-foreground mb-4 text-sm">
+          {allRegular
+            ? "Tutti i mesi con movimento risultano in regola. Bel lavoro."
+            : "Alcuni mesi hanno pendenze da chiudere: li trovi segnati qui sotto."}
         </p>
-      </main>
-    </div>
+      )}
+
+      <Card>
+        <CardContent className="py-2">
+          {rows.length === 0 ? (
+            <p className="text-muted-foreground py-8 text-center text-sm">
+              Ancora nessun dato di compliance.
+            </p>
+          ) : (
+            <ul>
+              {rows.map((row) => (
+                <MonthRow key={row.month} row={row} />
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <p className="text-muted-foreground mt-4 text-xs">
+        «Regolare» significa che tutte le schedine dovute per gli arrivi del mese risultano
+        acquisite dalla Questura e che nessuna dichiarazione di tassa è rimasta in lavorazione.
+      </p>
+    </ConciergePage>
   );
 }

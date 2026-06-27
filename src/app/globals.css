@@ -154,17 +154,6 @@
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
-
-  /*
-    Bottom-bar mobile: quando la pagina monta la nav (data-mobile-nav), aggiunge spazio in
-    fondo al contenuto così l'ultima riga non finisce sotto la barra fissa. Solo < md.
-    Evita di toccare il <main> di ogni pagina.
-  */
-  @media (max-width: 767px) {
-    body:has(nav[data-mobile-nav]) main {
-      padding-bottom: calc(4rem + env(safe-area-inset-bottom) + 1rem);
-    }
-  }
 }
 
 /*

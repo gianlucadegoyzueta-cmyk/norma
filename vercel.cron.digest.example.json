@@ -1,5 +1,5 @@
 {
-  "//": "ESEMPIO — NON è attivo. Per accendere il digest settimanale 'Fatto da Norma' (decisione del founder):",
+  "//": "DEPRECATO — i cron sono in vercel.json (root repo norma). Questo file resta solo come riferimento storico.",
   "//1": "1) copiare il blocco `crons` in un vero vercel.json alla radice del repo (unendolo agli altri cron se presenti);",
   "//2": "2) su Vercel impostare le env: CRON_SECRET (segreto del cron) e DIGEST_ENABLED=true;",
   "//3": "3) Vercel invoca GET /api/cron/digest con `Authorization: Bearer $CRON_SECRET`.",
