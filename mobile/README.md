@@ -11,8 +11,7 @@ Lo strato nativo (push, biometria, deep link, splash/status bar) vive nel web ap
 ## Prerequisiti (sul Mac)
 
 - Node ≥ 20, Xcode (iOS) e Android Studio (Android) installati.
-- Account **Apple Developer** (99 €/anno) e **Google Play Console** (25 € una-tantum) — vedi
-  `../NEEDS-HUMAN.md`.
+- Account **Apple Developer** (99 €/anno) e **Google Play Console** (25 € una-tantum).
 - ⚠️ L'ambiente CI remoto è Linux: iOS si costruisce **solo** su macOS.
 
 ## Primo setup
@@ -55,11 +54,26 @@ I file di associazione sono serviti dal web app di Norma:
 - iOS: `https://app.norma.casa/.well-known/apple-app-site-association`
 - Android: `https://app.norma.casa/.well-known/assetlinks.json`
 
-Da completare con valori reali prima del rilascio (vedi `NEEDS-HUMAN.md`):
+Da completare con valori reali prima del rilascio:
 
-- **Apple**: sostituire `TEAMID` con l'App ID Prefix (Team ID) nel file AASA.
-- **Android**: inserire il **SHA-256** del certificato di firma in `assetlinks.json`
-  (`keytool -list -v -keystore <keystore>` o da Play Console → App integrity).
+- **Apple**: impostare `APPLE_TEAM_ID` e `NATIVE_BUNDLE_ID` nelle env dell'app web (`~/dev/norma/.env` / Vercel).
+- **Android**: impostare `ANDROID_APP_PACKAGE` e `ANDROID_APP_SHA256` (uno o più fingerprint separati da virgola),
+  ricavati da `keytool -list -v -keystore <keystore>` o da Play Console → App integrity.
+
+Preflight rapido (payload `.well-known`):
+
+```bash
+npm run mobile:preflight
+# oppure
+MOBILE_BASE_URL=https://staging.app.norma.casa npm run mobile:preflight
+```
+
+## Billing policy mobile (companion app)
+
+- Nessun acquisto in-app: l&apos;abbonamento resta **web billing** (Stripe hosted).
+- Nella schermata `/billing`, da app nativa i CTA checkout/portal aprono Stripe nel browser di sistema
+  (Safari/Chrome), non dentro la webview.
+- Se trial scaduto, l&apos;utente viene indirizzato al flusso billing web esterno.
 
 ## Config nativa (dopo `npx cap add`)
 

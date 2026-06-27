@@ -11,19 +11,31 @@ import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { PASSWORD_RULES_HINT } from "@/lib/auth-constants";
 
-export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
+export function SignupForm({
+  googleEnabled,
+  redirectTo,
+}: {
+  googleEnabled: boolean;
+  redirectTo?: string;
+}) {
   const [state, action] = useActionState(registerWithPassword, {});
+  const formErrorId = "signup-form-error";
+  const withFormError = (base?: string) =>
+    state.error ? [base, formErrorId].filter(Boolean).join(" ") : base;
 
   return (
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="font-display text-xl">Crea il tuo account</CardTitle>
+          <CardTitle as="h1" className="font-display text-xl">
+            Crea il tuo account
+          </CardTitle>
           <CardDescription>Bastano pochi dati per iniziare.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
           <form action={action} className="flex flex-col gap-4">
-            <FormMessage>{state.error}</FormMessage>
+            {redirectTo ? <input type="hidden" name="redirectTo" value={redirectTo} /> : null}
+            <FormMessage id={formErrorId}>{state.error}</FormMessage>
 
             <Field id="signup-name" label="Il tuo nome">
               <Input
@@ -33,6 +45,8 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
                 required
                 autoComplete="name"
                 placeholder="Mario Rossi"
+                aria-invalid={state.error ? true : undefined}
+                aria-describedby={state.error ? formErrorId : undefined}
               />
             </Field>
 
@@ -48,7 +62,8 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
                 required
                 autoComplete="organization"
                 placeholder="Es. Rossi Affitti Brevi"
-                aria-describedby={describedById("signup-org", { hint: true })}
+                aria-invalid={state.error ? true : undefined}
+                aria-describedby={withFormError(describedById("signup-org", { hint: true }))}
               />
             </Field>
 
@@ -60,6 +75,8 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
                 required
                 autoComplete="email"
                 placeholder="tu@esempio.it"
+                aria-invalid={state.error ? true : undefined}
+                aria-describedby={state.error ? formErrorId : undefined}
               />
             </Field>
 
@@ -71,7 +88,8 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
                 required
                 autoComplete="new-password"
                 placeholder="••••••••"
-                aria-describedby={describedById("signup-password", { hint: true })}
+                aria-invalid={state.error ? true : undefined}
+                aria-describedby={withFormError(describedById("signup-password", { hint: true }))}
               />
             </Field>
 

@@ -4,11 +4,12 @@ import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { Building2, ChevronDown, LogOut, MoreHorizontal } from "lucide-react";
+import { Building2, Check, ChevronDown, LogOut, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SealMark } from "@/components/ui/seal-mark";
 import { CommandTrigger } from "@/components/command-trigger";
 import { MobileSidebarDrawer } from "./mobile-sidebar-drawer";
+import { switchOrganizationAction } from "./switch-organization-action";
 import { NAV, matchActive, type NavItem } from "./shell-nav";
 
 // Barra in alto del nuovo guscio (sostituisce la sidebar laterale ingombrante, #PARTE6/FASE2):
@@ -19,6 +20,7 @@ import { NAV, matchActive, type NavItem } from "./shell-nav";
 
 type Workspace = { name: string; sub?: string };
 type User = { name: string; email?: string; initials: string };
+type Organization = { organizationId: string; organizationName: string; role: string };
 
 /** Le tre voci "spina dorsale" sempre visibili in barra: home + i due pilastri (azione per pilastro). */
 const SPINE_KEYS = ["dashboard", "schedine", "istat"] as const;
@@ -137,11 +139,15 @@ export function TopNav({
   active,
   workspace,
   user,
+  organizations = [],
+  currentOrganizationId,
   signOutSlot,
 }: {
   active?: string;
   workspace?: Workspace;
   user?: User;
+  organizations?: Organization[];
+  currentOrganizationId?: string;
   /** Form/azione di logout (server action), reso in fondo al menu utente. */
   signOutSlot?: ReactNode;
 }) {
@@ -235,14 +241,62 @@ export function TopNav({
         {/* Cluster destro: ricerca ⌘K, struttura corrente, menu utente */}
         <div className="ml-auto flex items-center gap-2">
           <CommandTrigger />
-          <Link
-            href="/properties"
-            title={ws.name}
-            className="bg-card text-muted-foreground hover:text-foreground hidden h-9 items-center gap-2 rounded-lg border border-[var(--brand-hairline)] px-2.5 text-[12.5px] transition-colors md:flex"
-          >
-            <Building2 className="size-4" />
-            <span className="max-w-[160px] truncate">{ws.name}</span>
-          </Link>
+          {organizations.length <= 1 ? (
+            <Link
+              href="/properties"
+              title={ws.name}
+              className="bg-card text-muted-foreground hover:text-foreground hidden h-9 items-center gap-2 rounded-lg border border-[var(--brand-hairline)] px-2.5 text-[12.5px] transition-colors md:flex"
+            >
+              <Building2 className="size-4" />
+              <span className="max-w-[160px] truncate">{ws.name}</span>
+            </Link>
+          ) : (
+            <div className="hidden md:block">
+              <Dropdown
+                label={
+                  <span className="flex items-center gap-2">
+                    <Building2 className="size-4" />
+                    <span className="max-w-[160px] truncate">{ws.name}</span>
+                  </span>
+                }
+              >
+                {(_close) => (
+                  <div className="py-1">
+                    {organizations.map((org) => {
+                      const isCurrent = org.organizationId === currentOrganizationId;
+                      return (
+                        <form key={org.organizationId} action={switchOrganizationAction}>
+                          <input type="hidden" name="organizationId" value={org.organizationId} />
+                          <input type="hidden" name="returnTo" value={pathname || "/dashboard"} />
+                          <button
+                            type="submit"
+                            role="menuitem"
+                            className={cn(
+                              "flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[13.5px] transition-colors",
+                              isCurrent
+                                ? "bg-primary/[0.08] text-foreground font-medium"
+                                : "text-muted-foreground hover:text-foreground hover:bg-[var(--brand-avorio)]",
+                            )}
+                          >
+                            <Building2
+                              className={cn(
+                                "size-[17px] shrink-0",
+                                isCurrent ? "text-primary" : "text-muted-foreground",
+                              )}
+                            />
+                            <span className="min-w-0 flex-1 truncate">{org.organizationName}</span>
+                            {isCurrent && (
+                              <Check className="text-primary size-4 shrink-0" aria-hidden />
+                            )}
+                          </button>
+                        </form>
+                      );
+                    })}
+                  </div>
+                )}
+              </Dropdown>
+            </div>
+          )}
 
           <Dropdown
             align="right"

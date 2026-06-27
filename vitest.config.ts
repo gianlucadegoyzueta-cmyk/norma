@@ -25,6 +25,64 @@ export default defineConfig({
         find: /^server-only$/,
         replacement: fileURLToPath(new URL("./test/stubs/server-only.ts", import.meta.url)),
       },
+      {
+        // Il core Capacitor non è installato nell'ambiente test web/server. Stub minimale per i test
+        // che importano `src/lib/native/index.ts` senza dover risolvere dipendenze native.
+        find: /^@capacitor\/core$/,
+        replacement: fileURLToPath(new URL("./test/stubs/capacitor-core.ts", import.meta.url)),
+      },
+      {
+        find: /^@capacitor\/status-bar$/,
+        replacement: fileURLToPath(
+          new URL("./test/stubs/capacitor-status-bar.ts", import.meta.url),
+        ),
+      },
+      {
+        find: /^@capacitor\/splash-screen$/,
+        replacement: fileURLToPath(
+          new URL("./test/stubs/capacitor-splash-screen.ts", import.meta.url),
+        ),
+      },
+      {
+        find: /^@capacitor\/app$/,
+        replacement: fileURLToPath(new URL("./test/stubs/capacitor-app.ts", import.meta.url)),
+      },
+      {
+        find: /^@capacitor\/push-notifications$/,
+        replacement: fileURLToPath(
+          new URL("./test/stubs/capacitor-push-notifications.ts", import.meta.url),
+        ),
+      },
+      {
+        find: /^@capacitor\/browser$/,
+        replacement: fileURLToPath(new URL("./test/stubs/capacitor-browser.ts", import.meta.url)),
+      },
+      {
+        find: /^@aparajita\/capacitor-biometric-auth$/,
+        replacement: fileURLToPath(
+          new URL("./test/stubs/capacitor-biometric-auth.ts", import.meta.url),
+        ),
+      },
+      {
+        find: /^@capacitor\/camera$/,
+        replacement: fileURLToPath(new URL("./test/stubs/capacitor-camera.ts", import.meta.url)),
+      },
+      {
+        find: /^@pantrist\/capacitor-plugin-ml-kit-text-recognition$/,
+        replacement: fileURLToPath(
+          new URL("./test/stubs/capacitor-mlkit-text.ts", import.meta.url),
+        ),
+      },
+      {
+        find: /^@capacitor\/filesystem$/,
+        replacement: fileURLToPath(
+          new URL("./test/stubs/capacitor-filesystem.ts", import.meta.url),
+        ),
+      },
+      {
+        find: /^@capacitor\/share$/,
+        replacement: fileURLToPath(new URL("./test/stubs/capacitor-share.ts", import.meta.url)),
+      },
     ],
   },
   // tsconfig usa jsx:"preserve" (lo gestisce Next); per i test serve il transform automatico di React 19.

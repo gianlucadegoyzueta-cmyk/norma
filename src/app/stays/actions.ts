@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { checkWriteAccess } from "@/server/modules/billing/write-access";
 import { PrismaReferenceTablesLoader, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
 import type { GuestData, Party, PartyTipo } from "@/server/modules/stays";
 import { PrismaStaysRepository, StaysError, StaysService } from "@/server/modules/stays";
@@ -37,6 +38,8 @@ function parseDay(value: string): Date | null {
 export async function createStayAction(_prev: Result | null, formData: FormData): Promise<Result> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const propertyId = String(formData.get("propertyId") ?? "").trim();
   const arrivalDate = parseDay(String(formData.get("arrivalDate") ?? ""));
@@ -139,6 +142,8 @@ export async function addGuestPartyAction(
 ): Promise<GuestPartyState> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const stayId = String(formData.get("stayId") ?? "").trim();
   const tipo = String(formData.get("partyTipo") ?? "") as PartyTipo;
@@ -205,6 +210,8 @@ export async function generateSchedineAction(
 ): Promise<Result> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const stayId = String(formData.get("stayId") ?? "").trim();
   if (!stayId || !(await assertStayOwned(stayId, ctx.current.organizationId))) {

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { checkWriteAccess } from "@/server/modules/billing/write-access";
 import {
   ICalHttpFetcher,
   PrismaReservationImportRepository,
@@ -87,6 +88,8 @@ export async function confirmImportAction(input: {
 
   const orgId = await assertOwnProperty(propertyId);
   if (!orgId) return { ok: false, message: "Immobile non trovato o sessione scaduta." };
+  const access = await checkWriteAccess(orgId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   try {
     const r = await makeService().importNow(orgId, propertyId, url);
@@ -111,6 +114,8 @@ export async function syncImportAction(_prev: Result | null, formData: FormData)
 
   const orgId = await assertOwnProperty(propertyId);
   if (!orgId) return { ok: false, message: "Immobile non trovato o sessione scaduta." };
+  const access = await checkWriteAccess(orgId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   try {
     const r = await makeService().syncImport(importId, orgId);
@@ -135,6 +140,8 @@ export async function removeImportAction(formData: FormData): Promise<void> {
 
   const orgId = await assertOwnProperty(propertyId);
   if (!orgId) return;
+  const access = await checkWriteAccess(orgId);
+  if (!access.ok) return;
 
   await makeService().removeImport(importId, orgId);
   revalidatePath(`/properties/${propertyId}`);

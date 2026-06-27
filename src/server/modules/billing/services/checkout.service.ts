@@ -9,6 +9,7 @@ import type { SubscriptionRepository } from "../ports/SubscriptionRepository";
 export interface StartCheckoutInput {
   organizationId: string;
   plan: BillingPlan;
+  quantity?: number;
   customerEmail?: string | null;
   successUrl: string;
   cancelUrl: string;
@@ -42,6 +43,7 @@ export class BillingCheckoutService {
     return this.gateway.createCheckoutSession({
       organizationId: input.organizationId,
       lookupKey: def.lookupKey,
+      quantity: Number.isFinite(input.quantity) ? Math.max(1, Math.trunc(input.quantity ?? 1)) : 1,
       customerEmail: input.customerEmail ?? null,
       existingCustomerId: existing?.stripeCustomerId ?? null,
       successUrl: input.successUrl,

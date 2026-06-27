@@ -3,6 +3,7 @@
 import type { CredentialCategory } from "@prisma/client";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { checkWriteAccess } from "@/server/modules/billing/write-access";
 import {
   AlloggiatiSoapClient,
   CredentialService,
@@ -26,6 +27,8 @@ export async function onboardCredentialAction(
 ): Promise<Result> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const label = String(formData.get("label") ?? "").trim();
   const category = String(formData.get("category") ?? "SINGOLA") as CredentialCategory;

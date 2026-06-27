@@ -7,12 +7,18 @@ import { SignupForm } from "./SignupForm";
 
 export const metadata: Metadata = { title: "Crea un account" };
 
-export default async function SignupPage() {
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ invite?: string }>;
+}) {
   if (await getCurrentContext()) redirect("/dashboard");
+  const sp = await searchParams;
+  const redirectTo = sp.invite ? `/auth/invite?token=${encodeURIComponent(sp.invite)}` : undefined;
 
   return (
     <AuthShell>
-      <SignupForm googleEnabled={isGoogleEnabled} />
+      <SignupForm googleEnabled={isGoogleEnabled} redirectTo={redirectTo} />
     </AuthShell>
   );
 }

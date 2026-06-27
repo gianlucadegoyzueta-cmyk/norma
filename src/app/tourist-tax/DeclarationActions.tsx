@@ -16,7 +16,7 @@ import {
 const MODE_LABELS: Record<TaxRemittanceMode, string> = {
   MANUAL_EXPORT: "Esporta e invio io",
   GECOS: "GECOS (assistito)",
-  PAGOPA: "pagoPA (assistito)",
+  PAGOPA: "pagoPA (sandbox aggregatore)",
   COMUNE_PORTAL: "Portale comunale (assistito)",
 };
 
@@ -85,6 +85,8 @@ export function DeclarationActions({
         const w = window.open(r.url, "_blank", "noopener");
         if (w === null) {
           setMsg("Il browser ha bloccato la finestra: abilita i popup o usa Esporta CSV.");
+        } else {
+          setOk(r.message);
         }
       } else setMsg(r.message); // NOT_IMPLEMENTED → spiega che si usa l'export manuale
     });

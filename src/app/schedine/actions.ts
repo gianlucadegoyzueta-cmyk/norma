@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { checkWriteAccess } from "@/server/modules/billing/write-access";
 import { getSecretsVault } from "@/server/secrets";
 import {
   AlloggiatiSoapClient,
@@ -73,6 +74,8 @@ export async function setCredentialAutoSendAction(
 ): Promise<Result> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const credRepo = new PrismaCredentialRepository(prisma);
   const denied = await guardCredential(credRepo, credentialId, ctx.current.organizationId);
@@ -146,6 +149,8 @@ export async function sendCredentialAction(
 ): Promise<SendResult> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
   if (formData.get("confirm") !== "yes") {
     return { ok: false, message: "Invio non confermato." };
   }
@@ -201,6 +206,8 @@ export async function reopenRejectedAction(
 ): Promise<OutboxResult> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const schedinaId = String(formData.get("schedinaId") ?? "").trim();
   if (!schedinaId) return { ok: false, message: "Schedina non indicata." };
@@ -240,6 +247,8 @@ export async function reopenNeedsReviewAction(
 ): Promise<OutboxResult> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const schedinaId = String(formData.get("schedinaId") ?? "").trim();
   if (!schedinaId) return { ok: false, message: "Schedina non indicata." };
@@ -291,6 +300,8 @@ export async function reconcileCredentialAction(
 ): Promise<Result> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const credentialId = String(formData.get("credentialId") ?? "").trim();
   const receiptDateRaw = String(formData.get("receiptDate") ?? "").trim();

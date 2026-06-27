@@ -18,6 +18,10 @@ describe("resolveRemittanceChannel — esaustività", () => {
     expect(resolveRemittanceChannel("MANUAL_EXPORT").isImplemented).toBe(true);
   });
 
+  it("PAGOPA è implementato via adapter aggregatore (sandbox/mock in Fase 1)", () => {
+    expect(resolveRemittanceChannel("PAGOPA").isImplemented).toBe(true);
+  });
+
   it("una modalità sconosciuta (cast forzato) lancia, non ritorna undefined", () => {
     expect(() => resolveRemittanceChannel("BONIFICO_SEPA" as TaxRemittanceMode)).toThrow();
   });

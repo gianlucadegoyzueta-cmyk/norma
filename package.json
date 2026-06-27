@@ -27,7 +27,8 @@
     "alloggiati:inspect-tables": "RUN_TABLE_INSPECT=1 vitest run src/server/modules/alloggiati/__tests__/soap.tabella-inspect.live.test.ts",
     "alloggiati:sync-tables": "RUN_TABLE_SYNC=1 vitest run src/server/modules/alloggiati/__tests__/soap.table-sync.live.test.ts",
     "alloggiati:test-real": "RUN_TEST_REAL=1 vitest run src/server/modules/alloggiati/__tests__/soap.test-real.live.test.ts",
-    "alloggiati:gate0-pdf": "RUN_GATE0_PDF=1 vitest run src/server/modules/alloggiati/__tests__/soap.ricevuta-pdf.live.test.ts"
+    "alloggiati:gate0-pdf": "RUN_GATE0_PDF=1 vitest run src/server/modules/alloggiati/__tests__/soap.ricevuta-pdf.live.test.ts",
+    "mobile:preflight": "node scripts/mobile-preflight.mjs"
   },
   "prisma": {
     "schema": "prisma/schema.prisma"
@@ -64,6 +65,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "fast-xml-parser": "^4.5.0",
+    "google-auth-library": "^10.9.0",
     "lucide-react": "^1.21.0",
     "next": "^15.5.19",
     "next-auth": "^5.0.0-beta.31",

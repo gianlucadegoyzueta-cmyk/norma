@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/server/db";
-import { ResendEmailSender } from "@/server/modules/notifications";
+import {
+  FcmPushSender,
+  PrismaDeviceTokenRepository,
+  PrismaNotificationPreferenceRepository,
+  PushNotificationService,
+  ResendEmailSender,
+} from "@/server/modules/notifications";
 import {
   evaluateDigestGate,
   PrismaDigestRepository,
@@ -46,6 +52,33 @@ export async function GET(req: Request) {
     new ResendEmailSender(),
   );
   const report = await service.run(previousWeekWindow(new Date()));
+
+  // Push digest (pillar alloggiati): best-effort e gated dall'adapter FCM (PUSH_ENABLED + chiavi).
+  // Non blocca mai il cron email.
+  if (report.organizations > 0) {
+    const pushService = new PushNotificationService(
+      new FcmPushSender(),
+      new PrismaDeviceTokenRepository(prisma),
+      new PrismaNotificationPreferenceRepository(prisma),
+    );
+    const targets = await prisma.membership.findMany({
+      where: {
+        organizationId: { in: report.outcomes.map((o) => o.organizationId) },
+        role: { in: ["OWNER", "ADMIN"] },
+      },
+      select: { userId: true },
+    });
+    const userIds = [...new Set(targets.map((t) => t.userId))];
+    await Promise.allSettled(
+      userIds.map((userId) =>
+        pushService.notify(userId, "alloggiati", {
+          title: "Digest settimanale pronto",
+          body: "Norma ha preparato il riepilogo della settimana.",
+          data: { path: "/dashboard" },
+        }),
+      ),
+    );
+  }
 
   return NextResponse.json({ ok: true, report });
 }

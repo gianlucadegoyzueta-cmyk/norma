@@ -9,10 +9,16 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/_next/static/chunk.js")).toBe(true);
     expect(isPublicPath("/favicon.ico")).toBe(true);
     expect(isPublicPath("/icon.svg")).toBe(true);
+    expect(isPublicPath("/manifest.webmanifest")).toBe(true);
     expect(isPublicPath("/api/health")).toBe(true);
     // Cron Vercel: nessuna sessione utente, auth via CRON_SECRET nella route stessa.
     expect(isPublicPath("/api/cron/alloggiati")).toBe(true);
+    expect(isPublicPath("/api/cron/digest")).toBe(true);
     expect(isPublicPath("/api/cron/istat")).toBe(true);
+    expect(isPublicPath("/api/cron/reservations")).toBe(true);
+    // Deep link association files: letti da Apple/Google senza cookie.
+    expect(isPublicPath("/.well-known/apple-app-site-association")).toBe(true);
+    expect(isPublicPath("/.well-known/assetlinks.json")).toBe(true);
   });
 
   it("apre il flusso di registrazione e recupero a chi è sloggato", () => {

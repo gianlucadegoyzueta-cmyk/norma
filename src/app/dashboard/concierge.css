@@ -312,10 +312,6 @@
      tab in background, paint ritardato), il contenuto resta comunque visibile a riposo. */
   animation: cmx-fadeup 0.8s var(--ease) calc(var(--i) * 0.08s) backwards;
 }
-.cmx-kpi:hover {
-  border-color: rgba(188, 75, 43, 0.35);
-  box-shadow: 0 16px 40px rgba(33, 28, 21, 0.13);
-}
 .cmx-kpi:focus-visible {
   outline: 2px solid var(--terracotta);
   outline-offset: 3px;
@@ -336,9 +332,6 @@
   opacity: 0;
   transition: opacity 0.3s;
   pointer-events: none;
-}
-.cmx-kpi:hover::after {
-  opacity: 1;
 }
 .cmx-kpi .cmx-l {
   font-size: 13px;
@@ -377,16 +370,30 @@
   opacity: 0.85;
   transition: opacity 0.25s;
 }
-.cmx-kpi:hover .cmx-kpi-cta,
 .cmx-kpi:focus-visible .cmx-kpi-cta {
   opacity: 1;
 }
 .cmx-kpi-arrow {
   transition: transform 0.25s var(--ease);
 }
-.cmx-kpi:hover .cmx-kpi-arrow,
 .cmx-kpi:focus-visible .cmx-kpi-arrow {
   transform: translateX(4px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cmx-kpi:hover {
+    border-color: rgba(188, 75, 43, 0.35);
+    box-shadow: 0 16px 40px rgba(33, 28, 21, 0.13);
+  }
+  .cmx-kpi:hover::after {
+    opacity: 1;
+  }
+  .cmx-kpi:hover .cmx-kpi-cta {
+    opacity: 1;
+  }
+  .cmx-kpi:hover .cmx-kpi-arrow {
+    transform: translateX(4px);
+  }
 }
 .cmx-odo {
   display: flex;

@@ -4,11 +4,9 @@
 import type { TaxRemittanceMode } from "@prisma/client";
 import type { RemittanceChannel } from "../../ports/RemittanceChannel";
 import { ManualExportRemittance } from "./ManualExportRemittance";
-import {
-  ComunePortalRemittanceStub,
-  GecosRemittanceStub,
-  PagoPaRemittanceStub,
-} from "./StubRemittance";
+import { MockAggregatorCheckoutGateway } from "./MockAggregatorCheckoutGateway";
+import { PagoPaAggregatorRemittance } from "./PagoPaAggregatorRemittance";
+import { ComunePortalRemittanceStub, GecosRemittanceStub } from "./StubRemittance";
 
 export function resolveRemittanceChannel(mode: TaxRemittanceMode): RemittanceChannel {
   switch (mode) {
@@ -17,7 +15,7 @@ export function resolveRemittanceChannel(mode: TaxRemittanceMode): RemittanceCha
     case "GECOS":
       return new GecosRemittanceStub();
     case "PAGOPA":
-      return new PagoPaRemittanceStub();
+      return new PagoPaAggregatorRemittance(new MockAggregatorCheckoutGateway());
     case "COMUNE_PORTAL":
       return new ComunePortalRemittanceStub();
     default: {

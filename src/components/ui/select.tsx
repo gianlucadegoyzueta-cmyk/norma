@@ -8,7 +8,7 @@ export function Select({ className, ...props }: React.SelectHTMLAttributes<HTMLS
       className={cn(
         // text-base (16px) su mobile, text-sm (14px) da md in su: sotto i 16px iOS Safari fa
         // auto-zoom alla messa a fuoco. Coerente con Input; vale per le tendine del check-in mobile.
-        "border-input bg-background text-foreground flex h-10 w-full appearance-none rounded-md border px-3 py-2 text-base shadow-sm transition-colors duration-150 ease-[var(--ease-brand)] motion-reduce:transition-none md:text-sm",
+        "border-input bg-background text-foreground flex h-11 w-full appearance-none rounded-md border px-3 py-2 text-base shadow-sm transition-colors duration-150 ease-[var(--ease-brand)] motion-reduce:transition-none md:h-10 md:text-sm",
         "hover:border-foreground/25",
         "focus-visible:ring-ring focus-visible:ring-offset-background focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
         // Stato di errore coerente con Input: bordo e anello rossi quando aria-invalid, e resta

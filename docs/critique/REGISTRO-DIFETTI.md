@@ -2,7 +2,36 @@
 
 > **Aggiornamento 2026-06-26 (piano Ordine ecosistema):** verità editoriale migrata a `docs/EDITORIAL.md` — pitch **"Norma esegue per te su mandato"** (non più "prepara/confermi"). Interventi #1 e tono app in Top 10 vanno riletti alla luce di EDITORIAL; molti fix copy/CTA/deploy sono in corso su `norma-marketing` e `norma`.
 
-**Conteggi:** Sito: 4 BLOCKER, 13 MAJOR, 12 MINOR, 5 POLISH (34 difetti deduplicati). App: 5 BLOCKER, 17 MAJOR, 18 MINOR, 10 POLISH (50 difetti deduplicati). Totale: 9 BLOCKER, 30 MAJOR, 30 MINOR, 15 POLISH = 84 difetti unici su 12 report.
+**Conteggi (snapshot 2026-06-23):** Sito: 4 BLOCKER, 13 MAJOR, 12 MINOR, 5 POLISH (34 difetti deduplicati). App: 5 BLOCKER, 17 MAJOR, 18 MINOR, 10 POLISH (50 difetti deduplicati). Totale: 9 BLOCKER, 30 MAJOR, 30 MINOR, 15 POLISH = 84 difetti unici su 12 report.
+
+> **Re-audit Fase 1 in corso (2026-06-27):**
+>
+> - Navigazione app persistente (AppShell) già montata sulle pagine operative.
+> - Write-gating billing applicato alle server action di scrittura.
+> - `/schedine` mostra stato cron produzione (dry-run vs invio reale vs cron disattivo).
+> - ISTAT routing 21/21 con test verdi (15 FILE, 6 ASSISTITO, 0 AUTO).
+> - Tassa: `PAGOPA` passa da stub puro a adapter aggregatore sandbox/mock (`REDIRECT`), senza versamento reale.
+> - E2E smoke esteso e verde.
+> - Brand light-only rispettato in runtime: `color-scheme: light only` e nessuna utility `dark:*` sotto `src/`.
+> - Auth form a11y riallineata: errore form collegato ai campi (`aria-describedby` + `aria-invalid` su login/signup).
+> - Auth semantics riallineata: titolo pagina in `<h1>` su `/login` e `/signup` (CardTitle ora supporta livello heading esplicito).
+> - Copy blocker app ripulito nel codice (`/dashboard` + `/schedine`): niente claim "invia da sola"/"eseguo io".
+> - Mobile form controls riallineati: `Input`/`Select` a 16px + 44px su mobile (`h-11`, `md:h-10`) per evitare auto-zoom iOS e migliorare tap target.
+> - Tap target bottoni piccoli riallineato: variante `Button size="sm"` portata a 44px su mobile (`h-11`, fallback desktop `md:h-8`).
+> - Hover/touch behavior riallineato: effetti `:hover` KPI/righe attivi solo su puntatori fini (`@media (hover:hover) and (pointer:fine)`), eliminati stati appiccicosi su touch.
+> - `concierge-page.css` resa mobile-first: breakpoint ≤520px aggiunto (head/section/card/row compatti), rimosso assetto desktop rigido sulle pagine interne.
+> - Multi-org UX attivata in shell: switcher organizzazione in topbar con validazione membership server-side (`current-org`), base pronta per gate PM F4.
+> - Team management F4 avviato su `/account`: aggiunta membri via email+ruolo, cambio ruolo e rimozione con guardrail OWNER/ADMIN.
+> - Test aggiunti sul blocco team (`src/app/account/__tests__/team-actions.test.ts`): coperti permessi base e promozione ruolo.
+> - Inviti esterni F4 chiusi: generazione link firmato (`AUTH_SECRET`) + accettazione su `/auth/invite` con vincolo email invitata e membership role-safe.
+> - Isolamento multi-org rinforzato da test server-side (`src/components/shell/__tests__/switch-organization-action.test.ts`): no cookie switch se `organizationId` non autorizzato.
+> - Isolamento multi-org verificato anche in smoke E2E browser (`e2e/smoke.spec.ts`): switch org su topbar e conferma dati `/agency` isolati per organizzazione corrente.
+> - Billing PM quantity rinforzato: oltre alla quantity iniziale in checkout, sync automatico post-checkout su creazione immobili (`BillingQuantitySyncService`).
+> - Policy mobile billing resa esplicita in app: da `/billing` nativa i CTA Stripe aprono browser di sistema (web-only flow, nessun acquisto in-app).
+> - Introdotto preflight mobile (`npm run mobile:preflight`) per validare `.well-known` su URL target prima dei test device.
+> - Aggiunti test route `.well-known` (`src/app/.well-known/__tests__/*`) con esito locale verde; root cause mismatch prod identificata/fixata in codice (whitelist middleware per `/.well-known/*`), deploy completato.
+> - Verifica post-deploy: `npm run mobile:preflight` su `https://app.norma.casa` in PASS (AASA + assetlinks validi).
+> - Conteggi finali BLOCKER/MAJOR verranno ricalcolati a fine re-audit app.
 
 ## Verdetto sito
 

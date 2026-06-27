@@ -6,6 +6,7 @@ import type {
   CreateCheckoutParams,
   CreatePortalParams,
   ParsedWebhook,
+  UpdateSubscriptionQuantityParams,
 } from "../ports/BillingGateway";
 import type { GuestActivityRepository, ManagedGuestStats } from "../ports/GuestActivity";
 import { BillingCheckoutService, BillingNoCustomerError } from "../services/checkout.service";
@@ -24,6 +25,9 @@ class RecordingGateway implements BillingGateway {
   async createPortalSession(p: CreatePortalParams): Promise<{ url: string }> {
     this.lastPortal = p;
     return { url: "https://portal.test" };
+  }
+  async updateSubscriptionQuantity(_p: UpdateSubscriptionQuantityParams): Promise<void> {
+    return;
   }
   async parseWebhookEvent(): Promise<ParsedWebhook> {
     throw new Error("non usato");
@@ -58,6 +62,7 @@ describe("BillingCheckoutService", () => {
     const { url } = await svc.startCheckout({
       organizationId: "org_1",
       plan: "ANNUAL",
+      quantity: 3,
       customerEmail: "host@example.com",
       successUrl: "https://app/ok",
       cancelUrl: "https://app/ko",
@@ -65,6 +70,7 @@ describe("BillingCheckoutService", () => {
     expect(url).toBe("https://checkout.test");
     expect(gw.lastCheckout?.lookupKey).toBe(ANNUAL_PLAN.lookupKey);
     expect(gw.lastCheckout?.existingCustomerId).toBe("cus_existing");
+    expect(gw.lastCheckout?.quantity).toBe(3);
   });
 
   it("startPortal richiede un customer Stripe: senza, lancia BillingNoCustomerError", async () => {

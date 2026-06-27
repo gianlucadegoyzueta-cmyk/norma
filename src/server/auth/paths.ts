@@ -7,9 +7,14 @@
 const PUBLIC_EXACT = new Set<string>([
   "/favicon.ico",
   "/icon.svg",
+  "/manifest.webmanifest",
   "/api/health",
   "/api/cron/alloggiati",
+  "/api/cron/digest",
   "/api/cron/istat",
+  "/api/cron/reservations",
+  "/.well-known/apple-app-site-association",
+  "/.well-known/assetlinks.json",
 ]);
 // Pagine raggiungibili da SLOGGATI: login, registrazione, l'intero flusso /auth/* (recupero
 // password, "controlla email", reset, pagina d'errore di Auth.js), il CHECK-IN ospite self-service

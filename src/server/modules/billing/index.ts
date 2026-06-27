@@ -21,3 +21,4 @@ export * from "./adapters/PrismaGuestActivityRepository";
 export * from "./services/webhook.service";
 export * from "./services/checkout.service";
 export * from "./services/gating.service";
+export * from "./services/quantity-sync.service";

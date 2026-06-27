@@ -28,6 +28,8 @@ export async function registerWithPassword(
   const organizationName = String(formData.get("organizationName") ?? "").trim();
   const email = normalizeEmail(String(formData.get("email") ?? ""));
   const password = String(formData.get("password") ?? "");
+  const redirectToRaw = String(formData.get("redirectTo") ?? "").trim();
+  const redirectTo = redirectToRaw.startsWith("/") ? redirectToRaw : "/onboarding";
 
   if (!name) return { error: "Inserisci il tuo nome." };
   if (!email) return { error: "Inserisci un'email valida." };
@@ -58,7 +60,7 @@ export async function registerWithPassword(
   );
 
   try {
-    await signIn("credentials", { email, password, redirectTo: "/onboarding" });
+    await signIn("credentials", { email, password, redirectTo });
     return {};
   } catch (error) {
     if (error instanceof AuthError) {

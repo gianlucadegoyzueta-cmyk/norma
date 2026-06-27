@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { Prisma } from "@prisma/client";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { checkWriteAccess } from "@/server/modules/billing/write-access";
 import { toIstatCsv } from "@/server/modules/istat/domain/export-csv";
 import { loadIstatReport } from "@/server/modules/istat/report";
 import { loadRoss1000Report } from "@/server/modules/istat/ross1000/report";
@@ -39,6 +40,8 @@ export async function markIstatSubmittedAction(
   const ctx = await getCurrentContext();
   if (!ctx) redirect("/login");
   const orgId = ctx.current.organizationId;
+  const access = await checkWriteAccess(orgId);
+  if (!access.ok) return { ok: false, error: access.message };
   try {
     const { report } = await loadIstatReport(orgId, period);
     const data = {

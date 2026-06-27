@@ -5,7 +5,9 @@ import {
   ArrowRight,
   Bell,
   CreditCard,
+  Shield,
   KeyRound,
+  Trash2,
   Send,
   Settings2,
   TriangleAlert,
@@ -19,6 +21,9 @@ import { Button } from "@/components/ui/button";
 import { ProfileForm } from "./ProfileForm";
 import { NotificationPreferencesForm } from "./NotificationPreferencesForm";
 import { BiometricLockToggle } from "./BiometricLockToggle";
+import { InviteTeamMemberForm } from "./InviteTeamMemberForm";
+import { TeamInviteLinkForm } from "./TeamInviteLinkForm";
+import { removeTeamMemberAction, updateTeamRoleAction } from "./actions";
 
 export const metadata: Metadata = { title: "Impostazioni" };
 export const dynamic = "force-dynamic";
@@ -39,6 +44,22 @@ export default async function AccountPage() {
   // Consenso notifiche per-pilastro. Degrada al default opt-in se la tabella non esiste ancora
   // (migrazione PR2 non applicata): l'UI funziona comunque.
   const consent = await new PrismaNotificationPreferenceRepository(prisma).get(ctx.user.id);
+  const canManageTeam = ctx.current.role === "OWNER" || ctx.current.role === "ADMIN";
+  const teamMembers = await prisma.membership.findMany({
+    where: { organizationId: ctx.current.organizationId },
+    select: {
+      id: true,
+      role: true,
+      userId: true,
+      user: { select: { name: true, email: true } },
+    },
+    orderBy: [{ role: "asc" }, { createdAt: "asc" }],
+  });
+  const roleLabel: Record<"OWNER" | "ADMIN" | "MEMBER", string> = {
+    OWNER: "Owner",
+    ADMIN: "Admin",
+    MEMBER: "Member",
+  };
 
   return (
     <ConciergePage
@@ -121,6 +142,93 @@ export default async function AccountPage() {
                 Gestisci credenziali <ArrowRight className="size-4" />
               </Button>
             </Link>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Team organizzazione (F4): ruoli e membri nello stesso tenant. */}
+      <section className="cmx-section">
+        <Card style={{ borderRadius: 18 }}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="size-4" /> Team organizzazione
+            </CardTitle>
+            <CardDescription>
+              Membri con accesso a {ctx.current.organizationName}. OWNER e ADMIN possono gestire i
+              ruoli; un ADMIN non modifica un OWNER.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            {canManageTeam ? (
+              <div className="grid gap-4">
+                <InviteTeamMemberForm canAssignOwner={ctx.current.role === "OWNER"} />
+                <TeamInviteLinkForm canAssignOwner={ctx.current.role === "OWNER"} />
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                Solo OWNER o ADMIN possono aggiungere membri al team.
+              </p>
+            )}
+            <div className="grid gap-2.5">
+              {teamMembers.map((m) => {
+                const isSelf = m.userId === ctx.user.id;
+                const canChangeRole =
+                  canManageTeam &&
+                  !isSelf &&
+                  (ctx.current.role === "OWNER" ||
+                    (m.role !== "OWNER" && ctx.current.role !== "MEMBER"));
+                const canRemove = canChangeRole;
+                return (
+                  <div
+                    key={m.id}
+                    className="border-border flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {m.user.name ?? "Utente Norma"} {isSelf ? "(tu)" : ""}
+                      </p>
+                      <p className="text-muted-foreground truncate text-xs">{m.user.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {canChangeRole ? (
+                        <form action={updateTeamRoleAction} className="flex items-center gap-2">
+                          <input type="hidden" name="membershipId" value={m.id} />
+                          <select
+                            name="role"
+                            defaultValue={m.role}
+                            className="border-input bg-background h-11 rounded-md border px-3 text-xs md:h-10"
+                          >
+                            <option value="MEMBER">Member</option>
+                            <option value="ADMIN">Admin</option>
+                            {ctx.current.role === "OWNER" ? (
+                              <option value="OWNER">Owner</option>
+                            ) : null}
+                          </select>
+                          <Button type="submit" size="sm" variant="outline">
+                            Salva
+                          </Button>
+                        </form>
+                      ) : (
+                        <span className="cmx-badge cmx-badge-wait">{roleLabel[m.role]}</span>
+                      )}
+                      {canRemove ? (
+                        <form action={removeTeamMemberAction}>
+                          <input type="hidden" name="membershipId" value={m.id} />
+                          <Button
+                            type="submit"
+                            size="sm"
+                            variant="ghost"
+                            aria-label={`Rimuovi ${m.user.email ?? "membro"}`}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </form>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
       </section>

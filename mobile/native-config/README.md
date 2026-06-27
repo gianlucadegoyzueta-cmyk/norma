@@ -18,8 +18,8 @@ elencati in fondo come placeholder da riempire.
    - **Push Notifications**
    - **Associated Domains** → `applinks:app.norma.casa` (per gli Universal Links)
    - (Background Modes → Remote notifications, se vuoi le push in background)
-4. **APNs**: in Apple Developer crea una **APNs Auth Key (.p8)**; serve al canale push lato
-   server (vedi `NEEDS-HUMAN.md §11`).
+4. **APNs**: in Apple Developer crea una **APNs Auth Key (.p8)**; caricala nei segreti server
+   (`APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_P8`) — vedi `FcmPushSender.ts` e env Vercel.
 
 ## Android (dopo `npx cap add android`)
 
@@ -28,12 +28,15 @@ elencati in fondo come placeholder da riempire.
 
 ## Deep link — file `.well-known` (nel web app `norma`)
 
-Già serviti da `app.norma.casa`, ma con **placeholder** da sostituire al go-live:
+Già serviti da `app.norma.casa` tramite route dinamiche:
 
-- `public/.well-known/apple-app-site-association`: sostituisci `TEAMID` con il tuo **Team ID**
-  (Apple Developer → Membership → Team ID), formato `TEAMID.casa.norma.app`.
-- `public/.well-known/assetlinks.json`: sostituisci `REPLACE_WITH_SHA256_FINGERPRINT_OF_SIGNING_CERT`
-  con l'impronta **SHA-256** del certificato di firma:
+- `/.well-known/apple-app-site-association`: valorizzato da env `APPLE_TEAM_ID` + `NATIVE_BUNDLE_ID`.
+- `/.well-known/assetlinks.json`: valorizzato da env `ANDROID_APP_PACKAGE` + `ANDROID_APP_SHA256`.
+
+Per il go-live, inserisci valori reali:
+
+- Team ID Apple (Apple Developer → Membership → Team ID), formato `TEAMID.casa.norma.app`.
+- Impronta **SHA-256** del certificato Android:
   `keytool -list -v -keystore <keystore.jks> -alias <alias>` oppure Play Console → Test e
   versioni → Integrità app → impronte digitali del certificato.
 

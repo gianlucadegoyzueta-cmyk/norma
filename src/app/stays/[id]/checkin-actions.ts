@@ -3,6 +3,7 @@
 import { appBaseUrl } from "@/server/auth/email";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { checkWriteAccess } from "@/server/modules/billing/write-access";
 import { createCheckinToken } from "@/server/modules/checkin/token";
 
 /**
@@ -15,6 +16,8 @@ export async function generateCheckinLinkAction(
 ): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, error: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, error: access.message };
 
   const stay = await prisma.stay.findFirst({
     where: { id: stayId, organizationId: ctx.current.organizationId },

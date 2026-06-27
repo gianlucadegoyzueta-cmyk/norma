@@ -6,6 +6,7 @@ import type {
   CreateCheckoutParams,
   CreatePortalParams,
   ParsedWebhook,
+  UpdateSubscriptionQuantityParams,
 } from "../ports/BillingGateway";
 import { StripeWebhookService } from "../services/webhook.service";
 
@@ -20,6 +21,9 @@ class FakeGateway implements BillingGateway {
   }
   async createPortalSession(_p: CreatePortalParams): Promise<{ url: string }> {
     return { url: "https://portal.test" };
+  }
+  async updateSubscriptionQuantity(_p: UpdateSubscriptionQuantityParams): Promise<void> {
+    return;
   }
   async parseWebhookEvent(): Promise<ParsedWebhook> {
     const next = this.queue.shift();

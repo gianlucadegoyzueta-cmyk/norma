@@ -3,6 +3,7 @@
 import { type PersonInput, validatePerson } from "@/app/stays/guest-validation";
 import { prisma } from "@/server/db";
 import { PrismaReferenceTablesLoader, PrismaSchedinaRepository } from "@/server/modules/alloggiati";
+import { checkWriteAccess } from "@/server/modules/billing/write-access";
 import { DEFAULT_LOCALE, isLocale, MESSAGES } from "@/server/modules/checkin/messages";
 import { validateReferenceIds } from "@/server/modules/checkin/reference-validation";
 import { resolveCheckinToken } from "@/server/modules/checkin/token";
@@ -34,6 +35,8 @@ export async function submitCheckinAction(
   const locale = isLocale(langRaw) ? langRaw : DEFAULT_LOCALE;
   const ctx = await resolveCheckinToken(token);
   if (!ctx) return { error: "invalid" };
+  const access = await checkWriteAccess(ctx.organizationId);
+  if (!access.ok) return { error: "generic" };
 
   const v = (k: string) => {
     const s = String(formData.get(k) ?? "").trim();

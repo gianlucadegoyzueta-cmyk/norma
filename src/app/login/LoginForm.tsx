@@ -10,21 +10,33 @@ import { Field, FormMessage } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 
-export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; notice?: string }) {
+export function LoginForm({
+  googleEnabled,
+  notice,
+  redirectTo,
+}: {
+  googleEnabled: boolean;
+  notice?: string;
+  redirectTo?: string;
+}) {
   const [pwState, pwAction] = useActionState(signInWithPassword, {});
+  const formErrorId = "login-form-error";
 
   return (
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="font-display text-xl">Bentornato</CardTitle>
+          <CardTitle as="h1" className="font-display text-xl">
+            Bentornato
+          </CardTitle>
           <CardDescription>Accedi al tuo spazio Norma.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
           {notice ? <FormMessage variant="success">{notice}</FormMessage> : null}
 
           <form action={pwAction} className="flex flex-col gap-4">
-            <FormMessage>{pwState.error}</FormMessage>
+            {redirectTo ? <input type="hidden" name="redirectTo" value={redirectTo} /> : null}
+            <FormMessage id={formErrorId}>{pwState.error}</FormMessage>
             <Field id="login-email" label="Email">
               <Input
                 id="login-email"
@@ -34,6 +46,7 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
                 autoComplete="email"
                 placeholder="tu@esempio.it"
                 aria-invalid={pwState.error ? true : undefined}
+                aria-describedby={pwState.error ? formErrorId : undefined}
               />
             </Field>
             <Field
@@ -58,6 +71,7 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
                 autoComplete="current-password"
                 placeholder="••••••••"
                 aria-invalid={pwState.error ? true : undefined}
+                aria-describedby={pwState.error ? formErrorId : undefined}
               />
             </Field>
             <SubmitButton className="w-full" pendingLabel="Accesso…">

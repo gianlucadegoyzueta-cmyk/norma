@@ -22,8 +22,8 @@ permessi/elementi. Aggiungili dentro `<manifest>` (fuori da `<application>` per 
 2. Scarica `google-services.json` e mettilo in `android/app/google-services.json`
    (**gitignored**, mai nel repo).
 3. Il plugin `@capacitor/push-notifications` su Android usa FCM: il `google-services.json` +
-   il plugin Gradle sono sufficienti. Lato server serve `FCM_SERVICE_ACCOUNT_JSON` (vedi
-   PR #160 / `NEEDS-HUMAN.md §11`).
+   il plugin Gradle sono sufficienti. Lato server serve `FCM_SERVICE_ACCOUNT_JSON` in env
+   (Vercel) — vedi `FcmPushSender.ts`.
 
 ## App Links (deep link) — verifica del dominio
 

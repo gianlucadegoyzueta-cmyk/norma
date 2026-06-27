@@ -6,6 +6,8 @@
 import { prisma } from "@/server/db";
 import {
   BillingCheckoutService,
+  BillingNotConfiguredError,
+  BillingQuantitySyncService,
   BillingGatingService,
   PrismaGuestActivityRepository,
   PrismaProcessedEventStore,
@@ -37,6 +39,10 @@ export function webhookService(): StripeWebhookService {
     new PrismaSubscriptionRepository(prisma),
     new PrismaProcessedEventStore(prisma),
   );
+}
+
+function quantitySyncService(): BillingQuantitySyncService {
+  return new BillingQuantitySyncService(billingGateway(), new PrismaSubscriptionRepository(prisma));
 }
 
 /** Tabella `Subscription` assente (migrazione non ancora applicata)? Codice Prisma P2021. */
@@ -73,6 +79,20 @@ export async function loadBillingView(organizationId: string): Promise<BillingVi
     if (isMissingTableError(err)) {
       return { access: null, subscription: null, ready: false, configured };
     }
+    throw err;
+  }
+}
+
+/**
+ * Best-effort: riallinea la quantity Stripe con il numero strutture correnti.
+ * Se billing non e` configurato o tabella Subscription non disponibile, non blocca il flusso.
+ */
+export async function syncBillingQuantityForOrganization(organizationId: string): Promise<void> {
+  try {
+    const quantity = await prisma.property.count({ where: { organizationId } });
+    await quantitySyncService().syncOrganizationQuantity(organizationId, quantity);
+  } catch (err) {
+    if (err instanceof BillingNotConfiguredError || isMissingTableError(err)) return;
     throw err;
   }
 }

@@ -63,10 +63,6 @@
     box-shadow 0.25s var(--ease),
     border-color 0.25s var(--ease);
 }
-.agency-row:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 34px rgba(33, 28, 21, 0.1);
-}
 .agency-row + .agency-row {
   margin-top: 10px;
 }
@@ -146,6 +142,56 @@
   outline-offset: 2px;
 }
 
+/* --- Checklist onboarding PM: corsia operativa in-app --- */
+.pm-onboarding {
+  background: linear-gradient(180deg, rgba(188, 75, 43, 0.04), rgba(188, 75, 43, 0.015));
+  border: 1px solid rgba(188, 75, 43, 0.22);
+}
+.pm-onboarding-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pm-onboarding-item {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--carta);
+  padding: 9px 11px;
+}
+.pm-onboarding-state {
+  font-family: var(--font-mono);
+  color: var(--soft);
+  font-size: 13px;
+}
+.pm-onboarding-state[data-done="true"] {
+  color: var(--salvia-ink);
+  font-weight: 700;
+}
+.pm-onboarding-text {
+  font-size: 13px;
+  color: var(--inchiostro);
+}
+.pm-onboarding-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--terracotta-dark);
+  text-decoration: none;
+}
+.pm-onboarding-link:hover {
+  text-decoration: underline;
+}
+.pm-onboarding-link:focus-visible {
+  outline: 2px solid var(--terracotta);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
 @media (max-width: 900px) {
   .agency-kpis {
     grid-template-columns: repeat(2, 1fr);
@@ -155,9 +201,48 @@
   .agency-row {
     flex-direction: column;
     align-items: stretch;
+    padding: 14px;
   }
   .agency-row-badges {
     justify-content: flex-start;
+  }
+  .agency-kpi {
+    padding: 16px 14px;
+  }
+  .agency-kpi-value {
+    font-size: 26px;
+  }
+  .agency-row-title {
+    white-space: normal;
+  }
+  .agency-row-meta {
+    white-space: normal;
+  }
+  .pm-onboarding-item {
+    grid-template-columns: 18px 1fr;
+  }
+  .pm-onboarding-link {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 520px) {
+  .agency-kpis {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .agency-kpi-label {
+    font-size: 12px;
+  }
+  .agency-kpi-hint {
+    font-size: 11px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .agency-row:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px rgba(33, 28, 21, 0.1);
   }
 }
 

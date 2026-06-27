@@ -1,8 +1,8 @@
 // PORT: canale di VERSAMENTO della dichiarazione al comune.
 //
 // MANUAL_EXPORT è il default sicuro e SEMPRE disponibile (l'utente scarica l'export e versa).
-// GECOS / pagoPA / portale comunale sono PREDISPOSTI come adapter stub: attivabili per comune
-// senza riscrivere il dominio. Questo port è la cerniera che lo consente.
+// GECOS / portale comunale restano stub in Fase 1. pagoPA usa un adapter aggregatore sandbox
+// (isImplemented=true) dietro port dedicato, senza versamenti reali.
 
 import type { TaxRemittanceMode } from "@prisma/client";
 import type { DeclarationExport } from "../domain/export-csv";

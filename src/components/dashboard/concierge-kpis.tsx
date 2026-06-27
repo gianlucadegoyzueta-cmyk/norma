@@ -32,9 +32,11 @@ export interface KpiSpec {
   detail?: KpiDetail;
 }
 
-function prefersReducedMotion(): boolean {
+function canRunPointerFx(): boolean {
+  if (typeof window === "undefined") return false;
   return (
-    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
+    window.matchMedia("(hover: hover) and (pointer: fine)").matches
   );
 }
 
@@ -59,7 +61,7 @@ function useTilt() {
   const ref = useRef<HTMLButtonElement>(null);
   const onMove = (e: React.MouseEvent<HTMLButtonElement>) => {
     const el = ref.current;
-    if (!el || prefersReducedMotion()) return;
+    if (!el || !canRunPointerFx()) return;
     const r = el.getBoundingClientRect();
     const x = e.clientX - r.left;
     const y = e.clientY - r.top;

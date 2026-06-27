@@ -17,9 +17,13 @@ export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDiv
   return <div className={cn("flex flex-col gap-1.5 p-6", className)} {...props} />;
 }
 
-export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
+export function CardTitle({
+  className,
+  as: Component = "h3",
+  ...props
+}: React.HTMLAttributes<HTMLHeadingElement> & { as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" }) {
   return (
-    <h3
+    <Component
       className={cn("font-display text-lg leading-none font-semibold tracking-tight", className)}
       {...props}
     />

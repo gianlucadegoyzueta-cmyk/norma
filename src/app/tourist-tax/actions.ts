@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { TaxDeclarationStatus, TaxRemittanceMode } from "@prisma/client";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { checkWriteAccess } from "@/server/modules/billing/write-access";
 import { cinForDeclarationExport } from "@/server/modules/cin/domain/cin";
 import { periodLabel } from "@/server/modules/tourist-tax/domain/period";
 import type { DeclarationExport } from "@/server/modules/tourist-tax/domain/export-csv";
@@ -31,6 +32,8 @@ export async function buildDeclarationAction(formData: FormData) {
   const ctx = await getCurrentContext();
   if (!ctx) redirect("/login");
   const orgId = ctx.current.organizationId;
+  const access = await checkWriteAccess(orgId);
+  if (!access.ok) return { ok: false as const, error: access.message };
 
   const comuneId = String(formData.get("comuneId") ?? "");
   const period = String(formData.get("period") ?? "").trim();
@@ -54,6 +57,8 @@ export async function buildDeclarationAction(formData: FormData) {
 export async function changeDeclarationStatusAction(formData: FormData) {
   const ctx = await getCurrentContext();
   if (!ctx) redirect("/login");
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false as const, error: access.message };
   const id = String(formData.get("id") ?? "");
   const to = String(formData.get("to") ?? "") as TaxDeclarationStatus;
   if (!id || !STATUSES.includes(to)) return { ok: false as const, error: "Dati non validi" };
@@ -70,6 +75,8 @@ export async function changeDeclarationStatusAction(formData: FormData) {
 export async function setRemittanceModeAction(formData: FormData) {
   const ctx = await getCurrentContext();
   if (!ctx) redirect("/login");
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false as const, error: access.message };
   const id = String(formData.get("id") ?? "");
   const mode = String(formData.get("mode") ?? "") as TaxRemittanceMode;
   if (!id || !MODES.includes(mode)) return { ok: false as const, error: "Dati non validi" };

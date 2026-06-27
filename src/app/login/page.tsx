@@ -15,17 +15,18 @@ const NOTICES: Record<string, string> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ registered?: string; reset?: string }>;
+  searchParams: Promise<{ registered?: string; reset?: string; invite?: string }>;
 }) {
   // Chi è già autenticato non deve vedere il login.
   if (await getCurrentContext()) redirect("/dashboard");
 
   const sp = await searchParams;
   const notice = sp.registered ? NOTICES.registered : sp.reset ? NOTICES.reset : undefined;
+  const redirectTo = sp.invite ? `/auth/invite?token=${encodeURIComponent(sp.invite)}` : undefined;
 
   return (
     <AuthShell>
-      <LoginForm googleEnabled={isGoogleEnabled} notice={notice} />
+      <LoginForm googleEnabled={isGoogleEnabled} notice={notice} redirectTo={redirectTo} />
     </AuthShell>
   );
 }

@@ -29,16 +29,17 @@ NON tocca il modulo alloggiati. Isolamento multi-tenant (`organizationId`) in tu
 
 ## Reale vs Stub
 
-| Componente                                       | Stato                                                                                                                              |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Calcolatore + regole tipizzate                   | **REALE**, testato                                                                                                                 |
-| Selezione versione per data                      | **REALE**, testato                                                                                                                 |
-| Persistenza config/dichiarazioni (Prisma)        | **REALE**                                                                                                                          |
-| Stima per soggiorno (UI)                         | **REALE**                                                                                                                          |
-| Dichiarazione periodica + stati + export **CSV** | **REALE**                                                                                                                          |
-| Export **PDF**                                   | **NON implementato** in v1 (CSV soddisfa l'export; PDF predisponibile)                                                             |
-| Versamento **MANUAL_EXPORT**                     | **REALE** (scarica il CSV)                                                                                                         |
-| Versamento **GECOS / pagoPA / portale comunale** | **STUB** (`isImplemented=false`): port `RemittanceChannel` predisposto, ricaduta automatica su export manuale finché non integrati |
+| Componente                                       | Stato                                                                                                             |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| Calcolatore + regole tipizzate                   | **REALE**, testato                                                                                                |
+| Selezione versione per data                      | **REALE**, testato                                                                                                |
+| Persistenza config/dichiarazioni (Prisma)        | **REALE**                                                                                                         |
+| Stima per soggiorno (UI)                         | **REALE**                                                                                                         |
+| Dichiarazione periodica + stati + export **CSV** | **REALE**                                                                                                         |
+| Export **PDF**                                   | **REALE** (azione `prepareDeclarationPdfAction`)                                                                  |
+| Versamento **MANUAL_EXPORT**                     | **REALE** (scarica il CSV)                                                                                        |
+| Versamento **GECOS / portale comunale**          | **STUB** (`isImplemented=false`): fallback su export manuale                                                      |
+| Versamento **pagoPA**                            | **SANDBOX/MOCK** (`isImplemented=true`): adapter aggregatore agnostico con redirect test, nessun versamento reale |
 
 Totale test del modulo: **62** (calculator 30, version-select 8, estimate 7, declaration-domain 10,
 declaration.service 7). `tsc` pulito, `eslint` pulito dopo ogni fase.

@@ -31,12 +31,6 @@ export class GecosRemittanceStub extends StubRemittance {
   }
 }
 
-export class PagoPaRemittanceStub extends StubRemittance {
-  constructor() {
-    super("PAGOPA", "pagoPA");
-  }
-}
-
 export class ComunePortalRemittanceStub extends StubRemittance {
   constructor() {
     super("COMUNE_PORTAL", "portale comunale");

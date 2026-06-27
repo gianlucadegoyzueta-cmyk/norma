@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { CheckCircle2, CreditCard, Info, TriangleAlert } from "lucide-react";
+import { CheckCircle2, Info, TriangleAlert } from "lucide-react";
 import { getCurrentContext } from "@/server/auth/session";
 import {
   ANNUAL_PLAN,
@@ -11,10 +11,9 @@ import {
   type PlanDefinition,
 } from "@/server/modules/billing";
 import { ConciergePage } from "@/components/concierge/concierge-page";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BillingStripeButton } from "./BillingStripeButton";
 import { loadBillingView } from "./_lib/billing";
-import { openPortalAction, startCheckoutAction } from "./actions";
 
 export const metadata: Metadata = { title: "Abbonamento" };
 export const dynamic = "force-dynamic";
@@ -81,17 +80,13 @@ function PlanCard({ plan, configured }: { plan: PlanDefinition; configured: bool
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={startCheckoutAction}>
-          <input type="hidden" name="plan" value={plan.plan} />
-          <Button
-            type="submit"
-            className="w-full"
-            variant={plan.recommended ? "default" : "outline"}
-            disabled={!configured}
-          >
-            <CreditCard /> Abbónati
-          </Button>
-        </form>
+        <BillingStripeButton
+          mode="checkout"
+          plan={plan.plan}
+          configured={configured}
+          label="Abbónati"
+          variant={plan.recommended ? "default" : "outline"}
+        />
       </CardContent>
     </Card>
   );
@@ -232,11 +227,12 @@ export default async function BillingPage({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form action={openPortalAction}>
-                <Button type="submit" variant="outline" disabled={!configured}>
-                  Apri il portale clienti
-                </Button>
-              </form>
+              <BillingStripeButton
+                mode="portal"
+                configured={configured}
+                label="Apri il portale clienti"
+                variant="outline"
+              />
             </CardContent>
           </Card>
         )}

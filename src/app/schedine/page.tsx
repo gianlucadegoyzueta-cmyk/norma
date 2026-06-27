@@ -86,6 +86,8 @@ export default async function SchedinePage() {
   const queuedCount = counts.PENDING ?? 0;
   const acquiredCount = counts.ACQUIRED ?? 0;
   const activeCredentials = credentials.filter((c) => c.status === "ACTIVE").length;
+  const cronEnabled = process.env.ALLOGGIATI_CRON_ENABLED === "true";
+  const cronDryRun = process.env.ALLOGGIATI_CRON_DRY_RUN === "true";
 
   // Ordine d'azione della lista: stato per priorità, poi overdue, poi scadenza (l'intro lo promette).
   const sortedSchedine = [...schedine].sort((a, b) => {
@@ -283,6 +285,25 @@ export default async function SchedinePage() {
               <CardTitle>Auto-invio programmato</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
+              <div className="border-border bg-muted/30 rounded-xl border p-3 text-sm">
+                <p className="font-medium">Stato cron produzione</p>
+                {cronEnabled && cronDryRun && (
+                  <p className="text-muted-foreground mt-1">
+                    Modalita dry-run attiva: ogni credenziale con auto-invio ON entra nel batch di
+                    Test notturno, ma non viene inviato nulla alla Questura.
+                  </p>
+                )}
+                {cronEnabled && !cronDryRun && (
+                  <p className="text-destructive mt-1">
+                    Dry-run disattivato: il cron e in invio reale.
+                  </p>
+                )}
+                {!cronEnabled && (
+                  <p className="text-muted-foreground mt-1">
+                    Cron disattivato: il toggle salva solo la tua preferenza, senza eseguire batch.
+                  </p>
+                )}
+              </div>
               <p className="text-muted-foreground text-sm">
                 Con l&apos;auto-invio attivo per una credenziale, le schedine già{" "}
                 <em>validate dal Test</em> vengono inviate automaticamente all&apos;orario

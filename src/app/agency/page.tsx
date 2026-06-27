@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { hasRole } from "@/server/auth/access";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { loadProgress } from "@/server/modules/onboarding/progress";
+import { getOnboardingState } from "@/server/modules/onboarding/state";
 import type {
   AgencyTotals,
   PropertyComplianceRow,
@@ -49,7 +51,18 @@ export default async function AgencyPage({
 
   const { property: requestedProperty } = await searchParams;
   const orgId = ctx.current.organizationId;
-  const overview = await getAgencyOverview(prisma, orgId);
+  const [overview, progress, onboarding, teamMembers, activeCredentials, subscription] =
+    await Promise.all([
+      getAgencyOverview(prisma, orgId),
+      loadProgress(prisma, orgId),
+      getOnboardingState(prisma, orgId),
+      prisma.membership.count({ where: { organizationId: orgId } }),
+      prisma.alloggiatiCredential.count({ where: { organizationId: orgId, status: "ACTIVE" } }),
+      prisma.subscription.findUnique({
+        where: { organizationId: orgId },
+        select: { status: true, quantity: true },
+      }),
+    ]);
 
   // Isolamento: il filtro vale solo se la proprietà richiesta è dell'org (altrimenti "Tutte").
   const selectedId =
@@ -65,17 +78,16 @@ export default async function AgencyPage({
   // Gating di presentazione minimale: l'enfasi "agenzia" è per chi guida l'account (OWNER/ADMIN);
   // i collaboratori (MEMBER) vedono la stessa overview con un'intestazione più sobria.
   const isAgencyLead = hasRole(ctx.current.role, ["OWNER", "ADMIN"]);
+  const isPm = progress?.userType === "PROPERTY_MANAGER" || (progress?.structuresCount ?? 0) >= 5;
 
   const switcherOptions = overview.rows.map((r) => ({ id: r.propertyId, name: r.propertyName }));
 
   return (
     <ConciergePage
+      dense
+      active="agency"
       kicker={isAgencyLead ? "REGIA · AGENZIA" : "PANORAMICA · STRUTTURE"}
-      title={
-        <>
-          Le tue <em>strutture</em>
-        </>
-      }
+      title="Le tue strutture"
       intro={
         <>
           La <strong>vista d&apos;insieme</strong> di tutte le strutture di{" "}
@@ -108,6 +120,86 @@ export default async function AgencyPage({
         <>
           {switcherOptions.length > 1 && (
             <PropertySwitcher options={switcherOptions} selectedId={selectedId} />
+          )}
+          {isPm && (
+            <section
+              aria-labelledby="pm-onboarding-heading"
+              className="cmx-section pm-onboarding"
+              style={{ marginTop: 14 }}
+            >
+              <h2 id="pm-onboarding-heading" className="cmx-section-title">
+                Onboarding property manager (5+ strutture)
+              </h2>
+              <p className="text-muted-foreground -mt-1 mb-3 text-xs">
+                Percorso operativo consigliato per attivare il portafoglio senza colli di bottiglia.
+              </p>
+              <ul className="pm-onboarding-list">
+                <li className="pm-onboarding-item">
+                  <span
+                    className="pm-onboarding-state"
+                    data-done={overview.totals.propertyCount > 0}
+                  >
+                    {overview.totals.propertyCount > 0 ? "✓" : "·"}
+                  </span>
+                  <span className="pm-onboarding-text">
+                    Carica immobili in portafoglio (ora: {overview.totals.propertyCount})
+                  </span>
+                  <Link href="/properties" className="pm-onboarding-link">
+                    Vai a Immobili
+                  </Link>
+                </li>
+                <li className="pm-onboarding-item">
+                  <span className="pm-onboarding-state" data-done={activeCredentials > 0}>
+                    {activeCredentials > 0 ? "✓" : "·"}
+                  </span>
+                  <span className="pm-onboarding-text">
+                    Collega almeno una credenziale Alloggiati attiva (ora: {activeCredentials})
+                  </span>
+                  <Link href="/credentials" className="pm-onboarding-link">
+                    Vai a Credenziali
+                  </Link>
+                </li>
+                <li className="pm-onboarding-item">
+                  <span className="pm-onboarding-state" data-done={teamMembers > 1}>
+                    {teamMembers > 1 ? "✓" : "·"}
+                  </span>
+                  <span className="pm-onboarding-text">
+                    Attiva il team operativo (OWNER/ADMIN/MEMBER) — membri: {teamMembers}
+                  </span>
+                  <Link href="/account" className="pm-onboarding-link">
+                    Vai ad Account
+                  </Link>
+                </li>
+                <li className="pm-onboarding-item">
+                  <span
+                    className="pm-onboarding-state"
+                    data-done={subscription?.status === "ACTIVE"}
+                  >
+                    {subscription?.status === "ACTIVE" ? "✓" : "·"}
+                  </span>
+                  <span className="pm-onboarding-text">
+                    Verifica billing PM (quantity Stripe): {subscription?.quantity ?? 0} unita
+                  </span>
+                  <Link href="/billing" className="pm-onboarding-link">
+                    Vai a Billing
+                  </Link>
+                </li>
+                <li className="pm-onboarding-item">
+                  <span
+                    className="pm-onboarding-state"
+                    data-done={onboarding.steps.every((step) => step.done)}
+                  >
+                    {onboarding.steps.every((step) => step.done) ? "✓" : "·"}
+                  </span>
+                  <span className="pm-onboarding-text">
+                    Chiudi onboarding tecnico (stato: {onboarding.completed}/{onboarding.total})
+                  </span>
+                  <Link href="/onboarding" className="pm-onboarding-link">
+                    Vai a Configurazione
+                  </Link>
+                </li>
+              </ul>
+            </section>
           )}
 
           <section

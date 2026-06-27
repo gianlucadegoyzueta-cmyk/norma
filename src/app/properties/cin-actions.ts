@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { checkWriteAccess } from "@/server/modules/billing/write-access";
 import { CinError, CinService, PrismaCinRepository } from "@/server/modules/cin";
 
 type Result = { ok: boolean; message: string };
@@ -10,6 +11,8 @@ type Result = { ok: boolean; message: string };
 export async function saveCinAction(_prev: Result | null, formData: FormData): Promise<Result> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const propertyId = String(formData.get("propertyId") ?? "").trim();
   const cinRaw = String(formData.get("cin") ?? "").trim();
@@ -39,6 +42,8 @@ export async function markCinNotRequiredAction(
 ): Promise<Result> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const propertyId = String(formData.get("propertyId") ?? "").trim();
   if (!propertyId) return { ok: false, message: "Immobile non valido." };

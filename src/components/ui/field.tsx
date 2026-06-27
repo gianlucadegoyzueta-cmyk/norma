@@ -54,9 +54,11 @@ export function describedById(
  * Restituisce null se non c'è contenuto, così si può renderizzare sempre senza condizionali sparsi.
  */
 export function FormMessage({
+  id,
   children,
   variant = "error",
 }: {
+  id?: string;
   children?: React.ReactNode;
   variant?: "error" | "success";
 }) {
@@ -67,6 +69,7 @@ export function FormMessage({
   const isError = variant === "error";
   return (
     <div
+      id={id}
       role={isError ? "alert" : "status"}
       aria-live={isError ? undefined : "polite"}
       aria-atomic="true"

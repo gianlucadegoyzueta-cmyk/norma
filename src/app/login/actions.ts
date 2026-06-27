@@ -18,9 +18,11 @@ export async function signInWithPassword(
   const email = normalizeEmail(String(formData.get("email") ?? ""));
   const password = String(formData.get("password") ?? "");
   if (!email || !password) return { error: "Inserisci email e password." };
+  const redirectToRaw = String(formData.get("redirectTo") ?? "").trim();
+  const redirectTo = redirectToRaw.startsWith("/") ? redirectToRaw : "/dashboard";
 
   try {
-    await signIn("credentials", { email, password, redirectTo: "/dashboard" });
+    await signIn("credentials", { email, password, redirectTo });
     return {};
   } catch (error) {
     if (error instanceof AuthError) {

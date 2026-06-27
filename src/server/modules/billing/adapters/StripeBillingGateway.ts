@@ -12,6 +12,7 @@ import {
   type CreateCheckoutParams,
   type CreatePortalParams,
   type ParsedWebhook,
+  type UpdateSubscriptionQuantityParams,
 } from "../ports/BillingGateway";
 import { epochSecondsToDate, mapStripeStatus, planForLookupKey } from "../domain/stripe-mapping";
 import type { BillingEvent } from "../domain/webhook";
@@ -68,9 +69,12 @@ export class StripeBillingGateway implements BillingGateway {
       );
     }
 
+    const quantity = Number.isFinite(params.quantity)
+      ? Math.max(1, Math.trunc(params.quantity ?? 1))
+      : 1;
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
-      line_items: [{ price: price.id, quantity: 1 }],
+      line_items: [{ price: price.id, quantity }],
       client_reference_id: params.organizationId,
       // metadata su session E su subscription: l'aggancio org↔Stripe resta robusto
       // a prescindere dall'ordine d'arrivo dei webhook.
@@ -94,6 +98,22 @@ export class StripeBillingGateway implements BillingGateway {
       return_url: params.returnUrl,
     });
     return { url: session.url };
+  }
+
+  async updateSubscriptionQuantity(params: UpdateSubscriptionQuantityParams): Promise<void> {
+    const stripe = this.requireStripe();
+    const quantity = Number.isFinite(params.quantity)
+      ? Math.max(1, Math.trunc(params.quantity))
+      : 1;
+    const subscription = await stripe.subscriptions.retrieve(params.stripeSubscriptionId);
+    const item = subscription.items.data[0];
+    if (!item?.id) {
+      throw new Error("Subscription Stripe senza item: impossibile aggiornare quantity");
+    }
+    await stripe.subscriptions.update(params.stripeSubscriptionId, {
+      items: [{ id: item.id, quantity }],
+      proration_behavior: "none",
+    });
   }
 
   async parseWebhookEvent(rawBody: string, signature: string): Promise<ParsedWebhook> {

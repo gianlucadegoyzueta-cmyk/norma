@@ -81,10 +81,6 @@
     transform 0.3s var(--ease),
     box-shadow 0.3s var(--ease);
 }
-.cmx-card-hover:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 16px 40px rgba(33, 28, 21, 0.1);
-}
 
 /* Riga elenco (es. outbox schedine, soggiorni) */
 .cmx-row {
@@ -102,8 +98,8 @@
     border-color 0.25s var(--ease);
 }
 .cmx-row:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 34px rgba(33, 28, 21, 0.1);
+  transform: none;
+  box-shadow: none;
 }
 .cmx-row + .cmx-row {
   margin-top: 10px;
@@ -152,6 +148,18 @@
   border: 1px solid rgba(188, 75, 43, 0.3);
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .cmx-card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px rgba(33, 28, 21, 0.1);
+  }
+
+  .cmx-row:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px rgba(33, 28, 21, 0.1);
+  }
+}
+
 /* Stato vuoto elegante */
 .cmx-empty {
   text-align: center;
@@ -173,4 +181,42 @@
   max-width: 420px;
   margin: 0 auto;
   line-height: 1.6;
+}
+
+/* Telefoni stretti: pagine operative dense davvero leggibili (non desktop compresso). */
+@media (max-width: 520px) {
+  .cmx-wrap-dense {
+    padding-top: 10px;
+  }
+
+  .cmx-pagehead {
+    margin-bottom: 24px;
+  }
+
+  .cmx-pagetitle {
+    font-size: clamp(28px, 9vw, 36px);
+    line-height: 1.08;
+    margin-top: 10px;
+  }
+
+  .cmx-pagesub {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-top: 12px;
+  }
+
+  .cmx-section {
+    margin-top: 24px;
+  }
+
+  .cmx-card {
+    padding: 18px 16px;
+    border-radius: 14px;
+  }
+
+  .cmx-row {
+    padding: 13px 14px;
+    gap: 12px;
+    border-radius: 12px;
+  }
 }

@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 // PAID è positivo (cmx-badge-ok); CANCELLED usa il tono d'errore spento (cmx-badge-err).
 const STATUS_BADGE: Record<TaxDeclarationStatus, { text: string; cmx: string }> = {
   DRAFT: { text: "Bozza", cmx: "cmx-badge-wait" },
-  READY: { text: "Pronta", cmx: "cmx-badge-go" },
+  READY: { text: "Pronta", cmx: "cmx-badge-ok" },
   SUBMITTED: { text: "Inviata", cmx: "cmx-badge-wait" },
   PAID: { text: "Pagata", cmx: "cmx-badge-ok" },
   CANCELLED: { text: "Annullata", cmx: "cmx-badge-err" },

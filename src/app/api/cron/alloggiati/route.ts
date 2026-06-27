@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/server/db";
 import { getSecretsVault } from "@/server/secrets";
 import {
+  FcmPushSender,
+  PrismaDeviceTokenRepository,
+  PrismaNotificationPreferenceRepository,
+  PushNotificationService,
+} from "@/server/modules/notifications";
+import {
   AlloggiatiSoapClient,
   evaluateCronGate,
   PrismaCredentialRepository,
@@ -87,6 +93,7 @@ export async function GET(req: Request) {
     parkByIds: (ids: readonly string[]) => schedinaRepo.parkByIds(ids),
     send: (id: string) => outbox.processCredentialBatch(id),
   };
+  const parkedByCredential = new Map<string, number>();
 
   // DRY-RUN ("finto, senza rischi"): esegue il Test REALE contro l'endpoint Alloggiati e riporta cosa
   // invierebbe/parcheggerebbe, MA non parcheggia, non invia, non riconcilia → zero mutazioni, zero
@@ -109,10 +116,44 @@ export async function GET(req: Request) {
     // Solo credenziali ATTIVE con opt-in autoSend (oltre alla tripla barriera del gate).
     listActiveCredentialIds: () => credRepo.listAutoSendCredentialIds(),
     // Smart-send: Test → parcheggia le bocciate → invia solo le valide.
-    send: (credentialId) => verifyParkAndSend(smartDeps, credentialId).then(() => undefined),
+    send: async (credentialId) => {
+      const out = await verifyParkAndSend(smartDeps, credentialId);
+      parkedByCredential.set(credentialId, out.parked);
+    },
     reconcile: (credentialId, dateIso) => reconcile.reconcileCredential(credentialId, dateIso),
     reconcileDateIso: romeYesterdayIso(),
   });
+
+  // Push NEEDS_REVIEW: se il Test notturno ha parcheggiato righe, avvisa OWNER/ADMIN dell'org.
+  const needsReviewCredentialIds = [...parkedByCredential.entries()]
+    .filter(([, parked]) => parked > 0)
+    .map(([credentialId]) => credentialId);
+  if (needsReviewCredentialIds.length > 0) {
+    const creds = await prisma.alloggiatiCredential.findMany({
+      where: { id: { in: needsReviewCredentialIds } },
+      select: { id: true, organizationId: true },
+    });
+    const orgIds = [...new Set(creds.map((c) => c.organizationId))];
+    const members = await prisma.membership.findMany({
+      where: { organizationId: { in: orgIds }, role: { in: ["OWNER", "ADMIN"] } },
+      select: { userId: true },
+    });
+    const userIds = [...new Set(members.map((m) => m.userId))];
+    const pushService = new PushNotificationService(
+      new FcmPushSender(),
+      new PrismaDeviceTokenRepository(prisma),
+      new PrismaNotificationPreferenceRepository(prisma),
+    );
+    await Promise.allSettled(
+      userIds.map((userId) =>
+        pushService.notify(userId, "alloggiati", {
+          title: "Schedine da correggere",
+          body: "Il test notturno ha trovato righe da rivedere prima dell'invio.",
+          data: { path: "/schedine" },
+        }),
+      ),
+    );
+  }
 
   return NextResponse.json({ ok: true, report });
 }

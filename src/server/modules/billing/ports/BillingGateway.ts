@@ -8,6 +8,8 @@ export interface CreateCheckoutParams {
   organizationId: string;
   /** Quale prezzo: lookup_key del piano (annuale/mensile). */
   lookupKey: string;
+  /** Numero unita` fatturate (es. strutture attive). */
+  quantity?: number;
   /** Email da pre-compilare al checkout (se nuova subscription). */
   customerEmail?: string | null;
   /** Customer Stripe esistente, per non duplicarlo. */
@@ -19,6 +21,11 @@ export interface CreateCheckoutParams {
 export interface CreatePortalParams {
   stripeCustomerId: string;
   returnUrl: string;
+}
+
+export interface UpdateSubscriptionQuantityParams {
+  stripeSubscriptionId: string;
+  quantity: number;
 }
 
 /** Esito della verifica+normalizzazione di un webhook. `event` null = tipo non gestito (ack 200). */
@@ -33,6 +40,7 @@ export interface BillingGateway {
   isConfigured(): boolean;
   createCheckoutSession(params: CreateCheckoutParams): Promise<{ url: string }>;
   createPortalSession(params: CreatePortalParams): Promise<{ url: string }>;
+  updateSubscriptionQuantity(params: UpdateSubscriptionQuantityParams): Promise<void>;
   /**
    * Verifica la FIRMA del webhook (obbligatoria) e normalizza l'evento Stripe in `BillingEvent`.
    * Deve LANCIARE se la firma non è valida (la route risponderà 400, niente retry).

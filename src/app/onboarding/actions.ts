@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentContext } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { checkWriteAccess } from "@/server/modules/billing/write-access";
 import {
   AlloggiatiSoapClient,
   checkReferenceTablesHealth,
@@ -28,6 +29,8 @@ export async function advanceFromWelcomeAction(
 ): Promise<WizardActionState> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
   await upsertProgress(prisma, ctx.current.organizationId, {
     welcomedAt: new Date(),
     currentStep: 1,
@@ -45,6 +48,8 @@ export async function saveIdentityAction(
 ): Promise<WizardActionState> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const name = String(formData.get("name") ?? "").trim();
   const organizationName = String(formData.get("organizationName") ?? "").trim();
@@ -91,6 +96,8 @@ export async function connectCredentialAction(
 ): Promise<WizardActionState> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const label = String(formData.get("label") ?? "").trim();
   const category = String(formData.get("category") ?? "SINGOLA");
@@ -164,6 +171,8 @@ export async function syncReferenceTablesAction(
 ): Promise<WizardActionState> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const credentialId = String(formData.get("credentialId") ?? "").trim();
   if (!credentialId) return { ok: false, message: "Credenziale non indicata." };
@@ -210,6 +219,8 @@ export async function createWizardPropertyAction(
 ): Promise<WizardActionState> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const res = await createPropertyAction(null, formData);
   if (!res.ok) return { ok: false, message: res.message };
@@ -223,6 +234,8 @@ export async function createWizardPropertyAction(
 export async function setStepAction(step: number): Promise<void> {
   const ctx = await getCurrentContext();
   if (!ctx) return;
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return;
   const clamped = Math.max(0, Math.min(4, Math.trunc(step)));
   await upsertProgress(prisma, ctx.current.organizationId, { currentStep: clamped });
 }
@@ -244,6 +257,8 @@ export async function finishOnboardingAction(
 ): Promise<WizardActionState> {
   const ctx = await getCurrentContext();
   if (!ctx) return { ok: false, message: "Sessione scaduta: rifai il login." };
+  const access = await checkWriteAccess(ctx.current.organizationId);
+  if (!access.ok) return { ok: false, message: access.message };
 
   const targetKey = String(formData.get("target") ?? "dashboard");
   await upsertProgress(prisma, ctx.current.organizationId, {

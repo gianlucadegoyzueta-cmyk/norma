@@ -14,6 +14,7 @@ export * from "./domain/take-rate-config";
 export * from "./ports/TouristTaxConfigRepository";
 export * from "./ports/TouristTaxDeclarationRepository";
 export * from "./ports/RemittanceChannel";
+export * from "./ports/AggregatorCheckoutGateway";
 export * from "./ports/FeeCollectionChannel";
 export * from "./adapters/PrismaTouristTaxConfigRepository";
 export * from "./adapters/PrismaTouristTaxDeclarationRepository";
