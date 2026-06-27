@@ -1,44 +1,31 @@
 # Norma — SaaS Compliance Affitti Brevi (Italia)
 
-€12/mese. Schedine Alloggiati, tassa di soggiorno, ISTAT, CIN, check-in ospiti.
-Stack: Next.js 15 + TypeScript strict + PostgreSQL (Supabase) + Prisma. Deploy Vercel.
+Gratis fino al primo ospite · Host da €9/mese per struttura · PM da €6/mese per struttura.
+Due pilastri: **Alloggiati** + **Turismo** (tassa di soggiorno + ISTAT). Verità editoriale: `docs/EDITORIAL.md`.
+
+Stack: Next.js App Router + TypeScript strict + PostgreSQL (Supabase) + Prisma. Deploy Vercel.
 
 ## Moduli attivi in prod
 
 | Modulo | Percorso | Stato |
 |---|---|---|
-| Alloggiati (outbox SOAP) | `src/server/modules/alloggiati/` | ✅ invio CONGELATO per decisione |
+| Alloggiati (outbox SOAP) | `src/server/modules/alloggiati/` | ✅ cron + auto-send opt-in (spento per credenziale fino a toggle) |
 | Check-in ospite | `src/server/modules/checkin/` | ✅ |
 | Tassa di soggiorno | `src/server/modules/tourist-tax/` | ✅ |
-| ISTAT | `src/server/modules/istat/` | ✅ tracking in prod |
-| CIN | `src/server/modules/cin/` | ✅ |
-| iCal import (Airbnb/Booking) | `src/server/modules/stays/` | ✅ |
-| Billing Stripe | `src/server/modules/billing/` | ✅ codice in prod, attivazione pending |
-| Email transazionali (Resend) | `src/server/modules/notifications/` | 🟡 in costruzione |
+| ISTAT | `src/server/modules/istat/` | ✅ export file + reminder cron |
+| CIN (enabler, non pitch) | `src/server/modules/cin/` | ✅ |
+| iCal import (Airbnb/Booking) | `src/server/modules/stays/` | ✅ sync cron ogni 6h |
+| Billing Stripe | `src/server/modules/billing/` | ✅ chiavi in prod |
+| Digest settimanale | `src/server/modules/digest/` | ✅ cron lunedì |
 | Onboarding concierge | `src/server/modules/onboarding/` | ✅ |
-
-## Architettura
-
-- `src/app/` — UI e route (App Router). Server Components di default.
-- `src/components/ui/` — primitivi design system. Riusali, non reinventare.
-- `src/server/modules/` — domini: ogni modulo ha `*.service.ts`, `*.repository.ts`, `*.types.ts`
-- Pattern **ports & adapters**: dominio → interfacce → adapter (Prisma / InMemory per test)
-- `src/server/secrets/` — `SecretsVault`: unico punto di accesso a credenziali ospiti/partner
 
 ## Guardrail NON NEGOZIABILI
 
-1. **MAI un invio reale alla Questura come prova.** Solo metodi `Test` del WS. Il primo invio reale è decisione esplicita di Gianluca.
+1. **Primo Send reale ad Alloggiati = decisione esplicita del founder** su ospite vero. Auto-send per credenziale resta opt-in.
 2. **Migrazioni prod solo con backup fresco** (`~/bin/norma-backup.sh` → `~/backups/norma/`). Poi `prisma migrate deploy`.
 3. **PII fuori dal repo**: dati ospiti reali → `tmp/` (gitignored). Fixture test sempre anonimizzate.
 4. **Branch + PR, mai push su main.** CI verde prima del merge. Commit: `feat(scope): …` in italiano.
 5. **Outbox** `MAX_SEND_ATTEMPTS=5` — non ritentare invii senza dedup. `Send` è irreversibile.
-
-## Stile
-
-- Lingua: italiano per testo UI/dominio/commenti. Inglese per codice/identificatori.
-- TypeScript strict: niente `any` non giustificato. Tipi espliciti ai confini.
-- Componenti UI: riusa primitive `src/components/ui/`. Brand: terracotta/avorio/Fraunces.
-- Commenti solo per invarianti non ovvie. Niente commenti che ripetono il "cosa".
 
 ## Comandi
 
@@ -51,10 +38,3 @@ npm run db:migrate       # prisma migrate dev (solo locale)
 ```
 
 CI completa locale: `format && lint && typecheck && test && build` — tutto verde prima di ogni PR.
-
-## Prima di considerare un task completo
-
-- `env NODE_ENV= npm run typecheck` verde
-- `env NODE_ENV= npm test` verde
-- Nessun `any` introdotto senza giustificazione
-- Se tocchi billing/auth/outbox → classe di rischio HIGH: backup + rollback descritto

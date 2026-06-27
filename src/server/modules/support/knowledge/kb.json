@@ -5,25 +5,24 @@
     "purpose": "Unico serbatoio di fatti verificati. Ogni claim nei contenuti DEVE citare un id qui presente (kbRef). Il Compliance Reviewer rigetta i claim senza ref o con ref inesistente.",
     "sourcingPolicy": "Seed estratto dai docs curati del repo (workforce/docs/*, BRAND.md, AGENTS.md). Confidenza ereditata dal doc fonte. Prima che un claim su scadenze/sanzioni vada in stato PUBBLICATO (non-bozza), il Knowledge Steward DEVE allegare la fonte ufficiale (poliziadistato.it, portale Regione, normattiva) con data. Vedi README.md.",
     "confidenceScale": "A=fonte ufficiale/alta · M=media (da confermare) · B=bassa (da verificare). In Fase 1 si citano solo voci A.",
-    "lastSeeded": "2026-06-14"
+    "lastSeeded": "2026-06-27"
   },
   "entries": [
     {
       "id": "norma-scope-lancio",
-      "claim": "Norma è un SaaS di compliance per gli affitti brevi in Italia che al lancio copre due adempimenti: le schedine Alloggiati (Polizia di Stato) e il movimento turistico ISTAT (Ross1000), in un'unica app.",
+      "claim": "Norma è un SaaS di compliance per gli affitti brevi in Italia con due pilastri ricorrenti: schedine Alloggiati (Polizia di Stato) e turismo (tassa di soggiorno + movimento ISTAT), in un'unica app.",
       "sourceUrl": "workforce/docs/brief.md",
       "dateVerified": "2026-06-14",
       "tags": ["prodotto", "scope", "value-prop"],
       "confidence": "A"
     },
     {
-      "id": "tassa-soggiorno-roadmap",
-      "claim": "La tassa di soggiorno è in roadmap (post-lancio) e NON fa parte dell'offerta di lancio: non va comunicata come disponibile.",
-      "sourceUrl": "workforce/docs/brief.md",
-      "dateVerified": "2026-06-14",
-      "tags": ["roadmap", "guardrail", "non-comunicare"],
-      "confidence": "A",
-      "note": "Voce-guardia: usata dal Reviewer per bloccare qualsiasi copy che presenti la tassa di soggiorno come attiva."
+      "id": "tassa-soggiorno-attiva",
+      "claim": "La tassa di soggiorno è attiva in Norma: report, CSV e PDF per la dichiarazione periodica, dagli stessi dati ospiti.",
+      "sourceUrl": "docs/EDITORIAL.md",
+      "dateVerified": "2026-06-27",
+      "tags": ["tassa-soggiorno", "prodotto"],
+      "confidence": "A"
     },
     {
       "id": "mov-distinto-da-alloggiati",
@@ -452,7 +451,7 @@
       "dateVerified": "2026-06-15",
       "tags": ["tassa-soggiorno", "roma", "tributo"],
       "confidence": "A",
-      "note": "Fonte: Roma Capitale (Del. G.C. 255/2023). Tariffa affitti brevi 6,00 €/persona/notte, max 10 pernottamenti. ⚠️ La tassa di soggiorno è in ROADMAP per Norma: comunicarla solo come obbligo informativo, MAI come funzione attiva di Norma."
+      "note": "Fonte: Roma Capitale (Del. G.C. 255/2023). Tariffa affitti brevi 6,00 €/persona/notte, max 10 pernottamenti. Norma genera report/CSV/PDF per la dichiarazione; l'invio al Comune resta responsabilità dell'host salvo mandato esplicito."
     },
     {
       "id": "norma-mov-file-mode",
@@ -464,19 +463,18 @@
       "note": "Vincolo: per il movimento turistico NON si scrive 'inviamo noi'/'invio automatico'. Lo stato reale è FILE o ASSISTITO."
     },
     {
-      "id": "alloggiati-prepara-conferma",
-      "claim": "Per le schedine Alloggiati, oggi Norma le prepara e l'host le conferma con un click; l'invio completamente automatico non è attivo.",
-      "sourceUrl": "AGENTS.md",
-      "dateVerified": "2026-06-14",
+      "id": "alloggiati-mandato-auto-send",
+      "claim": "Per le schedine Alloggiati, Norma valida e invia su mandato firmato una volta. L'auto-send esiste ma è spento di default fino al go-live controllato; finché non attivo, l'host conferma manualmente con un click dopo il test.",
+      "sourceUrl": "docs/EDITORIAL.md",
+      "dateVerified": "2026-06-27",
       "tags": ["alloggiati", "verita-editoriale", "guardrail"],
-      "confidence": "A",
-      "note": "Verità editoriale del repo: 'mai scrivere il contrario'."
+      "confidence": "A"
     },
     {
-      "id": "prezzo-12-struttura",
-      "claim": "Il prezzo di Norma è 12 euro al mese a struttura.",
-      "sourceUrl": "AGENTS.md",
-      "dateVerified": "2026-06-14",
+      "id": "prezzo-9-struttura",
+      "claim": "Il prezzo per l'host con una struttura è 9 euro al mese (oppure 90 euro all'anno). Gratis fino al primo ospite gestito.",
+      "sourceUrl": "docs/EDITORIAL.md",
+      "dateVerified": "2026-06-27",
       "tags": ["prezzo"],
       "confidence": "A"
     },

@@ -1,5 +1,5 @@
 {
-  "//": "ESEMPIO — NON è attivo. Per accendere lo scheduler invio+reconcile (decisione umana):",
+  "//": "DEPRECATO — i cron sono in vercel.json (root repo norma). Questo file resta solo come riferimento storico.",
   "//1": "1) copiare il blocco `crons` in un vero vercel.json alla radice del repo;",
   "//2": "2) su Vercel impostare le env: CRON_SECRET (segreto del cron) e ALLOGGIATI_CRON_ENABLED=true;",
   "//3": "3) Vercel invoca GET /api/cron/alloggiati con `Authorization: Bearer $CRON_SECRET`.",

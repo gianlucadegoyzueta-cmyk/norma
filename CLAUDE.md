@@ -79,16 +79,16 @@ penale — vedi guardrail #1).** Positioning: **compliance garantita in automati
   reconcile T+1 per conteggio (#55), auto-send opt-in + Test-gated + DRY-RUN (#99, **spento di default**) — in prod.
 - ✅ **Pilastro Turismo:** tassa di soggiorno (report/CSV/PDF, #35), ISTAT Ross1000 export XML
   per-struttura + routing regionale (#98) — in prod. Invio regionale reale (Lazio) = prossimo gate.
-- ✅ Infra: billing €120/anno in prod ma **DORMIENTE** (mancano chiavi test + SDI) · Sentry EU PII-safe (#93)
+- ✅ Infra: billing Stripe **attivo in prod** (chiavi Vercel) · Sentry EU PII-safe (#93)
   · import iCal (#65) · design system unico "carta", no dark mode (#97).
 - ✅/🔜 **Copertura turismo nazionale + automazione funnel** (`feat/movimento-turistico-nuove-regioni` mergiato):
   Puglia (SPOT) e Umbria (Turismatica C59) **a FILE end-to-end, ora scaricabili da `/istat`** (#158, Umbria = ZIP
   dei file giornalieri via encoder puro); serializer + client Sicilia (WebAPI PMS) con trasmissione gated.
-  🔜 ancora: check-in → schedine automatiche; re-sync iCal (cron gated). Cancelli umani + adapter futuri
-  (Campania/VdA/FVG/Trento/Bolzano) e vault credenziali parcheggiato: NEEDS-HUMAN §9.
+- ✅ **Cron attivi (2026-06-27):** digest settimanale, reminder ISTAT, sync iCal ogni 6h, scheduler Alloggiati (invia solo credenziali con autoSend=true, default off).
+  🔜 ancora: adapter regionali futuri (Campania/VdA/FVG/Trento/Bolzano) e vault credenziali parcheggiato: NEEDS-HUMAN §9.
 - ⛔ **Primo invio reale (Alloggiati e ISTAT) = decisione esplicita di Gianluca su ospite vero**
-  (guardrail #1). L'auto-send esiste ma è spento: non accenderlo in autonomia, non riproporlo.
-- 🔜 Focus: chiudere il redesign app (in volo, `feat/app-redesign`) + **GTM** (KPI: 3 conversazioni host/giorno).
+  (guardrail #1). L'auto-send per credenziale resta opt-in (default off).
+- 🔜 Focus: **GTM** (KPI: 3 conversazioni host/giorno). Redesign app (#167) mergiato.
 - Backlog umano: NEEDS-HUMAN.md. Log notturni: NIGHT-LOG.md.
 
 ## Costituzione operativa (/ops — vincolante)
