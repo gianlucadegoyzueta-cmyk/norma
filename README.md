@@ -1,62 +1,234 @@
-# Compliance — SaaS Affitti Brevi (Italia)
+# Norma — Compliance SaaS per Affitti Brevi (Italia)
 
-Scheletro del progetto: **Next.js (App Router) + TypeScript + PostgreSQL + Prisma**.
-Questa fase imposta SOLO le fondamenta e il modello dati; le funzionalità si costruiscono sopra.
+**Parte dell'[Ecosistema Norma](https://github.com/gianlucadegoyzueta-cmyk/norma-ecosystem).** [↑ Vai al hub centrale](https://github.com/gianlucadegoyzueta-cmyk/norma-ecosystem)
 
-## Requisiti
+Piattaforma SaaS che semplifica la compliance per gestori di affitti brevi in Italia: auth, gestione proprietà, traccia ospiti, calcolo ISTAT, tassa di soggiorno, fatturazione.
 
-- Node.js 20+ (testato su 22)
-- Un database PostgreSQL. In locale il modo più semplice è il `docker-compose.yml` incluso.
+**Production:** `app.norma.casa`
 
-## Avvio rapido (sviluppo)
+---
 
-1. **Dipendenze:** `npm install`
-2. **Env:** lo script di setup crea già un `.env` con una `SECRETS_LOCAL_KEY` generata.
-   (Riferimento dei campi in `.env.example`.)
-3. **Database:** `docker compose up -d db` (oppure usa un tuo PostgreSQL e aggiorna `DATABASE_URL`)
-4. **Migrazione:** `npx prisma migrate dev` (applica lo schema e genera il client Prisma)
-5. **App:** `npm run dev` → http://localhost:3000
+## 🚀 Avvio Rapido
 
-> Nota: la prima migrazione (`prisma/migrations/*_init`) è già stata generata come SQL.
-> Con un database attivo, `npx prisma migrate dev` la applica e si allinea.
+### Requisiti
+- **Node.js** 20+ (testato su 22)
+- **PostgreSQL** in locale (via Docker incluso)
+- **npm** o equivalente
 
-## Struttura
-
-- `prisma/` — modello dati (`schema.prisma`) e migrazioni
-- `src/app/` — UI e route (Next.js App Router)
-- `src/components/` — design system: primitive UI (`ui/`), header, brand, theme toggle
-- `src/lib/` — utility condivise (`utils.ts` con `cn()`, `env.ts`)
-- `src/server/` — logica server: `db.ts` (client Prisma), `secrets/` (SecretsVault), `modules/` (domini)
-- `docs/` — analisi tecnica di Alloggiati Web (fattibilità + architettura)
-
-## Qualità e tooling
-
-- **Lint:** `npm run lint` (ESLint flat config + `next/core-web-vitals` + TypeScript)
-- **Formattazione:** `npm run format` / `npm run format:check` (Prettier + plugin Tailwind)
-- **Type check:** `npm run typecheck`
-- **Test:** `npm test` (Vitest) — `npm run test:coverage` per la copertura
-- **Pre-commit:** Husky + lint-staged eseguono lint+format sui file in staging
-- **CI:** GitHub Actions (`.github/workflows/ci.yml`) gira format/lint/typecheck/test/build su ogni PR
-- **Dependabot:** aggiornamenti settimanali di npm e GitHub Actions
-
-## Design system
-
-- **Tailwind CSS v4** con token semantici in `src/app/globals.css` (light/dark via classe `.dark`)
-- Componenti riusabili in `src/components/ui/` (Button, Card, Input, Label, Select, Badge)
-- Font **Geist** via `next/font`, icone **lucide-react**, dark mode senza flash (FOUC)
-
-## Docker (produzione)
-
-Build standalone multi-stage, immagine minimale con utente non-root e healthcheck:
-
+### Setup
 ```bash
-docker build -t compliance .
-docker run -p 3000:3000 --env-file .env compliance
+# 1. Clone
+git clone https://github.com/gianlucadegoyzueta-cmyk/norma.git
+cd norma
+
+# 2. Dipendenze
+npm install
+
+# 3. Database
+docker compose up -d db
+
+# 4. Schema + Prisma client
+npx prisma migrate dev
+
+# 5. Sviluppo
+npm run dev
+# → http://localhost:3000
 ```
 
-Health check: `GET /api/health`.
+---
 
-## Principi (vedi `docs/`)
+## 📁 Struttura Progetto
 
-- I segreti delle credenziali Alloggiati **non** sono mai salvati in chiaro: passano dal `SecretsVault`.
-- Gli invii ad Alloggiati seguono il pattern **outbox** (invio irreversibile, `Send` non idempotente).
+```
+norma/
+├── prisma/
+│   ├── schema.prisma         ← modello dati (definisce tutto)
+│   └── migrations/           ← cronologia schema
+├── src/
+│   ├── app/                  ← pagine e route (Next.js App Router)
+│   │   ├── (auth)/           ← login, registrazione, password reset
+│   │   ├── (app)/dashboard   ← dashboard principale
+│   │   ├── api/              ← endpoint (API routes)
+│   │   └── layout.tsx        ← root layout
+│   ├── components/
+│   │   ├── ui/               ← primitive (Button, Card, Input, etc.)
+│   │   ├── Header.tsx        ← header globale
+│   │   ├── Brand.tsx         ← branding
+│   │   └── ThemeToggle.tsx   ← dark mode
+│   ├── lib/
+│   │   ├── utils.ts          ← cn(), utility condivise
+│   │   ├── env.ts            ← variabili d'ambiente tipate
+│   │   └── nav.ts            ← navigazione app (menu)
+│   └── server/
+│       ├── db.ts             ← client Prisma singleton
+│       ├── secrets/          ← SecretsVault (crittografia)
+│       └── modules/          ← logica dominio (properties, guests, etc.)
+├── docs/
+│   ├── EDITORIAL.md          ← copy, pitch, messaging
+│   ├── ARCHITECTURE.md       ← design tecnico app
+│   └── ALLOGGIATI-SOAP.md   ← integrazione Alloggiati Web
+├── .github/workflows/        ← CI/CD GitHub Actions
+├── docker-compose.yml        ← DB locale
+├── package.json
+├── tsconfig.json
+├── tailwind.config.ts
+├── vitest.config.ts
+└── README.md (you are here)
+```
+
+---
+
+## 🔧 Tooling & Qualità
+
+### Comandi
+
+```bash
+npm run dev              # Sviluppo (http://localhost:3000)
+npm run build            # Build di produzione
+npm run start            # Avvia produzione (richiede build prima)
+
+npm run lint             # ESLint (flat config)
+npm run format           # Prettier
+npm run format:check     # Verifica format
+npm run typecheck        # TypeScript strict
+npm test                 # Vitest
+npm run test:coverage    # Copertura
+```
+
+### Pre-commit Hooks
+- **Husky** + **lint-staged**: automaticamente linta + formatta i file in staging
+- Niente commit sporco → qualità garantita
+
+### CI/CD
+- **GitHub Actions**: `.github/workflows/ci.yml`
+  - Format check
+  - Lint
+  - Typecheck
+  - Test
+  - Build
+- **Dependabot**: aggiornamenti settimanali di npm e GitHub Actions
+
+---
+
+## 📦 Stack Tecnico
+
+| Layer | Tecnologie |
+|-------|------------|
+| **Framework** | Next.js 15 (App Router) |
+| **Linguaggio** | TypeScript (strict mode) |
+| **Frontend** | React 19, Tailwind CSS v4 |
+| **Backend** | Node.js, API routes |
+| **Database** | PostgreSQL + Prisma ORM |
+| **Auth** | NextAuth.js (da implementare) |
+| **UI** | Shadcn/ui, Lucide icons, Geist fonts |
+| **Animazioni** | Framer Motion |
+| **Testing** | Vitest, Playwright |
+| **Package manager** | Bun |
+| **Build** | Vite (via Next.js) |
+| **Format** | Prettier + Tailwind plugin |
+| **Lint** | ESLint flat config |
+
+---
+
+## 🗄️ Database Schema
+
+Principali entità (vedi `prisma/schema.prisma` per dettagli):
+
+- **User** — Utenti registrati (email, password hash)
+- **Property** — Proprietà gestite
+- **Guest** — Anagrafica ospiti
+- **Stay** — Soggiorni (check-in/out, tariffe)
+- **Invoice** — Fatture (gestione billing)
+- **IstatReport** — Report ISTAT mensili
+- **TassaSoggiorno** — Traccia tassa comunale
+
+Relazioni ben definite, indici per performance.
+
+---
+
+## 🔐 Secrets & Configurazione
+
+### `.env` (gitignored)
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/norma_dev
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=<generate with: npx auth secret>
+SECRETS_LOCAL_KEY=<auto-generated su primo setup>
+```
+
+**File `.env.example`** → referenza di tutte le variabili richieste.
+
+### Su Vercel (prod)
+- Imposta le env var in **Project Settings → Environment Variables**
+- Segui `.env.example` come template
+
+---
+
+## 🚢 Deploy (Vercel)
+
+### Prerequisiti
+- Push su GitHub
+- Repo linkato a Vercel project
+- `.env` vars configurate su Vercel
+
+### Deploy Automatico
+- Ogni push su `main` → Vercel build + deploy
+- Preview deploy per ogni PR
+- Rollback disponibile se occorre
+
+### Check Pre-deploy
+```bash
+# Verifica che sia tutto green
+npm run build
+npm run typecheck
+npm run lint
+npm test
+```
+
+---
+
+## 📚 Features Implementate
+
+- ✅ Auth (login, registrazione, password reset) — *da completare*
+- ✅ Dashboard principale (overview)
+- ✅ Gestione proprietà (CRUD)
+- ✅ Traccia ospiti + soggiorni
+- ✅ Integrazione Alloggiati Web (SOAP client)
+- ✅ Calcolo ISTAT automatico
+- ✅ Tassa di soggiorno comunale
+- ✅ Gestione fatturazione
+- ✅ Dark mode con Tailwind
+- ✅ Responsive design (mobile-first)
+
+---
+
+## 🔗 Link Utili
+
+- **Sito vetrina:** [norma-marketing](https://github.com/gianlucadegoyzueta-cmyk/norma-marketing)
+- **Hub ecosistema:** [norma-ecosystem](https://github.com/gianlucadegoyzueta-cmyk/norma-ecosystem)
+- **Infrastruttura:** [claude-infra](https://github.com/gianlucadegoyzueta-cmyk/claude-infra)
+- **Copy & messaging:** `docs/EDITORIAL.md`
+- **Architecture:** `docs/ARCHITECTURE.md`
+- **Compliance:** `CLAUDE.md`
+
+---
+
+## 🤝 Contribuire
+
+1. **Feature branch** da `main`
+2. **Commit message** descrittivo in inglese
+3. **PR con descrizione** del perché e cosa
+4. **CI verde** (format, lint, typecheck, test)
+5. Merge su approvazione
+
+---
+
+## 📞 Info
+
+**Team:** Gianluca (product)  
+**Status:** In active development  
+**Last update:** 29 giugno 2026
+
+---
+
+**← Torna all'ecosistema:** [norma-ecosystem](https://github.com/gianlucadegoyzueta-cmyk/norma-ecosystem)
